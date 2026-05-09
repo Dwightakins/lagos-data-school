@@ -38,3 +38,42 @@ export interface Certificate {
   issued_at: string;
   pdf_url?: string;
 }
+
+export interface Module {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string;
+  order_index: number;
+  created_at: string;
+}
+
+export interface Lesson {
+  id: string;
+  module_id: string;
+  title: string;
+  content?: string;
+  video_url?: string;
+  duration_minutes?: number;
+  order_index: number;
+  created_at: string;
+}
+
+export interface EnrolledCourse {
+  enrollmentId: string;
+  courseId: string;
+  title: string;
+  coverImage: string | null;
+  slug: string;
+  enrolledAt: string;
+  totalLessons: number;
+  completedLessons: number;
+  progressPercent: number;
+}
+
+export interface ActivityItem {
+  id: string;
+  lessonTitle: string;
+  courseName: string;
+  completedAt: string;
+}
