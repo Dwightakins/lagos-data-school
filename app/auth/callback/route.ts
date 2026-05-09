@@ -11,9 +11,9 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // public.users row already exists — created by the on_auth_user_created trigger
-      // when the student first signed up. Just redirect.
-      return NextResponse.redirect(`${origin}${next}`);
+      const allowedPaths = ["/dashboard", "/courses", "/login"];
+      const safePath = allowedPaths.includes(next) ? next : "/dashboard";
+      return NextResponse.redirect(new URL(safePath, origin));
     }
   }
 

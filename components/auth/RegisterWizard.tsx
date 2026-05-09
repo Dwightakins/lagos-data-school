@@ -26,6 +26,17 @@ declare global {
   }
 }
 
+function deriveEmoji(title: string) {
+  const t = title.toLowerCase();
+  if (t.includes("data anal") || t.includes("analytics")) return "📊";
+  if (t.includes("machine learn") || t.includes("neural") || t.includes(" ml")) return "🤖";
+  if (t.includes("software") || t.includes("full-stack") || t.includes("web dev")) return "💻";
+  if (t.includes("data eng") || t.includes("pipeline")) return "🔧";
+  if (t.includes("python")) return "🐍";
+  if (t.includes("sql") || t.includes("database")) return "🗄️";
+  return "📚";
+}
+
 function withTimeout<T>(promise: Promise<T>, ms = 30_000): Promise<T> {
   return Promise.race([
     promise,
@@ -203,12 +214,10 @@ export default function RegisterWizard() {
       ref,
       async onSuccess(transaction) {
         try {
-          const userId = await createAccount();
-          if (!userId) { setLoading(false); return; }
+          const registered = await createAccount();
+          if (!registered) { setLoading(false); return; }
           const ok = await callApi("/api/enroll", {
-            userId,
             courseId: selectedCourse.id,
-            courseName: selectedCourse.name,
             paymentReference: transaction.reference,
           });
           if (ok) { setPayType("full"); setStep(4); }
@@ -230,10 +239,9 @@ export default function RegisterWizard() {
     setLoading(true);
     setError(null);
     try {
-      const userId = await createAccount();
-      if (!userId) return;
+      const registered = await createAccount();
+      if (!registered) return;
       const ok = await callApi("/api/scholarship/apply", {
-        userId,
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
       });
@@ -296,8 +304,16 @@ export default function RegisterWizard() {
       )}
       {step === 2 && (
         <Step2Course
-          selectedCourse={selectedCourse}
-          onSelect={(course) => { setSelectedCourse(course); setError(null); }}
+          onSelectCourse={(course) => {
+            setSelectedCourse({
+              id: course.id,
+              name: course.title,
+              emoji: deriveEmoji(course.title),
+              desc: course.description,
+              price: course.price,
+            });
+            setError(null);
+          }}
           onContinue={handleStep2}
           onBack={() => { setStep(1); setError(null); }}
         />
