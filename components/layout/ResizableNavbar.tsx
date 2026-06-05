@@ -442,6 +442,29 @@ function NavItem({
   );
 }
 
+function MobileNavLink({
+  href,
+  onClick,
+  icon,
+  children,
+}: {
+  href: string;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-accent"
+    >
+      {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
+      {children}
+    </Link>
+  );
+}
+
 function SimpleLink({ href, children, onHover }: { href: string; children: React.ReactNode; onHover: () => void }) {
   return (
     <a
