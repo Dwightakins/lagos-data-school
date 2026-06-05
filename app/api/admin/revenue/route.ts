@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       admin.from("payments").select("amount").eq("status", "paid"),
       admin.from("payments").select("amount").eq("status", "paid").gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
       admin.from("payments").select("amount").eq("status", "paid").gte("created_at", new Date(new Date().getFullYear(), 0, 1).toISOString()),
-      admin.from("payments").select("id, amount, created_at, reference, user_id, course_id, payment_intents!inner(payment_type), users!inner(full_name), courses!inner(title)").eq("status", "paid").order("created_at", { ascending: false }).limit(50),
+      admin.from("payments").select("id, amount, created_at, reference, user_id, course_id, users(full_name), courses(title)").eq("status", "paid").order("created_at", { ascending: false }).limit(50),
     ]);
 
     const sum = (rows: Array<{ amount: number }>) => rows.reduce((a, r) => a + Number(r.amount), 0);

@@ -1,6 +1,6 @@
 "use client";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const testimonials = [
   {

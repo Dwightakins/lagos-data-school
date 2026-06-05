@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { PointerHighlight } from "@/components/ui/pointer-highlight";
 import { UserPlus, BookOpen, Code2, Award } from "lucide-react";
 

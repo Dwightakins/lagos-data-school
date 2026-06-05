@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Check } from "lucide-react";
 
 const fullPayFeatures = [

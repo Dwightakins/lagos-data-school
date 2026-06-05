@@ -15,7 +15,7 @@ interface PaymentRaw {
   amount: number;
   reference: string;
   status: string;
-  paid_at: string | null;
+  created_at: string;
   provider: string;
   user_id: string;
   course_id: string;
@@ -84,8 +84,8 @@ export async function GET() {
       .limit(10),
     admin
       .from("payments")
-      .select("id, amount, reference, status, paid_at, provider, user_id, course_id")
-      .order("paid_at", { ascending: false })
+      .select("id, amount, reference, status, created_at, provider, user_id, course_id")
+      .order("created_at", { ascending: false })
       .limit(10),
   ]);
 
@@ -149,7 +149,7 @@ export async function GET() {
     amount: p.amount,
     reference: p.reference,
     status: p.status,
-    paid_at: p.paid_at,
+    created_at: p.created_at,
     provider: p.provider,
     user: usersMap.get(p.user_id) ?? null,
     course: coursesMap.get(p.course_id) ?? null,

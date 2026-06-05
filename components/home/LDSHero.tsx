@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Spotlight } from "@/components/ui/spotlight";
 import { ContainerTextFlip } from "@/components/ui/container-text-flip";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";

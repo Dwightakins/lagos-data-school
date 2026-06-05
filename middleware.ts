@@ -49,6 +49,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  if (pathname.startsWith("/learn") && !user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+
   if (user) {
     // ── Email verification gate ────────────────────────────────
     // Redirect unconfirmed users to the verify-email page before
@@ -56,7 +62,8 @@ export async function middleware(request: NextRequest) {
     const isProtected =
       pathname.startsWith("/dashboard") ||
       pathname.startsWith("/admin") ||
-      pathname.startsWith("/checkout");
+      pathname.startsWith("/checkout") ||
+      pathname.startsWith("/learn");
 
     if (isProtected && !user.email_confirmed_at) {
       return NextResponse.redirect(new URL("/verify-email", request.url));
@@ -95,6 +102,7 @@ export const config = {
     "/admin/:path*",
     "/checkout/:path*",
     "/checkout",
+    "/learn/:path*",
     "/login",
     "/register",
   ],
