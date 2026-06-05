@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/ui/back-button";
 
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -67,9 +68,7 @@ export default function CourseMaterialsPage() {
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center gap-4">
-        <Link href={`/admin/courses/${id}`} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </Link>
+        <BackButton label="Back" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground" />
         <div>
           <p className="text-[11px] font-bold text-brand uppercase tracking-[0.28em]">Course Materials</p>
           <h1 className="text-[1.5rem] font-bold text-foreground">{courseTitle}</h1>

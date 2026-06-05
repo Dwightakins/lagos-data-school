@@ -73,9 +73,9 @@ export default function PaymentsPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
-        </Link>
+        <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6">
+          <ArrowLeft className="w-3.5 h-3.5" /> Back
+        </button>
         <h1 className="text-2xl font-bold text-foreground mb-1">Payment History</h1>
         <p className="text-muted-foreground text-[14px] mb-6">{payments.length} transaction{payments.length !== 1 ? "s" : ""}</p>
 

@@ -345,7 +345,7 @@ export default function LessonPlayerPage() {
           <button type="button" onClick={() => setSidebarOpen(v => !v)} className="lg:hidden h-11 w-11 flex items-center justify-center text-white/70 hover:text-foreground transition-colors" aria-label="Toggle sidebar">
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-          <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors shrink-0"><ArrowLeft className="w-4 h-4" /></Link>
+          <button type="button" onClick={() => router.back()} className="text-muted-foreground hover:text-foreground transition-colors shrink-0" aria-label="Back"><ArrowLeft className="w-4 h-4" /></button>
           <span className="text-[13px] font-semibold text-white/80 truncate">{courseTitle}</span>
         </div>
         <div className="flex items-center gap-3 shrink-0 ml-4">

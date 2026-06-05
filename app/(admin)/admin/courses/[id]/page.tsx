@@ -130,9 +130,9 @@ export default function EditCoursePage() {
 
   return (
     <div className="p-8">
-      <Link href="/admin/courses" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#6b6040] hover:text-[#e63946] transition-colors mb-6">
-        <ArrowLeft className="w-3.5 h-3.5" /> Back to Courses
-      </Link>
+      <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6">
+        <ArrowLeft className="w-3.5 h-3.5" /> Back
+      </button>
 
       {toast && (
         <div className="bg-[#fef3b0] border border-[#5EEAD4] text-[#1a1a2e] text-[13px] font-semibold rounded-lg px-4 py-2.5 mb-5">

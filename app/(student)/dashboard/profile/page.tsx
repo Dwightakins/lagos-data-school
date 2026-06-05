@@ -128,13 +128,14 @@ export default function ProfilePage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-        <Link
-          href="/dashboard"
+        <button
+          type="button"
+          onClick={() => router.back()}
           className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Dashboard
-        </Link>
+          Back
+        </button>
 
         <h1 className="text-2xl font-bold text-foreground mb-1">My Profile</h1>
         <p className="text-muted-foreground text-[14px] mb-8">Manage your account details</p>

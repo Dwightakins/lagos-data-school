@@ -83,9 +83,9 @@ export default function ProgressPage() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
-        </Link>
+        <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6">
+          <ArrowLeft className="w-3.5 h-3.5" /> Back
+        </button>
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground mb-1">Progress Reports</h1>

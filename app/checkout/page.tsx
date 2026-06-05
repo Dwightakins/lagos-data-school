@@ -198,12 +198,13 @@ function CheckoutContent() {
 
       <main className="flex-1 flex items-start justify-center px-4 py-10">
         <div className="w-full max-w-md">
-          <Link
-            href={courseId ? `/courses/${courseId}` : "/courses"}
+          <button
+            type="button"
+            onClick={() => router.back()}
             className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to course
-          </Link>
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
 
           <h1 className="text-[1.6rem] font-bold text-foreground mb-1">Complete Enrollment</h1>
           {course && (

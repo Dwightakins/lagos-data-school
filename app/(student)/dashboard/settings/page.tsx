@@ -141,9 +141,9 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="bg-foreground border-b border-border px-6 py-4 flex items-center gap-4">
-        <Link href="/dashboard" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-        </Link>
+        <button type="button" onClick={() => router.back()} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
         <div className="w-px h-4 bg-white/20" />
         <h1 className="text-[15px] font-semibold">Account Settings</h1>
       </header>

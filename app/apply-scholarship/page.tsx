@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLogo } from "@/components/layout/logo";
 import { CheckCircle2, ArrowLeft, UserPlus } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
 
 interface Course { id: string; title: string; }
 
@@ -135,12 +136,10 @@ export default function ApplyScholarshipPage() {
 
       <main className="flex-1 flex items-start justify-center px-4 py-10">
         <div className="w-full max-w-lg">
-          <Link
-            href="/courses"
-            className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground mb-6 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to courses
-          </Link>
+          <BackButton
+            label="Back"
+            className="text-[13px] text-muted-foreground hover:text-foreground mb-6"
+          />
 
           <div className="bg-card border border-border rounded-2xl shadow-elevated px-8 py-10">
             <div className="flex justify-center mb-6">

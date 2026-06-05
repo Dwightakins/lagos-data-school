@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Course, Module, Lesson } from "@/types";
 import CourseEnrollCTA from "@/components/ui/CourseEnrollCTA";
+import { BackButton } from "@/components/ui/back-button";
 import { ResizableNavbar } from "@/components/layout/ResizableNavbar";
 import { FooterSection } from "@/components/home/FooterSection";
 import {
@@ -178,7 +179,7 @@ export default async function CourseDetailPage({
           <nav className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
             <Link href="/" className="hover:text-brand transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
-            <Link href="/courses" className="hover:text-brand transition-colors">Courses</Link>
+            <BackButton label="Courses" className="hover:text-brand" />
             <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
             <span className="text-foreground font-medium truncate">{course.title}</span>
           </nav>

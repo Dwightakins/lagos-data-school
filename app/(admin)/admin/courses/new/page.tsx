@@ -56,13 +56,14 @@ export default function NewCoursePage() {
 
   return (
     <div className="p-8">
-      <Link
-        href="/admin/courses"
+      <button
+        type="button"
+        onClick={() => router.back()}
         className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        Back to Courses
-      </Link>
+        Back
+      </button>
 
       <h1 className="text-2xl font-bold text-foreground mb-6">New Course</h1>
 

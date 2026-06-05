@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BackButton } from "@/components/ui/back-button";
 import { ArrowLeft, FileDown, File, FileText, Image, Film, Archive } from "lucide-react";
 import type { LessonMaterial } from "@/types";
 
@@ -53,9 +54,7 @@ export default function MaterialsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="bg-foreground border-b border-border px-6 py-4 flex items-center gap-4">
-        <Link href="/dashboard" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-        </Link>
+        <BackButton label="Back" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground" />
         <div className="w-px h-4 bg-white/20" />
         <h1 className="text-[15px] font-semibold">Course Materials</h1>
       </header>
@@ -102,5 +101,6 @@ export default function MaterialsPage() {
     </div>
   );
 }
+
 
 

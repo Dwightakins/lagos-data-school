@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BackButton } from "@/components/ui/back-button";
 import { ArrowLeft, Bell, BookOpen, Clock, Trophy, DollarSign, BadgeCheck, Trash2, Check, CheckCheck } from "lucide-react";
 import type { Notification } from "@/types";
 
@@ -80,9 +81,7 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="bg-foreground border-b border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-          </Link>
+          <BackButton label="Back" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground" />
           <div className="w-px h-4 bg-white/20" />
           <h1 className="text-[15px] font-semibold">Notifications</h1>
           {unreadCount > 0 && <span className="bg-teal-500 text-foreground text-[11px] font-bold px-2 py-0.5 rounded-full">{unreadCount}</span>}
@@ -144,5 +143,6 @@ export default function NotificationsPage() {
     </div>
   );
 }
+
 
 
