@@ -1,0 +1,31 @@
+{
+  "env": {
+    "ECC_DISABLED_HOOKS": "pre:edit-write:gateguard-fact-force,pre:bash:gateguard-fact-force"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(python \"C:\\\\Users\\\\USER\\\\.claude\\\\plugins\\\\cache\\\\nextlevelbuilder\\\\ui-ux-pro-max\\\\2.5.0\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"EdTech LMS professional Nigerian adult learners trust premium\" --design-system -p \"Lagos Data School\" -f markdown)",
+      "Bash(py --version)",
+      "Bash(where python *)",
+      "PowerShell(head *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\USER\\\\.claude\\\\plugins\\\\cache\\\\nextlevelbuilder\\\\\" -Recurse -File | Select-Object -First 40 | ForEach-Object { $_.FullName })",
+      "Bash(Select-String \"resend\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\USER\\\\lagos-data-school\\\\app\\\\api\\\\admin\\\\courses\\\\[id]\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\USER\\\\lagos-data-school\\\\app\\\\api\\\\admin\\\\modules\\\\[id]\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\USER\\\\lagos-data-school\\\\app\\\\api\\\\admin\\\\lessons\\\\[id]\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\USER\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-USER-lagos-data-school\\\\bf2450eb-d23d-46ec-87e1-b2b46c23a0a1\\\\tasks\\\\byyarr74r.output\" -Wait)",
+      "Bash(grep -E --line-buffered \"error TS|warning TS|Found [0-9]+ error|^\\\\s*$\")",
+      "Bash(exit 0)",
+      "Bash(node *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(echo \"EXIT:$?\")"
+    ]
+  }
+}

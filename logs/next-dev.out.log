@@ -1,0 +1,10 @@
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.3:3000
+- Environments: .env.local
+✓ Ready in 4.0s
+Creating turbopack project { dir: 'C:\\Users\\USER\\Desktop\\lagos-data-school', testMode: true }
+- Experiments (use with caution):
+  ✓ optimizeCss
+
+○ Compiling / ...
