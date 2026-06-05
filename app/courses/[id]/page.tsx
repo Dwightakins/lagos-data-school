@@ -130,7 +130,9 @@ export default async function CourseDetailPage({
   const { id } = await params;
   const supabase = createAdminClient();
 
-  const [courseResult, modulesResult] = await Promise.all([
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+
+  const fetchData = Promise.all([
     supabase
       .from("courses")
       .select("id, title, slug, description, price, cover_image_url, published, created_at")
@@ -142,6 +144,11 @@ export default async function CourseDetailPage({
       .eq("course_id", id)
       .order("order_index"),
   ]);
+
+  const raceResult = await Promise.race([fetchData, timeout]);
+  if (!raceResult) notFound();
+
+  const [courseResult, modulesResult] = raceResult as Awaited<typeof fetchData>;
 
   if (courseResult.error || !courseResult.data) {
     notFound();

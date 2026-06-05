@@ -21,13 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-300">
+      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange={false}>
-          <Script
-            src="https://js.paystack.co/v1/inline.js"
-            strategy="beforeInteractive"
-          />
           {children}
+          <Script src="https://js.paystack.co/v1/inline.js" strategy="lazyOnload" />
         </ThemeProvider>
       </body>
     </html>

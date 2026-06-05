@@ -82,16 +82,23 @@ export default function CourseDetailPage() {
       .order("order_index");
 
     const moduleList = (modulesData ?? []) as Omit<ModuleRow, "lessons">[];
-    const withLessons: ModuleRow[] = await Promise.all(
-      moduleList.map(async (m) => {
-        const { data: lessons } = await supabase
+    const moduleIds = moduleList.map((m) => m.id);
+    const { data: allLessonsRaw } = moduleIds.length
+      ? await supabase
           .from("lessons")
           .select("id, title, duration_minutes, order_index, module_id")
-          .eq("module_id", m.id)
-          .order("order_index");
-        return { ...m, lessons: (lessons ?? []) as LessonRow[] };
-      })
-    );
+          .in("module_id", moduleIds)
+          .order("order_index")
+      : { data: [] };
+    const lessonsByModule = (allLessonsRaw ?? []).reduce<Record<string, LessonRow[]>>((acc, l) => {
+      const lesson = l as LessonRow;
+      (acc[lesson.module_id] ??= []).push(lesson);
+      return acc;
+    }, {});
+    const withLessons: ModuleRow[] = moduleList.map((m) => ({
+      ...m,
+      lessons: lessonsByModule[m.id] ?? [],
+    }));
     setModules(withLessons);
     setExpandedModules(new Set(withLessons.map((m) => m.id)));
 
