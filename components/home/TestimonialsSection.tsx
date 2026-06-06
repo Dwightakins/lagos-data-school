@@ -17,7 +17,7 @@ export function TestimonialsSection() {
               designation: "Backend Engineer",
               src: "/images/student-2.jpg",
               quote:
-                "I joined LDSL with zero coding background. Twelve weeks later I was writing Go in production at Flutterwave. The instructors don't just teach — they raise the bar.",
+                "I joined LDSL with zero coding background. Twelve weeks later I was writing Go in production. The instructors don't just teach — they raise the bar.",
             },
             {
               name: "Amaka Nwosu",

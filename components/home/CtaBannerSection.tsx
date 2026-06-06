@@ -9,13 +9,13 @@ export function CtaBannerSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <BackgroundBeamsCollision className="rounded-2xl sm:rounded-3xl border border-border/70 min-h-[380px] sm:h-[520px] bg-secondary/40 overflow-hidden py-16 sm:py-0">
           <div className="relative z-10 mx-auto max-w-3xl text-center px-6">
-            <div className="font-mono text-xs uppercase tracking-[0.25em] text-brand">Cohort 14 · January 2026</div>
+            <div className="font-mono text-xs uppercase tracking-[0.25em] text-brand"   >Cohort 14</div>
             <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground text-balance">
               Your tech career in Africa <br className="hidden sm:block" />
               starts in Lagos.
             </h2>
             <p className="mt-6 text-lg text-muted-foreground">
-              Only 320 seats. Applications close December 15.
+              Application now open.
             </p>
             <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
               <a
