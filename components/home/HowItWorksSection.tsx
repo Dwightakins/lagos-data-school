@@ -1,10 +1,9 @@
 import { PointerHighlight } from "@/components/ui/pointer-highlight";
 
 const steps = [
-  { n: "01", title: "Apply", body: "Tell us your goals. We'll match you with the right cohort and track." },
-  { n: "02", title: "Learn live", body: "Join 12 weeks of live instructor‑led sessions, weekly projects and reviews." },
-  { n: "03", title: "Build proof", body: "Ship a portfolio of production‑quality work reviewed by senior engineers." },
-  { n: "04", title: "Get placed", body: "Mock interviews, CV polish and warm intros to our hiring partner network." },
+  { n: "01", title: "Apply", body: "Submit your application online. Tell us about your background and which programme you're interested in. No experience required." },
+  { n: "02", title: "Learn Live", body: "Join 8-12 weeks of live instructor-led sessions, hands-on projects, and weekly code reviews with industry professionals." },
+  { n: "03", title: "Build Proof", body: "Graduate with a portfolio of real-world projects, a verified certificate, and skills employers actually want." },
 ];
 
 export function HowItWorksSection() {
@@ -14,7 +13,7 @@ export function HowItWorksSection() {
         <div className="max-w-3xl">
           <div className="font-mono text-xs uppercase tracking-[0.2em] text-brand">How it works</div>
           <h2 className="mt-3 font-display text-4xl md:text-5xl font-bold tracking-tight text-foreground text-balance">
-            Four steps from{" "}
+            Three steps from{" "}
             <PointerHighlight>
               <span className="text-foreground">curious</span>
             </PointerHighlight>{" "}
@@ -26,7 +25,7 @@ export function HowItWorksSection() {
           </h2>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border rounded-3xl overflow-hidden border border-border">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-px bg-border rounded-3xl overflow-hidden border border-border">
           {steps.map((s) => (
             <div key={s.n} className="bg-card p-8 md:p-10 group hover:bg-accent/40 transition">
               <div className="font-mono text-sm font-semibold text-brand">{s.n}</div>

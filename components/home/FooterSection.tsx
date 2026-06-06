@@ -22,8 +22,6 @@ const cols = [
     h: "Company",
     links: [
       { label: "About LDSL", href: "/about" },
-      { label: "Our instructors", href: "/about" },
-      { label: "Careers", href: "/contact" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -41,8 +39,6 @@ const cols = [
       { label: "Hire our graduates", href: "/contact" },
       { label: "Corporate training", href: "/contact" },
       { label: "Partnerships", href: "/contact" },
-      { label: "Diversity in tech", href: "/contact" },
-      { label: "Talent pool", href: "/contact" },
     ],
   },
 ];
@@ -57,7 +53,7 @@ export function FooterSection() {
               <LdslLogo />
             </div>
             <p className="mt-6 max-w-xs text-sm text-background/60 leading-relaxed">
-              Lagos Data School Limited. Training Nigeria's next generation of engineers, designers and data scientists since 2024.
+              Lagos Data School Limited. Training Nigeria's next generation of tech enthusiasts since 2024.
             </p>
             <div className="mt-6 flex gap-2">
               {socialIcons.map((s, i) => (

@@ -97,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile top bar — hidden on md+ */}
       <header className="bg-foreground text-background h-14 flex items-center justify-between px-4 md:hidden shrink-0 z-[60] relative">
-        <AppLogo size="sm" subtitle="Admin" href="/admin" onDark />
+        <AppLogo size="sm" href="/admin" onDark />
         <button
           type="button"
           aria-label={sidebarOpen ? "Close menu" : "Open menu"}
@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Logo — hidden on mobile (already shown in top bar) */}
         <div className="px-5 py-5 border-b border-background/10 hidden md:block">
-          <AppLogo size="sm" subtitle="Admin" href="/admin" onDark />
+          <AppLogo size="sm" href="/admin" onDark />
         </div>
 
         {/* Extra top padding on mobile so content clears the OS status area */}
