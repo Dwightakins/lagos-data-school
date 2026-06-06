@@ -6,12 +6,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   BarChart2, Cpu, Code2, Wrench, Terminal, Database,
-  BookOpen, Award, User, LogOut, LayoutDashboard,
+  BookOpen, Award, User,
   GraduationCap, TrendingUp, ArrowRight, Clock,
-  Bell, Bookmark, FileText, Download, HelpCircle, Settings, CreditCard,
-  Sun, Moon,
 } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
@@ -63,117 +60,6 @@ function getCourseIcon(title: string): LucideIcon {
   return BookOpen;
 }
 
-const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/courses", label: "Browse Courses", Icon: GraduationCap },
-  { href: "/dashboard/progress", label: "My Progress", Icon: TrendingUp },
-  { href: "/dashboard/notifications", label: "Notifications", Icon: Bell },
-  { href: "/dashboard/certificates", label: "Certificates", Icon: Award },
-  { href: "/dashboard/payments", label: "Payments", Icon: CreditCard },
-  { href: "/dashboard/bookmarks", label: "Bookmarks", Icon: Bookmark },
-  { href: "/dashboard/notes", label: "Notes", Icon: FileText },
-  { href: "/dashboard/materials", label: "Materials", Icon: Download },
-  { href: "/dashboard/support", label: "Support", Icon: HelpCircle },
-  { href: "/dashboard/settings", label: "Settings", Icon: Settings },
-];
-
-function Sidebar({ firstName, studentId, onLogout }: { firstName: string; studentId: string | null; onLogout: () => void }) {
-  const { theme, toggle } = useTheme();
-  return (
-    <aside className="hidden md:flex flex-col w-64 min-h-screen bg-foreground text-background shrink-0">
-      <div className="px-5 py-6 border-b border-background/10">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center shadow-brand">
-            <span className="font-black text-brand-foreground text-[11px] tracking-tight">LDSL</span>
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-bold text-[13px] tracking-tight">Lagos Data School</span>
-            <span className="text-[9px] text-brand font-bold tracking-[0.2em] uppercase">Limited</span>
-          </div>
-        </Link>
-      </div>
-
-      <div className="px-4 py-5 border-b border-background/8">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-brand/20 flex items-center justify-center">
-            <User className="w-4 h-4 text-brand" />
-          </div>
-          <div>
-            <p className="text-[13px] font-semibold">{firstName}</p>
-            <p className="text-[10px] text-background/40 uppercase tracking-wide">Student</p>
-            {studentId && (
-              <p className="text-[10px] text-brand font-mono font-bold mt-0.5 tracking-wide">{studentId}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {NAV_LINKS.map(({ href, label, Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-background/65 hover:text-background hover:bg-background/8 transition-all"
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-          </Link>
-        ))}
-      </nav>
-
-      <div className="px-3 pb-6 space-y-1">
-        <button
-          type="button"
-          onClick={toggle}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-background/45 hover:text-background hover:bg-background/8 transition-all"
-        >
-          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {theme === "dark" ? "Light Mode" : "Dark Mode"}
-        </button>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-background/45 hover:text-brand hover:bg-brand/10 transition-all"
-        >
-          <LogOut className="w-4 h-4" />
-          Log out
-        </button>
-      </div>
-    </aside>
-  );
-}
-
-function MobileHeader({ firstName, onLogout }: { firstName: string; onLogout: () => void }) {
-  const { theme, toggle } = useTheme();
-  return (
-    <header className="md:hidden bg-foreground text-background px-5 py-4 flex items-center justify-between border-b border-background/10">
-      <Link href="/" className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-brand flex items-center justify-center">
-          <span className="font-black text-brand-foreground text-[10px] tracking-tight">LDSL</span>
-        </div>
-        <span className="font-bold text-[13px]">Lagos Data School</span>
-      </Link>
-      <div className="flex items-center gap-2">
-        <span className="text-[12px] text-background/60 hidden sm:block">{firstName}</span>
-        <button
-          type="button"
-          onClick={toggle}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-background/60 hover:text-background hover:bg-background/10 transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-background/60 hover:text-brand transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
-      </div>
-    </header>
-  );
-}
 
 export default function DashboardPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
@@ -249,40 +135,31 @@ export default function DashboardPage() {
     load();
   }, [router]);
 
-  async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-  }
-
   const firstName = profile?.full_name?.split(" ")[0] || user?.email || "Student";
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex">
-        <div className="hidden md:block w-64 bg-foreground" />
-        <div className="flex-1 p-8">
-          <Skeleton className="h-7 w-56 mb-2" />
-          <Skeleton className="h-4 w-40 mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="p-6 lg:p-10">
+        <Skeleton className="h-7 w-56 mb-2" />
+        <Skeleton className="h-4 w-40 mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-2xl p-6 border border-border">
+              <Skeleton className="h-8 w-12 mb-2" />
+              <Skeleton className="h-3.5 w-28" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-6">
+          <Skeleton className="h-5 w-28 mb-5" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-2xl p-6 border border-border">
-                <Skeleton className="h-8 w-12 mb-2" />
-                <Skeleton className="h-3.5 w-28" />
+              <div key={i} className="border border-border rounded-2xl p-5">
+                <Skeleton className="w-10 h-10 rounded-xl mb-3" />
+                <Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-3 w-full mb-1" />
               </div>
             ))}
-          </div>
-          <div className="bg-card rounded-2xl border border-border p-6">
-            <Skeleton className="h-5 w-28 mb-5" />
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="border border-border rounded-2xl p-5">
-                  <Skeleton className="w-10 h-10 rounded-xl mb-3" />
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-3 w-full mb-1" />
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>
@@ -290,13 +167,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar firstName={firstName} studentId={profile?.student_id ?? null} onLogout={handleLogout} />
-
-      <div className="flex-1 flex flex-col min-h-screen">
-        <MobileHeader firstName={firstName} onLogout={handleLogout} />
-
-        <main className="flex-1 px-6 lg:px-10 py-8 max-w-5xl">
+    <main className="px-6 lg:px-10 py-8 max-w-5xl mx-auto">
 
           {/* Welcome */}
           <div className="mb-8">
@@ -518,9 +389,7 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }
 
