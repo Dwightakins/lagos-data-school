@@ -10,7 +10,10 @@ import { MovingBorderButton } from "@/components/ui/moving-border-button";
 export function HeroSection() {
   const prefersReducedMotion = useReducedMotion();
   const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setReady(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const dur = (d: number, del?: number) =>
     prefersReducedMotion ? { duration: 0 } : { duration: d, ...(del ? { delay: del } : {}) };

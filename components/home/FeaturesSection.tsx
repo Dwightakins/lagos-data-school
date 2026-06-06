@@ -1,31 +1,38 @@
-import { BookOpen, Radio, BadgeCheck, Users, Briefcase } from "lucide-react";
+import { BookOpen, Radio, BadgeCheck, Users, Briefcase, type LucideIcon } from "lucide-react";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
+
+interface GridItemProps {
+  area: string;
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+}
 
 const items = [
   {
     area: "md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]",
     icon: BookOpen,
     title: "20+ Curated Courses",
-    desc: "From fundamentals to specialization — every track built with hiring partners in Lagos, Nairobi and London.",
+    desc: "From fundamentals to specialization — every track built with hiring partners.",
   },
   {
     area: "md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]",
     icon: Radio,
     title: "Live Cohort Classes",
-    desc: "Real instructors. Weekly office hours. Africa‑first timezone. Zero pre‑recorded fluff.",
+    desc: "Real instructors. Weekly office hours. Africa‑first timezone.",
   },
   {
     area: "md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]",
     icon: BadgeCheck,
     title: "Verified Certificates",
-    desc: "Industry‑recognised credentials with QR verification and LinkedIn integration on completion.",
+    desc: "Industry‑recognised credentials with QR verification.",
   },
   {
     area: "md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]",
     icon: Users,
     title: "Student Community",
-    desc: "4,200+ peers in private channels — pair‑program, share wins and find your next co‑founder.",
+    desc: "1,200+ peers in private channels — pair‑program, share wins and find your next co‑founder.",
   },
   {
     area: "md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]",
@@ -61,7 +68,7 @@ export function FeaturesSection() {
   );
 }
 
-function GridItem({ area, icon: Icon, title, desc }: any) {
+function GridItem({ area, icon: Icon, title, desc }: GridItemProps) {
   return (
     <li className={`min-h-[16rem] list-none ${area}`}>
       <div className="relative h-full rounded-2xl border border-border/70 p-2 md:rounded-3xl md:p-3">
