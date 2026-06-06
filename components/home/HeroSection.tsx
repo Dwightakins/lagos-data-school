@@ -28,9 +28,8 @@ export function HeroSection() {
         >
           <a href="#" className="group inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/50 backdrop-blur px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition">
             <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">
-              <Sparkles className="h-3 w-3" /> New
+              <Sparkles className="h-3 w-3" /> 
             </span>
-            Cohort 4 applications now open — limited seats
             <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
           </a>
         </motion.div>
@@ -71,7 +70,7 @@ export function HeroSection() {
                 transparent
                 className="!px-7 !py-3.5 gap-2 text-foreground"
               >
-                Get started free
+                Get started
                 <ArrowRight className="h-4 w-4" />
               </MovingBorderButton>
               <Link
