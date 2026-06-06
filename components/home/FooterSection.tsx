@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LdslLogo } from "@/components/layout/logo";
+import { AppLogo } from "@/components/layout/logo";
 
 const socialIcons = [
   { label: "X / Twitter", path: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" },
@@ -49,9 +49,7 @@ export function FooterSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 md:py-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 md:gap-10">
           <div className="col-span-1 sm:col-span-2 md:col-span-3">
-            <div className="[&_*]:!text-background [&_.gradient-brand]:opacity-80">
-              <LdslLogo />
-            </div>
+            <AppLogo size="sm" onDark />
             <p className="mt-6 max-w-xs text-sm text-background/60 leading-relaxed">
               Lagos Data School Limited. Training Nigeria's next generation of tech enthusiasts since 2024.
             </p>

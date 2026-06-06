@@ -9,16 +9,16 @@ interface LogoProps {
   subtitle?: string | false;
   /** Wrap in a Next.js Link. Defaults to "/". Pass false for no link. */
   href?: string | false;
-  /** Force white title text — use on dark/navy/black backgrounds that don't follow the theme. */
+  /** Use on dark backgrounds — renders name text white instead of foreground. */
   onDark?: boolean;
   className?: string;
 }
 
-const sizeMap: Record<LogoSize, { icon: string; initials: string; name: string }> = {
-  xs: { icon: "h-8 w-8 rounded-lg text-[11px]",  initials: "LD", name: "text-[14px]" },
-  sm: { icon: "h-9 w-9 rounded-xl text-[11px]",  initials: "LD", name: "text-[13px]" },
-  md: { icon: "h-10 w-10 rounded-xl text-[12px]", initials: "LD", name: "text-[14px]" },
-  lg: { icon: "h-11 w-11 rounded-xl text-[13px]", initials: "LD", name: "text-[17px]" },
+const sizeMap: Record<LogoSize, { circle: string; initials: string; name: string }> = {
+  xs: { circle: "h-8 w-8 text-[7px]",    initials: "LDSL", name: "text-[13px]" },
+  sm: { circle: "h-9 w-9 text-[7.5px]",  initials: "LDSL", name: "text-[13px]" },
+  md: { circle: "h-10 w-10 text-[8px]",  initials: "LDSL", name: "text-[14px]" },
+  lg: { circle: "h-11 w-11 text-[9px]",  initials: "LDSL", name: "text-[17px]" },
 };
 
 export function AppLogo({
@@ -32,16 +32,19 @@ export function AppLogo({
 
   const inner = (
     <span className={cn("flex items-center gap-2.5", className)}>
+      {/* Green circle with LDSL */}
       <span
         className={cn(
-          "gradient-brand grid place-items-center shrink-0",
-          s.icon,
+          "gradient-brand rounded-full grid place-items-center shrink-0",
+          s.circle,
         )}
       >
-        <span className="font-black text-brand-foreground tracking-tight leading-none">
+        <span className="font-black text-white tracking-tighter leading-none">
           {s.initials}
         </span>
       </span>
+
+      {/* Text stack */}
       <span className="flex flex-col leading-none">
         <span
           className={cn(
@@ -53,7 +56,7 @@ export function AppLogo({
           Lagos Data School
         </span>
         {subtitle !== false && subtitle && (
-          <span className="text-[9px] text-brand font-bold tracking-[0.22em] uppercase mt-0.5">
+          <span className="text-[9px] text-brand font-bold tracking-[0.22em] uppercase mt-1.5">
             {subtitle}
           </span>
         )}
