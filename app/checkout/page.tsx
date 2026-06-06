@@ -52,6 +52,7 @@ function CheckoutContent() {
   const [pageLoading, setPageLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState<LoadingStep>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paystackReady, setPaystackReady] = useState(false);
 
   useEffect(() => {
     if (!courseId) {
@@ -87,6 +88,15 @@ function CheckoutContent() {
     }
     void init();
   }, [courseId, router]);
+
+  // Poll until PaystackPop is available on window (loaded via Script afterInteractive)
+  useEffect(() => {
+    if (window.PaystackPop) { setPaystackReady(true); return; }
+    const id = setInterval(() => {
+      if (window.PaystackPop) { setPaystackReady(true); clearInterval(id); }
+    }, 150);
+    return () => clearInterval(id);
+  }, []);
 
   const handlePayment = async () => {
     if (!userId || !course) return;
@@ -255,12 +265,16 @@ function CheckoutContent() {
               </ul>
               <button
                 onClick={() => void handlePayment()}
-                disabled={loading}
+                disabled={loading || !paystackReady}
                 className="gradient-brand text-brand-foreground font-bold px-6 py-4 rounded-xl w-full transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <Spinner /> Please wait…
+                  </span>
+                ) : !paystackReady ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Spinner /> Loading payment system…
                   </span>
                 ) : (
                   `Pay ${course ? fmt(course.price) : "Now"}`
