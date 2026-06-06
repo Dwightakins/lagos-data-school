@@ -1,32 +1,34 @@
-import { BookOpen, Radio, BadgeCheck, Users, Briefcase, type LucideIcon } from "lucide-react";
+import Image from "next/image";
+import { Users, Briefcase, type LucideIcon } from "lucide-react";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 
 interface GridItemProps {
   area: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   title: string;
   desc: string;
+  image?: string;
 }
 
-const items = [
+const items: GridItemProps[] = [
   {
     area: "md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]",
-    icon: BookOpen,
     title: "20+ Curated Courses",
     desc: "From fundamentals to specialization — every track built with hiring partners.",
+    image: "/images/feature-courses.jpg",
   },
   {
     area: "md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]",
-    icon: Radio,
     title: "Live Cohort Classes",
     desc: "Real instructors. Weekly office hours. Africa‑first timezone.",
+    image: "/images/feature-live.jpg",
   },
   {
     area: "md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]",
-    icon: BadgeCheck,
     title: "Verified Certificates",
     desc: "Industry‑recognised credentials with QR verification.",
+    image: "/images/feature-cert.jpg",
   },
   {
     area: "md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]",
@@ -68,24 +70,52 @@ export function FeaturesSection() {
   );
 }
 
-function GridItem({ area, icon: Icon, title, desc }: GridItemProps) {
+function GridItem({ area, icon: Icon, title, desc, image }: GridItemProps) {
   return (
     <li className={`min-h-[16rem] list-none ${area}`}>
       <div className="relative h-full rounded-2xl border border-border/70 p-2 md:rounded-3xl md:p-3">
         <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} />
-        <div className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl border-[0.5px] border-border/50 bg-card p-6 shadow-sm md:p-7">
-          <div className="w-fit rounded-lg border border-border/60 bg-background p-2.5">
-            <Icon className="h-5 w-5 text-brand" />
+
+        {image ? (
+          /* Card with photo */
+          <div className="relative flex h-full flex-col overflow-hidden rounded-xl border-[0.5px] border-border/50 bg-card shadow-sm">
+            <div className="relative h-44 w-full shrink-0">
+              <Image
+                src={image}
+                alt={title}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent" />
+            </div>
+            <div className="p-6 md:p-7">
+              <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground tracking-tight">
+                {title}
+              </h3>
+              <p className="mt-2 text-sm md:text-[15px] text-muted-foreground leading-relaxed">
+                {desc}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground tracking-tight">
-              {title}
-            </h3>
-            <p className="mt-2 text-sm md:text-[15px] text-muted-foreground leading-relaxed">
-              {desc}
-            </p>
+        ) : (
+          /* Card with icon only */
+          <div className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl border-[0.5px] border-border/50 bg-card p-6 shadow-sm md:p-7">
+            {Icon && (
+              <div className="w-fit rounded-lg border border-border/60 bg-background p-2.5">
+                <Icon className="h-5 w-5 text-brand" />
+              </div>
+            )}
+            <div>
+              <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground tracking-tight">
+                {title}
+              </h3>
+              <p className="mt-2 text-sm md:text-[15px] text-muted-foreground leading-relaxed">
+                {desc}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </li>
   );

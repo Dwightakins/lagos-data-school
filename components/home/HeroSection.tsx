@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, PlayCircle, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { Spotlight } from "@/components/ui/spotlight";
 import { ContainerTextFlip } from "@/components/ui/container-text-flip";
 import { MovingBorderButton } from "@/components/ui/moving-border-button";
@@ -109,22 +110,14 @@ export function HeroSection() {
           >
             <div className="animate-float relative rounded-3xl border border-border/70 bg-card/70 backdrop-blur-xl p-2 shadow-elevated">
               <div className="absolute -top-3 left-6 right-6 h-3 rounded-t-xl bg-gradient-to-r from-brand via-brand-glow to-gold opacity-60 blur-md" />
-              <img
+              <Image
                 src="/images/hero.jpg"
                 width={1280}
                 height={896}
                 alt="LDSL learning platform"
                 className="w-full rounded-2xl"
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  img.style.display = "none";
-                  const placeholder = img.nextElementSibling as HTMLElement | null;
-                  if (placeholder) placeholder.style.display = "flex";
-                }}
+                priority
               />
-              <div className="hidden w-full rounded-2xl bg-gradient-to-br from-brand/20 to-brand-glow/20 items-center justify-center" style={{ aspectRatio: "16/9" }}>
-                <span className="text-brand font-bold text-lg">Lagos Data School</span>
-              </div>
               <div className="absolute -bottom-5 -left-5 rounded-2xl border border-border/70 bg-background/90 backdrop-blur p-3 shadow-elevated hidden sm:block">
                 <div className="flex items-center gap-2.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
