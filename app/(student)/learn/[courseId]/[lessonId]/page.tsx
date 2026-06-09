@@ -484,7 +484,7 @@ export default function LessonPlayerPage() {
 
     const { data: enrollment } = await supabase
       .from("enrollments").select("id")
-      .eq("user_id", user.id).eq("course_id", courseId).eq("payment_status", "paid")
+      .eq("user_id", user.id).eq("course_id", courseId).eq("status", "active")
       .maybeSingle();
     if (!enrollment) { router.push("/courses"); return; }
 

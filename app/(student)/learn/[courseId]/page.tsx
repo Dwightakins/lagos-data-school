@@ -21,7 +21,7 @@ export default async function LearnCoursePage({
     .select("id")
     .eq("user_id", user.id)
     .eq("course_id", courseId)
-    .eq("payment_status", "paid")
+    .eq("status", "active")
     .maybeSingle();
 
   if (!enrollment) redirect("/courses");
