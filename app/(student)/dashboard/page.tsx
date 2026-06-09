@@ -227,9 +227,10 @@ export default function DashboardPage() {
                   const Icon = getCourseIcon(course.title);
                   const progress = progressMap[course.id];
                   return (
-                    <div
+                    <Link
                       key={enr.id}
-                      className="relative bg-muted border border-border rounded-2xl p-5 hover:border-brand/30 hover:shadow-md transition-all duration-300"
+                      href={`/learn/${course.id}`}
+                      className="relative bg-muted border border-border rounded-2xl p-5 hover:border-brand/30 hover:shadow-md transition-all duration-300 block"
                     >
                       <GlowingEffect spread={15} glow={false} disabled={false} proximity={50} inactiveZone={0.1} borderWidth={1.5} />
                       <div className="flex items-start justify-between mb-3">
@@ -292,14 +293,11 @@ export default function DashboardPage() {
                             day: "numeric", month: "short", year: "numeric",
                           })}
                         </span>
-                        <Link
-                          href={`/learn/${course.id}`}
-                          className="text-[11.5px] font-bold text-brand hover:underline"
-                        >
-                          Continue →
-                        </Link>
+                        <span className="text-[11.5px] font-bold text-brand">
+                          {(progress?.completionPercent ?? 0) > 0 ? "Continue →" : "Start →"}
+                        </span>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
