@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Award, ArrowLeft, ExternalLink, Copy, CheckCircle2, BookOpen, Loader2 } from "lucide-react";
+import { Award, ExternalLink, Copy, CheckCircle2, BookOpen, Loader2 } from "lucide-react";
 
 interface CertRow {
   id: string;
@@ -159,38 +159,17 @@ export default function CertificatesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0D9488]" />
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-foreground text-foreground px-6 py-4 flex items-center justify-between border-b border-border/50">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0D9488] to-[#134E4A] flex items-center justify-center shadow-md shadow-brand/30">
-            <span className="font-black text-foreground text-[11px] tracking-tight">LDS</span>
-          </div>
-          <div className="hidden sm:flex flex-col leading-none">
-            <span className="font-bold text-[13px] tracking-tight">Lagos Data School</span>
-            <span className="text-[9px] text-brand/80 font-bold tracking-[0.2em] uppercase">Limited</span>
-          </div>
-        </Link>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back
-        </button>
-
-        <h1 className="text-2xl font-bold text-foreground mb-1">My Certificates</h1>
-        <p className="text-muted-foreground text-[14px] mb-8">
+    <div className="px-6 lg:px-10 py-8 max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-[1.5rem] font-bold text-foreground mb-1">My Certificates</h1>
+        <p className="text-muted-foreground text-[14px]">
           {certs.length} verified certificate{certs.length !== 1 ? "s" : ""} earned
         </p>
 
@@ -202,16 +181,16 @@ export default function CertificatesPage() {
             </p>
             <div className="flex flex-col gap-3">
               {claimable.map((c) => (
-                <div key={c.courseId} className="flex items-center justify-between bg-card border border-brand/40/50 rounded-xl px-5 py-4">
-                  <div className="flex items-center gap-3">
+                <div key={c.courseId} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-card border border-brand/40/50 rounded-xl px-5 py-4">
+                  <div className="flex items-center gap-3 min-w-0">
                     <Award className="w-5 h-5 text-brand shrink-0" />
-                    <span className="text-[13.5px] font-semibold text-foreground">{c.title}</span>
+                    <span className="text-[13.5px] font-semibold text-foreground truncate">{c.title}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => claimCert(c.courseId)}
                     disabled={claiming === c.courseId}
-                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-foreground font-bold text-[13px] px-4 py-2 rounded-lg transition-colors active:scale-[0.97] shadow-md shadow-orange-500/20"
+                    className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-foreground font-bold text-[13px] px-4 py-2.5 rounded-lg transition-colors active:scale-[0.97] shadow-md shadow-orange-500/20 min-h-[44px] sm:w-auto w-full shrink-0"
                   >
                     {claiming === c.courseId
                       ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating…</>

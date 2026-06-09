@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { BackButton } from "@/components/ui/back-button";
-import { ArrowLeft, Bell, BookOpen, Clock, Trophy, DollarSign, BadgeCheck, Trash2, Check, CheckCheck } from "lucide-react";
+import { Bell, BookOpen, Clock, Trophy, DollarSign, BadgeCheck, Trash2, Check, CheckCheck } from "lucide-react";
 import type { Notification } from "@/types";
 
 const FILTERS = ["All", "Unread", "Read"] as const;
@@ -78,22 +76,20 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="bg-foreground border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <BackButton label="Back" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground" />
-          <div className="w-px h-4 bg-white/20" />
-          <h1 className="text-[15px] font-semibold">Notifications</h1>
-          {unreadCount > 0 && <span className="bg-teal-500 text-foreground text-[11px] font-bold px-2 py-0.5 rounded-full">{unreadCount}</span>}
+    <div className="px-6 lg:px-10 py-8 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <h1 className="text-[1.5rem] font-bold text-foreground">Notifications</h1>
+          {unreadCount > 0 && <span className="bg-brand text-brand-foreground text-[11px] font-bold px-2.5 py-0.5 rounded-full">{unreadCount}</span>}
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="flex items-center gap-1.5 text-[12px] text-brand hover:text-brand font-medium">
+          <button onClick={markAllRead} className="flex items-center gap-1.5 text-[12px] text-brand hover:opacity-80 font-medium min-h-[44px] px-2">
             <CheckCheck className="w-4 h-4" /> Mark all read
           </button>
         )}
-      </header>
+      </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div>
         {/* Filter pills */}
         <div className="flex gap-2 mb-6">
           {FILTERS.map((f) => (
@@ -128,10 +124,10 @@ export default function NotificationsPage() {
                   <p className="text-[12px] text-white/45 mt-0.5 line-clamp-2">{n.message}</p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => markRead(n.id, !n.read)} title={n.read ? "Mark unread" : "Mark read"} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-brand hover:bg-brand/10 transition-colors">
+                  <button onClick={() => markRead(n.id, !n.read)} title={n.read ? "Mark unread" : "Mark read"} className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-brand hover:bg-brand/10 transition-colors">
                     <Check className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => deleteNotif(n.id)} title="Delete" className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                  <button onClick={() => deleteNotif(n.id)} title="Delete" className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-red-400 hover:bg-red-500/10 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -143,6 +139,3 @@ export default function NotificationsPage() {
     </div>
   );
 }
-
-
-

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Download, Filter, Receipt } from "lucide-react";
+import { Download, Receipt } from "lucide-react";
 
 interface PaymentRow {
   id: string;
@@ -53,31 +52,17 @@ export default function PaymentsPage() {
   const filtered = filter === "all" ? payments : payments.filter((p) => p.status === filter);
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0D9488]" />
+    <div className="flex items-center justify-center py-20">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-foreground text-foreground px-6 py-4 flex items-center gap-3 border-b border-border/50">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0D9488] to-[#134E4A] flex items-center justify-center">
-            <span className="font-black text-foreground text-[11px]">LDS</span>
-          </div>
-          <div className="hidden sm:flex flex-col leading-none">
-            <span className="font-bold text-[13px]">Lagos Data School</span>
-            <span className="text-[9px] text-brand/80 font-bold tracking-[0.2em] uppercase">Limited</span>
-          </div>
-        </Link>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back
-        </button>
-        <h1 className="text-2xl font-bold text-foreground mb-1">Payment History</h1>
-        <p className="text-muted-foreground text-[14px] mb-6">{payments.length} transaction{payments.length !== 1 ? "s" : ""}</p>
+    <div className="px-6 lg:px-10 py-8 max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-[1.5rem] font-bold text-foreground mb-1">Payment History</h1>
+        <p className="text-muted-foreground text-[14px]">{payments.length} transaction{payments.length !== 1 ? "s" : ""}</p>
+      </div>
 
         {/* Filter */}
         <div className="flex gap-2 mb-6 flex-wrap">
@@ -86,7 +71,7 @@ export default function PaymentsPage() {
               key={f}
               type="button"
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${filter === f ? "bg-brand text-foreground border-[#0D9488]" : "bg-card text-muted-foreground border-border hover:border-[#0D9488]"}`}
+              className={`px-4 py-2 rounded-full text-[13px] font-semibold border transition-colors min-h-[44px] ${filter === f ? "bg-brand text-foreground border-[#0D9488]" : "bg-card text-muted-foreground border-border hover:border-[#0D9488]"}`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
@@ -176,7 +161,6 @@ export default function PaymentsPage() {
             </div>
           </>
         )}
-      </div>
     </div>
   );
 }

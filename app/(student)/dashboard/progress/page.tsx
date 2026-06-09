@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, TrendingUp, BookOpen, Award, Clock, Flame, Download } from "lucide-react";
+import { TrendingUp, BookOpen, Award, Clock, Flame, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 interface Enrollment {
@@ -68,33 +67,22 @@ export default function ProgressPage() {
   ];
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand" />
+    <div className="flex items-center justify-center py-20">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-foreground text-background px-6 py-4 flex items-center gap-3 border-b border-background/10">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-brand flex items-center justify-center"><span className="font-black text-brand-foreground text-[11px]">LDS</span></div>
-          <div className="hidden sm:flex flex-col leading-none"><span className="font-bold text-[13px]">Lagos Data School</span><span className="text-[9px] text-brand font-bold tracking-[0.2em] uppercase">Limited</span></div>
-        </Link>
-      </header>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back
-        </button>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground mb-1">Progress Reports</h1>
-            <p className="text-muted-foreground text-[14px]">Your learning analytics and achievements</p>
-          </div>
-          <a href="/api/transcript" className="hidden sm:flex items-center gap-2 bg-brand hover:opacity-80 text-brand-foreground font-semibold text-[13px] px-4 py-2.5 rounded-xl transition-colors shadow-sm">
-            <Download className="w-4 h-4" /> Download Transcript
-          </a>
+    <div className="px-6 lg:px-10 py-8 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-[1.5rem] font-bold text-foreground">Progress Reports</h1>
+          <p className="text-muted-foreground text-sm mt-1">Your learning analytics and achievements</p>
         </div>
+        <a href="/api/transcript" className="flex items-center gap-2 bg-brand hover:opacity-90 text-brand-foreground font-semibold text-[13px] px-4 py-2.5 rounded-xl transition-opacity shadow-sm min-h-[44px]">
+          <Download className="w-4 h-4" /> <span className="hidden sm:inline">Download </span>Transcript
+        </a>
+      </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
@@ -168,10 +156,6 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <a href="/api/transcript" className="sm:hidden flex items-center justify-center gap-2 bg-brand hover:opacity-80 text-brand-foreground font-semibold text-[13px] px-4 py-2.5 rounded-xl transition-colors">
-          <Download className="w-4 h-4" /> Download Transcript
-        </a>
-      </div>
     </div>
   );
 }

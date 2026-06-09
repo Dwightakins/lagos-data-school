@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { User, Lock, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
+import { User, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-border text-[14px] text-foreground placeholder-gray-400 bg-card focus:outline-none focus:ring-2 focus:ring-[#0D9488]/20 focus:border-[#0D9488] transition-all";
 
@@ -106,41 +105,20 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0D9488]" />
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Nav */}
-      <header className="bg-foreground text-white px-6 py-4 flex items-center justify-between border-b border-white/8">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0D9488] to-[#134E4A] flex items-center justify-center shadow-md shadow-brand/30">
-            <span className="font-black text-white text-[11px] tracking-tight">LDS</span>
-          </div>
-          <div className="hidden sm:flex flex-col leading-none">
-            <span className="font-bold text-[13px] tracking-tight">Lagos Data School</span>
-            <span className="text-[9px] text-brand/80 font-bold tracking-[0.2em] uppercase">Limited</span>
-          </div>
-        </Link>
-      </header>
+    <div className="px-6 lg:px-10 py-8 max-w-2xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-[1.5rem] font-bold text-foreground">My Profile</h1>
+        <p className="text-muted-foreground text-sm mt-1">Manage your personal information and password.</p>
+      </div>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-brand transition-colors mb-6"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back
-        </button>
-
-        <h1 className="text-2xl font-bold text-foreground mb-1">My Profile</h1>
-        <p className="text-muted-foreground text-[14px] mb-8">Manage your account details</p>
-
-        {/* Name Section */}
+      {/* Name Section */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-5">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-8 h-8 rounded-lg bg-background border border-brand/40/50 flex items-center justify-center">
@@ -237,7 +215,6 @@ export default function ProfilePage() {
             </button>
           </form>
         </div>
-      </div>
     </div>
   );
 }

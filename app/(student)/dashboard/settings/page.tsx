@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Lock, Bell, Trash2, Eye, EyeOff, Upload, Camera } from "lucide-react";
+import { User, Lock, Bell, Trash2, Eye, EyeOff, Upload, Camera } from "lucide-react";
 
 const TABS = ["Profile", "Security", "Notifications", "Account"] as const;
 type Tab = typeof TABS[number];
@@ -136,19 +136,16 @@ export default function SettingsPage() {
     marketing: "Promotions & news",
   };
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="bg-foreground border-b border-border px-6 py-4 flex items-center gap-4">
-        <button type="button" onClick={() => router.back()} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-        <div className="w-px h-4 bg-white/20" />
-        <h1 className="text-[15px] font-semibold">Account Settings</h1>
-      </header>
+    <div className="px-6 lg:px-10 py-8">
+      <div className="mb-8">
+        <h1 className="text-[1.5rem] font-bold text-foreground">Account Settings</h1>
+        <p className="text-muted-foreground text-sm mt-1">Manage your profile, security, and preferences.</p>
+      </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-10">
+      <div className="max-w-2xl">
         {msg && (
           <div className={`mb-6 px-4 py-3 rounded-xl text-[13px] font-medium ${msg.type === "ok" ? "bg-teal-500/15 text-brand border border-teal-500/30" : "bg-red-500/15 text-red-400 border border-red-500/30"}`}>
             {msg.text}
@@ -158,7 +155,7 @@ export default function SettingsPage() {
         {/* Tabs */}
         <div className="flex gap-1 bg-foreground/5 rounded-xl p-1 mb-8">
           {TABS.map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2 text-[13px] font-medium rounded-lg transition-colors ${tab === t ? "bg-teal-500 text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2 text-[10px] sm:text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap ${tab === t ? "bg-teal-500 text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {t}
             </button>
           ))}
@@ -209,7 +206,7 @@ export default function SettingsPage() {
               <label className="block text-[12px] font-medium text-white/70 mb-1.5">Current Password</label>
               <div className="relative">
                 <input type={showCurrent ? "text" : "password"} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} className="w-full bg-foreground/5 border border-border rounded-xl px-4 py-2.5 text-[14px] text-foreground pr-10 focus:outline-none focus:border-brand/50" />
-                <button onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <button onClick={() => setShowCurrent(!showCurrent)} className="absolute right-0 top-0 h-full px-3 flex items-center text-muted-foreground hover:text-foreground">
                   {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -218,7 +215,7 @@ export default function SettingsPage() {
               <label className="block text-[12px] font-medium text-white/70 mb-1.5">New Password</label>
               <div className="relative">
                 <input type={showNew ? "text" : "password"} value={newPw} onChange={(e) => setNewPw(e.target.value)} className="w-full bg-foreground/5 border border-border rounded-xl px-4 py-2.5 text-[14px] text-foreground pr-10 focus:outline-none focus:border-brand/50" />
-                <button onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <button onClick={() => setShowNew(!showNew)} className="absolute right-0 top-0 h-full px-3 flex items-center text-muted-foreground hover:text-foreground">
                   {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -273,7 +270,6 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
-
       {/* Delete Modal */}
       {deleteOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -293,5 +289,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-

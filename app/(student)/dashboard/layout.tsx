@@ -139,6 +139,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-background">
 
+      {/* ── Mobile: top header bar ─────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-foreground text-background flex items-center justify-between px-4 z-30 md:hidden border-b border-background/10">
+        <AppLogo size="sm" onDark />
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          className="w-11 h-11 flex items-center justify-center rounded-xl text-background/70 hover:text-background hover:bg-background/10 transition-colors"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      </header>
+
       {/* ── Desktop sidebar (hidden on mobile) ─────────────────── */}
       <aside className="hidden md:flex fixed top-0 left-0 h-screen w-64 bg-foreground text-background flex-col z-40">
         <div className="px-5 py-5 border-b border-background/10">
@@ -152,8 +165,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* ── Main content area ──────────────────────────────────── */}
-      {/* pb-[60px] prevents bottom nav from overlapping content on mobile */}
-      <div className="md:ml-64 min-h-screen pb-[60px] md:pb-0">
+      {/* pt-14 clears mobile top header; pb-[60px] clears bottom nav */}
+      <div className="md:ml-64 min-h-screen pb-[60px] md:pb-0 pt-14 md:pt-0">
         {children}
       </div>
 

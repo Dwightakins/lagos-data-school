@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { BackButton } from "@/components/ui/back-button";
-import { ArrowLeft, FileText, Search, Trash2, Edit3, X, Check, Download } from "lucide-react";
+import { FileText, Search, Trash2, Edit3, X, Check, Download } from "lucide-react";
 import type { CourseNote } from "@/types";
 
 interface NoteWithContext extends CourseNote {
@@ -67,21 +65,17 @@ export default function NotesPage() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="bg-foreground border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <BackButton label="Back" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground" />
-          <div className="w-px h-4 bg-white/20" />
-          <h1 className="text-[15px] font-semibold">My Notes</h1>
-        </div>
+    <div className="px-6 lg:px-10 py-8 max-w-2xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-[1.5rem] font-bold text-foreground">My Notes</h1>
         {notes.length > 0 && (
-          <button onClick={exportPDF} className="flex items-center gap-1.5 text-[12px] text-brand hover:text-brand font-medium">
+          <button onClick={exportPDF} className="flex items-center gap-1.5 text-[12px] text-brand hover:opacity-80 font-medium">
             <Download className="w-4 h-4" /> Export
           </button>
         )}
-      </header>
+      </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div>
         {/* Search */}
         <div className="relative mb-6">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
@@ -116,13 +110,13 @@ export default function NotesPage() {
                         <div className="flex items-center gap-1">
                           {editId === n.id ? (
                             <>
-                              <button onClick={() => saveEdit(n.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-brand hover:bg-brand/10"><Check className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => setEditId(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:bg-foreground/5"><X className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => saveEdit(n.id)} className="w-11 h-11 rounded-lg flex items-center justify-center text-brand hover:bg-brand/10"><Check className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => setEditId(null)} className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:bg-foreground/5"><X className="w-3.5 h-3.5" /></button>
                             </>
                           ) : (
                             <>
-                              <button onClick={() => { setEditId(n.id); setEditText(n.note_text); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-brand hover:bg-brand/10"><Edit3 className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => deleteNote(n.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => { setEditId(n.id); setEditText(n.note_text); }} className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-brand hover:bg-brand/10"><Edit3 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => deleteNote(n.id)} className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
                             </>
                           )}
                         </div>

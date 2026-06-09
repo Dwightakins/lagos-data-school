@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   BarChart2, Cpu, Code2, Wrench, Terminal, Database,
   BookOpen, Award, User,
-  GraduationCap, TrendingUp, ArrowRight, Clock,
+  GraduationCap, TrendingUp, ArrowRight,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
@@ -41,13 +41,6 @@ interface CourseProgress {
   completionPercent: number;
 }
 
-interface AvailableCourse {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  duration?: string;
-}
 
 function getCourseIcon(title: string): LucideIcon {
   const t = title.toLowerCase();
@@ -65,7 +58,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>([]);
   const [progressMap, setProgressMap] = useState<Record<string, CourseProgress>>({});
   const [completedLessonsTotal, setCompletedLessonsTotal] = useState(0);
   const [certsCount, setCertsCount] = useState(0);
@@ -96,9 +88,8 @@ export default function DashboardPage() {
       setLoading(false);
 
       const courseIds = enrolledList.map((e) => e.course?.id).filter(Boolean) as string[];
-      const enrolledIdSet = new Set(courseIds);
 
-      const [progressEntries, certsResult, completedResult, coursesRes] = await Promise.all([
+      const [progressEntries, certsResult, completedResult] = await Promise.all([
         Promise.all(
           courseIds.map(async (courseId) => {
             try {
@@ -120,7 +111,6 @@ export default function DashboardPage() {
           .select("id", { count: "exact", head: true })
           .eq("student_id", user.id)
           .eq("completed", true),
-        fetch("/api/courses").then((r) => r.json()).catch(() => ({ courses: [] })) as Promise<{ courses: AvailableCourse[] }>,
       ]);
 
       const map: Record<string, CourseProgress> = {};
@@ -128,8 +118,6 @@ export default function DashboardPage() {
       setProgressMap(map);
       setCertsCount(certsResult.count ?? 0);
       setCompletedLessonsTotal(completedResult.count ?? 0);
-      const allCourses = (coursesRes.courses ?? []) as AvailableCourse[];
-      setAvailableCourses(allCourses.filter((c) => !enrolledIdSet.has(c.id)));
     };
 
     load();
@@ -178,7 +166,7 @@ export default function DashboardPage() {
               Hello,{" "}
               <span className="text-brand">{firstName}</span>!
             </h1>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               <p className="text-[14px] text-muted-foreground">
                 Here&apos;s what&apos;s happening with your learning journey.
               </p>
@@ -215,7 +203,7 @@ export default function DashboardPage() {
           <div className="bg-card rounded-2xl border border-border p-6 mb-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-[16px] font-bold text-foreground">My Courses</h2>
-              <Link href="/courses" className="text-[13px] text-brand font-semibold hover:underline">
+              <Link href="/courses" className="hidden sm:inline text-[13px] text-brand font-semibold hover:underline">
                 Browse more →
               </Link>
             </div>
@@ -317,57 +305,6 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-
-          {/* Discover Courses */}
-          {availableCourses.length > 0 && (
-            <div className="bg-card rounded-2xl border border-border p-6 mb-6 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-[16px] font-bold text-foreground">Discover More Courses</h2>
-                <Link href="/courses" className="text-[13px] text-brand font-semibold hover:underline">
-                  View all →
-                </Link>
-              </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableCourses.slice(0, 3).map((course) => {
-                  const Icon = getCourseIcon(course.title);
-                  return (
-                    <div
-                      key={course.id}
-                      className="relative bg-muted border border-border rounded-2xl p-5 hover:border-brand/30 hover:shadow-md transition-all duration-300"
-                    >
-                      <GlowingEffect spread={15} glow={false} disabled={false} proximity={50} inactiveZone={0.1} borderWidth={1.5} />
-                      <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center mb-3">
-                        <Icon className="w-5 h-5 text-brand" />
-                      </div>
-                      <h3 className="font-bold text-foreground text-[13.5px] leading-snug mb-1">
-                        {course.title}
-                      </h3>
-                      {course.duration && (
-                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-1.5">
-                          <Clock className="w-3 h-3" />
-                          {course.duration}
-                        </div>
-                      )}
-                      <p className="text-[11.5px] text-muted-foreground line-clamp-2 mb-4">
-                        {course.description}
-                      </p>
-                      <div className="flex items-center justify-between pt-3 border-t border-border">
-                        <span className="text-[13px] font-black text-brand">
-                          ₦{course.price.toLocaleString("en-NG")}
-                        </span>
-                        <Link
-                          href={`/checkout?courseId=${course.id}`}
-                          className="text-[11.5px] font-bold text-brand bg-brand/10 hover:bg-brand hover:text-brand-foreground px-3 py-1.5 rounded-lg transition-colors"
-                        >
-                          Enroll Now
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Quick Links */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

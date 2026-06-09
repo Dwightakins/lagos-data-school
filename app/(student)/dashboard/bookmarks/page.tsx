@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BackButton } from "@/components/ui/back-button";
-import { ArrowLeft, Bookmark, BookmarkX, Play, BookOpen } from "lucide-react";
+import { Bookmark, BookmarkX, Play, BookOpen } from "lucide-react";
 
 interface BookmarkItem {
   id: string;
@@ -44,15 +43,13 @@ export default function BookmarksPage() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="bg-foreground border-b border-border px-6 py-4 flex items-center gap-4">
-        <BackButton label="Back" className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground" />
-        <div className="w-px h-4 bg-white/20" />
-        <h1 className="text-[15px] font-semibold">Saved Lessons</h1>
-        {bookmarks.length > 0 && <span className="text-[12px] text-muted-foreground">{bookmarks.length} bookmark{bookmarks.length !== 1 ? "s" : ""}</span>}
-      </header>
+    <div className="px-6 lg:px-10 py-8 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-8">
+        <h1 className="text-[1.5rem] font-bold text-foreground">Saved Lessons</h1>
+        {bookmarks.length > 0 && <span className="text-[13px] text-muted-foreground">{bookmarks.length} bookmark{bookmarks.length !== 1 ? "s" : ""}</span>}
+      </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div>
         {loading ? (
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-foreground/5 rounded-2xl animate-pulse" />)}
@@ -86,7 +83,7 @@ export default function BookmarksPage() {
                           <Link href={href} className="text-[13px] font-semibold text-foreground hover:text-brand transition-colors truncate block">{lesson?.title ?? "Lesson"}</Link>
                           {lesson?.duration_minutes && <p className="text-[11px] text-muted-foreground/70 mt-0.5">{lesson.duration_minutes} min</p>}
                         </div>
-                        <button onClick={() => remove(b.lesson_id)} title="Remove bookmark" className="text-muted-foreground/50 hover:text-red-400 transition-colors">
+                        <button onClick={() => remove(b.lesson_id)} title="Remove bookmark" className="w-11 h-11 flex items-center justify-center rounded-lg text-muted-foreground/50 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0">
                           <BookmarkX className="w-4 h-4" />
                         </button>
                       </div>
@@ -101,6 +98,3 @@ export default function BookmarksPage() {
     </div>
   );
 }
-
-
-

@@ -345,7 +345,7 @@ export default function LessonPlayerPage() {
           <button type="button" onClick={() => setSidebarOpen(v => !v)} className="lg:hidden h-11 w-11 flex items-center justify-center text-white/70 hover:text-foreground transition-colors" aria-label="Toggle sidebar">
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-          <button type="button" onClick={() => router.back()} className="text-muted-foreground hover:text-foreground transition-colors shrink-0" aria-label="Back"><ArrowLeft className="w-4 h-4" /></button>
+          <button type="button" onClick={() => router.back()} className="h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0" aria-label="Back"><ArrowLeft className="w-4 h-4" /></button>
           <span className="text-[13px] font-semibold text-white/80 truncate">{courseTitle}</span>
         </div>
         <div className="flex items-center gap-3 shrink-0 ml-4">
@@ -418,13 +418,13 @@ export default function LessonPlayerPage() {
                 {/* Nav + Complete */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                   <div className="flex gap-2">
-                    {prevLesson && <Link href={`/learn/${courseId}/${prevLesson.id}`} className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-brand/40 px-4 py-2 rounded-xl transition-colors"><ChevronLeft className="w-4 h-4" /> Previous</Link>}
-                    {nextLesson && <Link href={`/learn/${courseId}/${nextLesson.id}`} className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-brand/40 px-4 py-2 rounded-xl transition-colors">Next <ChevronRight className="w-4 h-4" /></Link>}
+                    {prevLesson && <Link href={`/learn/${courseId}/${prevLesson.id}`} className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-brand/40 px-4 py-2.5 rounded-xl transition-colors min-h-[44px]"><ChevronLeft className="w-4 h-4" /> Previous</Link>}
+                    {nextLesson && <Link href={`/learn/${courseId}/${nextLesson.id}`} className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-brand/40 px-4 py-2.5 rounded-xl transition-colors min-h-[44px]">Next <ChevronRight className="w-4 h-4" /></Link>}
                   </div>
                   {isCompleted ? (
                     <div className="flex items-center gap-2 text-[13px] font-bold text-brand bg-background border border-brand/40 px-4 py-2 rounded-xl"><CheckCircle2 className="w-4 h-4" /> Lesson Complete</div>
                   ) : (
-                    <button type="button" onClick={markComplete} disabled={marking} className="flex items-center gap-2 bg-[#EA580C] hover:bg-[#C2410C] disabled:opacity-60 text-foreground font-bold text-[13px] px-5 py-2 rounded-xl transition-all shadow-md shadow-[#EA580C]/20">
+                    <button type="button" onClick={markComplete} disabled={marking} className="flex items-center gap-2 bg-[#EA580C] hover:bg-[#C2410C] disabled:opacity-60 text-foreground font-bold text-[13px] px-5 py-2.5 rounded-xl transition-all shadow-md shadow-[#EA580C]/20 min-h-[44px]">
                       <CheckCircle2 className="w-4 h-4" /> {marking ? "Saving…" : nextLesson ? "Complete & Continue" : "Complete Course"}
                     </button>
                   )}
