@@ -60,6 +60,35 @@ export async function POST(request: Request) {
   return NextResponse.json({ comment: data });
 }
 
+export async function PATCH(request: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+  const action = searchParams.get("action");
+  if (!id || action !== "upvote") return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  const admin = createAdminClient();
+  const { data: comment, error: fetchErr } = await admin
+    .from("lesson_comments")
+    .select("upvotes")
+    .eq("id", id)
+    .single();
+
+  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+
+  const current = (comment as { upvotes: number } | null)?.upvotes ?? 0;
+  const { error } = await admin
+    .from("lesson_comments")
+    .update({ upvotes: current + 1 })
+    .eq("id", id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, upvotes: current + 1 });
+}
+
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
