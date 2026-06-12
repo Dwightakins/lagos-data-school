@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { AppLogo } from "@/components/layout/logo";
 
 export const metadata: Metadata = {
-  title: "Lagos Data School — Create Account",
+  title: "Create Account — Lagos Data School",
+  robots: { index: false, follow: false },
 };
 
 export default function RegisterLayout({ children }: { children: ReactNode }) {

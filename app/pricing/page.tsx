@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ResizableNavbar } from "@/components/layout/ResizableNavbar";
 import { FooterSection } from "@/components/home/FooterSection";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Lock, BadgeCheck, Users } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Pricing — Lagos Data School Limited",
+  title: "Pricing — Lagos Data School",
   description: "Simple, transparent pricing. Full pay for immediate access, or apply for a scholarship. No hidden fees.",
+  openGraph: {
+    title: "Pricing — Lagos Data School",
+    description: "Simple, transparent pricing. Full pay for immediate access, or apply for a scholarship. No hidden fees.",
+    url: "https://lagosdataschool.com/pricing",
+  },
 };
 
 const FULL_FEATURES = [
@@ -129,9 +134,21 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <p className="text-center text-[13px] text-muted-foreground mt-8">
-          Payments processed securely via Paystack · Nigerian Naira (NGN) · No hidden fees
-        </p>
+        {/* Trust strip */}
+        <div className="flex flex-wrap items-center justify-center gap-5 mt-10 pt-8 border-t border-border">
+          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <Lock className="w-3.5 h-3.5 text-brand" />
+            Secured by Paystack
+          </span>
+          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <BadgeCheck className="w-3.5 h-3.5 text-brand" />
+            Verified Certificates
+          </span>
+          <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <Users className="w-3.5 h-3.5 text-brand" />
+            2,000+ Students Trained
+          </span>
+        </div>
       </section>
 
       {/* FAQ */}

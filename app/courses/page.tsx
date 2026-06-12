@@ -8,9 +8,15 @@ import LDSCoursesClient from "@/components/courses/LDSCoursesClient";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Courses — Lagos Data School Limited",
+  title: "Our Courses — Lagos Data School",
   description:
-    "Browse practical, project-based courses in data analysis, machine learning, software engineering and more.",
+    "Browse 20+ professional tech courses. Live classes, hands-on projects, verified certificates. Data Analysis, Data Science, Cybersecurity and more.",
+  openGraph: {
+    title: "Our Courses — Lagos Data School",
+    description:
+      "Browse 20+ professional tech courses. Live classes, hands-on projects, verified certificates.",
+    url: "https://lagosdataschool.com/courses",
+  },
 };
 
 const FALLBACK_COURSES: Course[] = [

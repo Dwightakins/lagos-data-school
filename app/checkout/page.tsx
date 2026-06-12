@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AppLogo } from "@/components/layout/logo";
-import { Check, ArrowLeft } from "lucide-react";
+import { Check, ArrowLeft, Lock } from "lucide-react";
 
 function fmt(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -280,6 +280,10 @@ function CheckoutContent() {
                   `Pay ${course ? fmt(course.price) : "Now"}`
                 )}
               </button>
+              <p className="flex items-center justify-center gap-1.5 text-[12px] text-muted-foreground mt-2">
+                <Lock className="w-3 h-3" />
+                Your payment is secured by Paystack
+              </p>
             </div>
 
             {/* Scholarship note */}

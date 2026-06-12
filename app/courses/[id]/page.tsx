@@ -61,9 +61,16 @@ export async function generateMetadata({
     .single();
 
   if (!data) return { title: "Course — Lagos Data School" };
+  const title = `${data.title} — Lagos Data School`;
+  const description = data.description as string;
   return {
-    title: `${data.title} — Lagos Data School`,
-    description: data.description as string,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://lagosdataschool.com/courses/${id}`,
+    },
   };
 }
 
