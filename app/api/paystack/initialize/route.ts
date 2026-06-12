@@ -85,6 +85,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "One or more courses are not currently available." }, { status: 400 });
     }
 
+    // Check for existing paid enrollments — prevent charging twice
+    const { data: existingEnrollments } = await admin
+      .from("enrollments")
+      .select("course_id")
+      .eq("user_id", userId)
+      .in("course_id", courseIds)
+      .eq("status", "active");
+
+    if (existingEnrollments && existingEnrollments.length > 0) {
+      return NextResponse.json(
+        {
+          error: "You're already enrolled in this course. Head to your dashboard to continue learning.",
+          alreadyEnrolled: true,
+        },
+        { status: 409 }
+      );
+    }
+
     // Server computes authoritative expected amount — prevents client-side price tampering
     const expectedAmount =
       paymentType === "scholarship"

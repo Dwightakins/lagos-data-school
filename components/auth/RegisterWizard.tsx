@@ -112,6 +112,7 @@ function RegisterWizardContent() {
   const [courseName, setCourseName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [emailTaken, setEmailTaken] = useState(false);
+  const [step1Busy, setStep1Busy] = useState(false);
   const [preselectedLoaded, setPreselectedLoaded] = useState(!preselectedCourseId);
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -170,8 +171,27 @@ function RegisterWizardContent() {
     setError(null);
   }
 
-  function handleStep1() {
+  async function handleStep1() {
     setError(null);
+    setEmailTaken(false);
+    setStep1Busy(true);
+
+    try {
+      const res = await fetch(
+        `/api/auth/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`
+      );
+      const data = (await res.json()) as { exists: boolean };
+      if (data.exists) {
+        setEmailTaken(true);
+        setError("This email is already registered. Please log in to your existing account.");
+        return;
+      }
+    } catch {
+      // Network error — proceed; duplicate caught at payment step if needed
+    } finally {
+      setStep1Busy(false);
+    }
+
     // Skip Step2 if a course is pre-selected
     if (preselectedCourseId && selectedCourse) {
       setStep(3);
@@ -238,15 +258,17 @@ function RegisterWizardContent() {
         />
 
         {error && (
-          <div className="bg-brand/10 border border-brand/30 text-brand text-[13.5px] rounded-lg px-4 py-3 mb-5">
+          <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[13.5px] rounded-xl px-4 py-3 mb-5 leading-relaxed" role="alert">
             {error}
             {emailTaken && (
-              <span>
-                {" "}
-                <Link href="/login" className="font-semibold underline text-brand hover:opacity-80">
-                  Log in instead →
+              <div className="mt-2.5">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 bg-destructive text-white text-[13px] font-bold px-3.5 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                >
+                  Go to Login →
                 </Link>
-              </span>
+              </div>
             )}
           </div>
         )}
@@ -259,6 +281,7 @@ function RegisterWizardContent() {
             confirmPassword={confirmPassword}
             onChange={handleChange}
             onContinue={handleStep1}
+            disabled={step1Busy}
           />
         )}
         {step === 2 && (

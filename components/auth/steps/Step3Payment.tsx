@@ -57,6 +57,7 @@ export default function Step3Payment({
 }: Step3Props) {
   const [loadingStep, setLoadingStep] = useState<LoadingStep>(null);
   const [error, setError] = useState<string | null>(null);
+  const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
 
   const loading = loadingStep !== null;
 
@@ -87,7 +88,7 @@ export default function Step3Payment({
       return data.userId;
     }
 
-    if (res.status === 409 && !data.userId) {
+    if (res.status === 409) {
       setError(
         data.error ??
           "An account with this email already exists. Please log in instead."
@@ -120,7 +121,7 @@ export default function Step3Payment({
       amount: number;
       courseIds: string[];
     };
-    type InitResult = InitOk & { error?: string };
+    type InitResult = InitOk & { error?: string; alreadyEnrolled?: boolean };
 
     let initData: InitOk;
     try {
@@ -136,6 +137,13 @@ export default function Step3Payment({
         }),
       });
       const raw = (await initRes.json()) as InitResult;
+
+      if (initRes.status === 409 || raw.alreadyEnrolled) {
+        setAlreadyEnrolled(true);
+        setLoadingStep(null);
+        return;
+      }
+
       if (!initRes.ok || !raw.reference) {
         setError(raw.error ?? "Could not set up payment. Please try again.");
         setLoadingStep(null);
@@ -204,6 +212,33 @@ export default function Step3Payment({
   };
 
   const loadingMessage = loadingStep ? LOADING_MESSAGES[loadingStep] : null;
+
+  // Already enrolled — show friendly message with dashboard link
+  if (alreadyEnrolled) {
+    return (
+      <div className="text-center py-4">
+        <div className="w-14 h-14 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center mx-auto mb-4">
+          <Check className="w-7 h-7 text-brand" strokeWidth={2.5} />
+        </div>
+        <h2 className="text-[1.25rem] font-bold text-foreground mb-2">
+          You&apos;re already enrolled!
+        </h2>
+        <p className="text-[13.5px] text-muted-foreground leading-relaxed mb-6">
+          You already have access to{" "}
+          {selectedCourses.length === 1
+            ? <strong className="text-foreground">{selectedCourses[0].name}</strong>
+            : "these courses"}.{" "}
+          Head to your dashboard to continue learning.
+        </p>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-brand hover:opacity-90 text-brand-foreground font-bold text-[15px] transition-opacity shadow-brand"
+        >
+          Go to My Courses →
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>

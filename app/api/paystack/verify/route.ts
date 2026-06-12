@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { assignStudentId } from "@/lib/student-id";
 import { sendOnboardingEmail } from "@/lib/emails/onboarding";
 
-const SCHOLARSHIP_PRICE = 10000;
+const SCHOLARSHIP_PRICE = 8000;
 const BULK_DISCOUNT_THRESHOLD = 3;
 const BULK_DISCOUNT_RATE = 0.1;
 
@@ -142,6 +142,7 @@ export async function POST(req: NextRequest) {
       course_id: courseId,
       type: paymentType,
       status: "active",
+      payment_status: "paid",
     }));
 
     const { error: enrollError } = await admin.from("enrollments").insert(enrollmentRows);
@@ -150,18 +151,25 @@ export async function POST(req: NextRequest) {
       throw new Error(`Could not save enrollment: ${enrollError.message}`);
     }
 
-    // 5. Payment record (linked to primary course — non-fatal if it fails)
-    const { error: paymentError } = await admin.from("payments").insert({
-      user_id: userId,
-      course_id: courseIds[0],
-      amount: amountPaidNaira,
-      reference,
-      status: "paid",
-      provider: "paystack",
-    });
+    // 5. Payment record — idempotent: skip if reference already recorded
+    const { data: existingPayment } = await admin
+      .from("payments")
+      .select("id")
+      .eq("reference", reference)
+      .maybeSingle();
 
-    if (paymentError) {
-      console.error("[paystack/verify] Payment record error:", paymentError);
+    if (!existingPayment) {
+      const { error: paymentError } = await admin.from("payments").insert({
+        user_id: userId,
+        course_id: courseIds[0],
+        amount: amountPaidNaira,
+        reference,
+        status: "paid",
+        provider: "paystack",
+      });
+      if (paymentError) {
+        console.error("[paystack/verify] Payment record error:", paymentError);
+      }
     }
 
     // 6. Assign student ID based on first enrolled course (non-fatal)

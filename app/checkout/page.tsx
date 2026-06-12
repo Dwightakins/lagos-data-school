@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AppLogo } from "@/components/layout/logo";
-import { Check, ArrowLeft, Lock } from "lucide-react";
+import { Check, ArrowLeft, Lock, CheckCircle2 } from "lucide-react";
 
 function fmt(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -53,6 +53,7 @@ function CheckoutContent() {
   const [loadingStep, setLoadingStep] = useState<LoadingStep>(null);
   const [error, setError] = useState<string | null>(null);
   const [paystackReady, setPaystackReady] = useState(false);
+  const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
 
   useEffect(() => {
     if (!courseId) {
@@ -84,6 +85,20 @@ function CheckoutContent() {
       }
       const data = (await res.json()) as { course: CourseInfo };
       setCourse(data.course);
+
+      // Check if already enrolled — show friendly screen instead of payment form
+      const { data: enrollment } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("course_id", courseId)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (enrollment) {
+        setAlreadyEnrolled(true);
+      }
+
       setPageLoading(false);
     }
     void init();
@@ -118,6 +133,7 @@ function CheckoutContent() {
       amount?: number;
       courseIds?: string[];
       error?: string;
+      alreadyEnrolled?: boolean;
     };
 
     let initData: { publicKey: string; reference: string; email: string; amount: number; courseIds: string[] };
@@ -134,6 +150,13 @@ function CheckoutContent() {
         }),
       });
       const raw = (await initRes.json()) as InitResult;
+
+      if (initRes.status === 409 || raw.alreadyEnrolled) {
+        setAlreadyEnrolled(true);
+        setLoadingStep(null);
+        return;
+      }
+
       if (!initRes.ok || !raw.reference) {
         setError(raw.error ?? "Could not set up payment. Please try again.");
         setLoadingStep(null);
@@ -196,6 +219,39 @@ function CheckoutContent() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Spinner />
+      </div>
+    );
+  }
+
+  if (alreadyEnrolled) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="px-6 py-4 border-b border-border">
+          <AppLogo size="sm" />
+        </header>
+        <main className="flex-1 flex items-center justify-center px-4 py-10">
+          <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-elevated px-8 py-12 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="w-8 h-8 text-brand" />
+            </div>
+            <h1 className="text-[1.5rem] font-bold text-foreground mb-3">
+              You&apos;re already enrolled!
+            </h1>
+            <p className="text-[14px] text-muted-foreground mb-2 leading-relaxed">
+              You already have access to{" "}
+              {course ? <strong className="text-foreground">{course.title}</strong> : "this course"}.
+            </p>
+            <p className="text-[13.5px] text-muted-foreground mb-8">
+              Head to your dashboard to continue learning.
+            </p>
+            <a
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-brand hover:opacity-90 text-brand-foreground font-bold text-[15px] transition-opacity shadow-brand"
+            >
+              Go to My Courses →
+            </a>
+          </div>
+        </main>
       </div>
     );
   }

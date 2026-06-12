@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
   if (existing) {
     return NextResponse.json(
-      { error: "An application for this course already exists with this email." },
+      { error: "You already have a pending application for this course. We will notify you by email once it is reviewed." },
       { status: 409 }
     );
   }

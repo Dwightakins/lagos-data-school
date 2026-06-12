@@ -53,6 +53,7 @@ interface Step1Props {
   confirmPassword: string;
   onChange: (field: "fullName" | "email" | "password" | "confirmPassword", value: string) => void;
   onContinue: () => void;
+  disabled?: boolean;
 }
 
 export default function Step1Personal({
@@ -62,6 +63,7 @@ export default function Step1Personal({
   confirmPassword,
   onChange,
   onContinue,
+  disabled = false,
 }: Step1Props) {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -191,9 +193,10 @@ export default function Step1Personal({
       <button
         type="button"
         onClick={handleContinue}
-        className="mt-6 w-full bg-brand hover:opacity-90 text-brand-foreground font-semibold text-[14.5px] py-2.5 rounded-lg transition-opacity shadow-brand"
+        disabled={disabled}
+        className="mt-6 w-full bg-brand hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-brand-foreground font-semibold text-[14.5px] py-2.5 rounded-lg transition-opacity shadow-brand"
       >
-        Continue →
+        {disabled ? "Checking…" : "Continue →"}
       </button>
 
     </div>
