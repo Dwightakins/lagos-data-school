@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Plus, Trash2, GripVertical, Eye, EyeOff } from "lucide-react";
@@ -11,12 +10,30 @@ const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-[#e8d89a] text-[14p
 interface CourseData {
   id: string; title: string; slug: string; description: string; price: number; published: boolean;
 }
+interface LessonData {
+  id: string; title: string; video_url: string | null; duration_minutes: number | null; order_index: number;
+}
 interface ModuleData {
   id: string; title: string; description: string; order_index: number;
   lessons: LessonData[];
 }
-interface LessonData {
-  id: string; title: string; video_url: string | null; duration_minutes: number | null; order_index: number;
+
+async function fetchWithTimeout(input: RequestInfo, init?: RequestInit, ms = 10000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(input, { ...init, signal: controller.signal });
+    clearTimeout(timeout);
+    return res;
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
+}
+
+function timeoutError(err: unknown): string {
+  if (err instanceof Error && err.name === "AbortError") return "Request timed out. Try again.";
+  return "Network error. Check your connection.";
 }
 
 export default function EditCoursePage() {
@@ -24,40 +41,37 @@ export default function EditCoursePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [addingModule, setAddingModule] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
 
   const [course, setCourse] = useState<CourseData | null>(null);
   const [modules, setModules] = useState<ModuleData[]>([]);
   const [newModuleTitle, setNewModuleTitle] = useState("");
-  const [addingModule, setAddingModule] = useState(false);
   const [newLesson, setNewLesson] = useState<Record<string, { title: string; video_url: string; duration: string }>>({});
 
   const load = useCallback(async () => {
-    const supabase = createClient();
-    const [courseRes, modulesRes] = await Promise.all([
-      supabase.from("courses").select("id,title,slug,description,price,published").eq("id", id).single(),
-      supabase.from("modules").select("id,title,description,order_index").eq("course_id", id).order("order_index"),
-    ]);
-    if (courseRes.error || !courseRes.data) { router.push("/admin/courses"); return; }
-    const courseData = courseRes.data as CourseData;
-    setCourse(courseData);
-
-    const moduleList = (modulesRes.data ?? []) as Omit<ModuleData, "lessons">[];
-    const withLessons: ModuleData[] = await Promise.all(
-      moduleList.map(async (m) => {
-        const { data: lessons } = await supabase
-          .from("lessons").select("id,title,video_url,duration_minutes,order_index")
-          .eq("module_id", m.id).order("order_index");
-        return { ...m, lessons: (lessons ?? []) as LessonData[] };
-      })
-    );
-    setModules(withLessons);
-    setLoading(false);
+    try {
+      const [courseRes, modulesRes] = await Promise.all([
+        fetch(`/api/admin/courses/${id}`).then((r) => r.json()),
+        fetch(`/api/admin/modules?courseId=${id}`).then((r) => r.json()),
+      ]);
+      if (!courseRes.course) {
+        router.push("/admin/courses");
+        return;
+      }
+      setCourse(courseRes.course as CourseData);
+      setModules((modulesRes.modules ?? []) as ModuleData[]);
+    } catch {
+      setError("Failed to load course. Please refresh the page.");
+    } finally {
+      setLoading(false);
+    }
   }, [id, router]);
 
   useEffect(() => {
-    void Promise.resolve().then(load);
+    void load();
   }, [load]);
 
   function showToast(msg: string) {
@@ -68,57 +82,128 @@ export default function EditCoursePage() {
   async function saveCourse(e: React.FormEvent) {
     e.preventDefault();
     if (!course) return;
-    setSaving(true); setError("");
-    const res = await fetch(`/api/admin/courses/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(course),
-    });
-    if (res.ok) { showToast("Course saved."); }
-    else { const j = await res.json() as { error?: string }; setError(j.error ?? "Save failed."); }
-    setSaving(false);
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetchWithTimeout(`/api/admin/courses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(course),
+      });
+      if (res.ok) {
+        showToast("Course saved.");
+      } else {
+        const j = await res.json() as { error?: string };
+        setError(j.error ?? "Save failed.");
+      }
+    } catch (err) {
+      setError(timeoutError(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteCourse() {
+    if (!confirm("Delete this entire course? This cannot be undone.")) return;
+    setDeleting(true);
+    setError("");
+    try {
+      const res = await fetchWithTimeout(`/api/admin/courses/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        router.push("/admin/courses");
+      } else {
+        const j = await res.json() as { error?: string };
+        setError(j.error ?? "Failed to delete course.");
+        setDeleting(false);
+      }
+    } catch (err) {
+      setError(timeoutError(err));
+      setDeleting(false);
+    }
   }
 
   async function addModule() {
     if (!newModuleTitle.trim()) return;
     setAddingModule(true);
-    const res = await fetch("/api/admin/modules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId: id, title: newModuleTitle, orderIndex: modules.length }),
-    });
-    if (res.ok) { setNewModuleTitle(""); await load(); }
-    setAddingModule(false);
+    setError("");
+    try {
+      const res = await fetchWithTimeout("/api/admin/modules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId: id, title: newModuleTitle, orderIndex: modules.length }),
+      });
+      if (res.ok) {
+        setNewModuleTitle("");
+        await load();
+      } else {
+        const j = await res.json() as { error?: string };
+        setError(j.error ?? "Failed to add module.");
+      }
+    } catch (err) {
+      setError(timeoutError(err));
+    } finally {
+      setAddingModule(false);
+    }
   }
 
   async function deleteModule(moduleId: string) {
     if (!confirm("Delete this module and all its lessons?")) return;
-    await fetch(`/api/admin/modules/${moduleId}`, { method: "DELETE" });
-    await load();
+    setError("");
+    try {
+      const res = await fetchWithTimeout(`/api/admin/modules/${moduleId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const j = await res.json() as { error?: string };
+        setError(j.error ?? "Failed to delete module.");
+        return;
+      }
+      await load();
+    } catch (err) {
+      setError(timeoutError(err));
+    }
   }
 
   async function addLesson(moduleId: string) {
     const l = newLesson[moduleId];
     if (!l?.title.trim()) return;
     const courseModule = modules.find((m) => m.id === moduleId);
-    await fetch("/api/admin/lessons", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        moduleId,
-        title: l.title,
-        videoUrl: l.video_url || null,
-        durationMinutes: l.duration ? parseInt(l.duration, 10) : null,
-        orderIndex: courseModule?.lessons.length ?? 0,
-      }),
-    });
-    setNewLesson((prev) => ({ ...prev, [moduleId]: { title: "", video_url: "", duration: "" } }));
-    await load();
+    setError("");
+    try {
+      const res = await fetchWithTimeout("/api/admin/lessons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          moduleId,
+          title: l.title,
+          videoUrl: l.video_url || null,
+          durationMinutes: l.duration ? parseInt(l.duration, 10) : null,
+          orderIndex: courseModule?.lessons.length ?? 0,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json() as { error?: string };
+        setError(j.error ?? "Failed to add lesson.");
+        return;
+      }
+      setNewLesson((prev) => ({ ...prev, [moduleId]: { title: "", video_url: "", duration: "" } }));
+      await load();
+    } catch (err) {
+      setError(timeoutError(err));
+    }
   }
 
   async function deleteLesson(lessonId: string) {
-    await fetch(`/api/admin/lessons/${lessonId}`, { method: "DELETE" });
-    await load();
+    setError("");
+    try {
+      const res = await fetchWithTimeout(`/api/admin/lessons/${lessonId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const j = await res.json() as { error?: string };
+        setError(j.error ?? "Failed to delete lesson.");
+        return;
+      }
+      await load();
+    } catch (err) {
+      setError(timeoutError(err));
+    }
   }
 
   if (loading) return (
@@ -233,8 +318,8 @@ export default function EditCoursePage() {
         </div>
 
         {/* Course details form */}
-        <div>
-          <h2 className="text-[17px] font-bold text-[#1a1a2e] mb-4">Course Details</h2>
+        <div className="space-y-4">
+          <h2 className="text-[17px] font-bold text-[#1a1a2e]">Course Details</h2>
           <form onSubmit={saveCourse} className="bg-[#fef3b0] border border-[#e8d89a] rounded-xl p-5 space-y-4">
             <div>
               <label className="block text-[12px] font-bold text-[#6b6040] uppercase tracking-wide mb-1.5">Title</label>
@@ -274,9 +359,40 @@ export default function EditCoursePage() {
               {saving ? "Saving…" : "Save Changes"}
             </button>
           </form>
+
+          {/* Sub-page links */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Materials", href: `/admin/courses/${id}/materials` },
+              { label: "Quizzes", href: `/admin/courses/${id}/quizzes` },
+              { label: "Assignments", href: `/admin/courses/${id}/assignments` },
+            ].map((l) => (
+              <Link
+                key={l.label}
+                href={l.href}
+                className="text-center px-3 py-2 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground hover:bg-muted/40 transition-colors"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Danger zone */}
+          <div className="bg-card border border-red-200 rounded-xl p-4">
+            <p className="text-[12px] font-bold text-red-500 uppercase tracking-wide mb-2">Danger Zone</p>
+            <p className="text-[12.5px] text-muted-foreground mb-3">Permanently delete this course and all its modules, lessons, and materials.</p>
+            <button
+              type="button"
+              onClick={deleteCourse}
+              disabled={deleting}
+              className="w-full flex items-center justify-center gap-2 border border-red-300 hover:bg-red-50 disabled:opacity-60 text-red-600 font-semibold text-[13px] py-2 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {deleting ? "Deleting…" : "Delete Course"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-

@@ -21,13 +21,14 @@ export default function NewCoursePage() {
   });
 
   function set(field: string, value: string | boolean) {
-    setForm((f) => ({ ...f, [field]: value }));
     if (field === "title" && typeof value === "string") {
       setForm((f) => ({
         ...f,
         title: value,
         slug: value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
       }));
+    } else {
+      setForm((f) => ({ ...f, [field]: value }));
     }
   }
 
@@ -40,16 +41,27 @@ export default function NewCoursePage() {
       return;
     }
     setSaving(true);
-    const res = await fetch("/api/admin/courses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, price }),
-    });
-    if (res.ok) {
-      router.push("/admin/courses");
-    } else {
-      const json = await res.json() as { error?: string };
-      setError(json.error ?? "Failed to create course.");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const res = await fetch("/api/admin/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, price }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        router.push("/admin/courses");
+      } else {
+        const json = await res.json() as { error?: string };
+        setError(json.error ?? "Failed to create course.");
+        setSaving(false);
+      }
+    } catch (err) {
+      clearTimeout(timeout);
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      setError(isTimeout ? "Request timed out. Try again." : "Network error. Check your connection.");
       setSaving(false);
     }
   }
@@ -130,6 +142,3 @@ export default function NewCoursePage() {
     </div>
   );
 }
-
-
-
