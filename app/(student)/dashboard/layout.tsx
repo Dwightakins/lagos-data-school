@@ -9,7 +9,7 @@ import { useTheme } from "@/components/theme-provider";
 import {
   LayoutDashboard, BookOpen, TrendingUp, Award, CreditCard,
   Bell, Bookmark, FileText, Download, HelpCircle, Settings,
-  LogOut, Menu, X, Sun, Moon, User, type LucideIcon,
+  LogOut, Menu, X, Sun, Moon, User, MessageSquare, type LucideIcon,
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; Icon: LucideIcon; exact?: boolean };
@@ -20,6 +20,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/progress",       label: "Progress",       Icon: TrendingUp },
   { href: "/dashboard/certificates",   label: "Certificates",   Icon: Award },
   { href: "/dashboard/payments",       label: "Payments",       Icon: CreditCard },
+  { href: "/dashboard/messages",       label: "Messages",       Icon: MessageSquare },
   { href: "/dashboard/notifications",  label: "Notifications",  Icon: Bell },
   { href: "/dashboard/bookmarks",      label: "Bookmarks",      Icon: Bookmark },
   { href: "/dashboard/notes",          label: "Notes",          Icon: FileText },
@@ -38,6 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -53,6 +55,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setFirstName((data.full_name as string | null)?.split(" ")[0] ?? "");
         setStudentId((data.student_id as string | null) ?? null);
       }
+      fetch("/api/messages?type=inbox")
+        .then(r => r.json())
+        .then((d: { unread?: number }) => setUnreadMessages(d.unread ?? 0))
+        .catch(() => {});
     };
     void load();
   }, []);
@@ -73,24 +79,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   function NavLinks({ onClick }: { onClick?: () => void }) {
     return (
       <>
-        {NAV.map(({ href, label, Icon, exact }) => (
-          <Link
-            key={href}
-            href={href}
-            onClick={onClick}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-              isActive(href, exact)
-                ? "bg-background/15 text-background"
-                : "text-background/55 hover:text-background hover:bg-background/10"
-            }`}
-          >
-            <Icon className="w-4 h-4 shrink-0" />
-            {label}
-            {isActive(href, exact) && (
-              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-background/60 shrink-0" />
-            )}
-          </Link>
-        ))}
+        {NAV.map(({ href, label, Icon, exact }) => {
+          const active = isActive(href, exact);
+          const badge = href === "/dashboard/messages" && unreadMessages > 0 ? unreadMessages : 0;
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={onClick}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+                active
+                  ? "bg-background/15 text-background"
+                  : "text-background/55 hover:text-background hover:bg-background/10"
+              }`}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              {label}
+              {badge > 0 && (
+                <span className="ml-auto bg-brand text-brand-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
+              {active && badge === 0 && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-background/60 shrink-0" />
+              )}
+            </Link>
+          );
+        })}
       </>
     );
   }

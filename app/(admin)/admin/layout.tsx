@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, Award,
   DollarSign, Megaphone, Tag, UserCheck, Mail, Sun, Moon, Menu, X, Settings,
+  MessageSquare, LifeBuoy,
 } from "lucide-react";
 import { AppLogo } from "@/components/layout/logo";
 import { useTheme } from "@/components/theme-provider";
@@ -19,6 +20,8 @@ const NAV = [
   { href: "/admin/certificates", label: "Certificates", Icon: Award },
   { href: "/admin/revenue", label: "Revenue", Icon: DollarSign },
   { href: "/admin/announcements", label: "Announcements", Icon: Megaphone },
+  { href: "/admin/messages", label: "Messages", Icon: MessageSquare },
+  { href: "/admin/support", label: "Support", Icon: LifeBuoy },
   { href: "/admin/coupons", label: "Coupons", Icon: Tag },
   { href: "/admin/instructors", label: "Instructors", Icon: UserCheck },
   { href: "/admin/email-templates", label: "Email Templates", Icon: Mail },
@@ -45,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [ready, setReady] = useState(false);
   const [adminName, setAdminName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const check = async () => {
@@ -59,6 +63,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       setAdminName(profile?.full_name?.split(" ")[0] ?? "Admin");
       setReady(true);
+
+      fetch("/api/admin/messages?type=inbox")
+        .then(r => r.json())
+        .then((d: { unread?: number }) => setUnreadMessages(d.unread ?? 0))
+        .catch(() => {});
     };
     check();
   }, [router]);
@@ -139,6 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {NAV.map((item) => {
             const active = isActive(item);
+            const badge = item.href === "/admin/messages" && unreadMessages > 0 ? unreadMessages : 0;
             return (
               <Link
                 key={item.href}
@@ -152,6 +162,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <item.Icon className="w-4 h-4 shrink-0" />
                 {item.label}
+                {badge > 0 && (
+                  <span className="ml-auto bg-brand text-brand-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
               </Link>
             );
           })}
