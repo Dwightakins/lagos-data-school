@@ -55,7 +55,7 @@ export default function AdminStudentsPage() {
     const load = async () => {
       const res = await fetch("/api/admin/students?withEnrollments=true");
       if (!res.ok) { setLoading(false); return; }
-      const d = await res.json() as { students: Array<Student & { enrollments: Array<RawEnrollmentRow & { courses: { title: string } | null }> }> };
+      const d = await res.json() as { students: Array<Omit<Student, "enrollments"> & { enrollments: Array<RawEnrollmentRow> }> };
 
       const studentList: Student[] = (d.students ?? []).map((u) => ({
         id: u.id,

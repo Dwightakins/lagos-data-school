@@ -134,6 +134,7 @@ export interface LessonMaterial {
   file_type: string;
   file_size?: number;
   created_at: string;
+  lessons?: { title: string } | null;
 }
 
 export interface LessonComment {

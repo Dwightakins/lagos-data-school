@@ -31,7 +31,9 @@
       "Bash(npx next *)",
       "Bash(dir \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\\\(admin\\)\" /s /b)",
       "Bash(dir \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\api\" /s /b)",
-      "Bash(xargs grep -l \"storage\\\\|bucket\")"
+      "Bash(xargs grep -l \"storage\\\\|bucket\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in deps.items\\(\\) if any\\(x in k for x in ['toast','sonner','notify','alert']\\)]\")",
+      "Bash(npx supabase *)"
     ]
   }
 }
