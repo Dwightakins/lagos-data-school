@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, Award,
-  DollarSign, Megaphone, Tag, UserCheck, Mail, Sun, Moon, Menu, X,
+  DollarSign, Megaphone, Tag, UserCheck, Mail, Sun, Moon, Menu, X, Settings,
 } from "lucide-react";
 import { AppLogo } from "@/components/layout/logo";
 import { useTheme } from "@/components/theme-provider";
@@ -22,6 +22,7 @@ const NAV = [
   { href: "/admin/coupons", label: "Coupons", Icon: Tag },
   { href: "/admin/instructors", label: "Instructors", Icon: UserCheck },
   { href: "/admin/email-templates", label: "Email Templates", Icon: Mail },
+  { href: "/admin/settings", label: "Settings", Icon: Settings },
 ];
 
 

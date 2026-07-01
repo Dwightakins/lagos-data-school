@@ -7,11 +7,25 @@ export async function GET() {
   if (!auth.ok) return auth.response;
 
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("courses")
-    .select("id, title, slug, published, price, created_at")
-    .order("created_at", { ascending: false });
-  return NextResponse.json({ courses: data ?? [] });
+  const [coursesResult, enrollmentsResult] = await Promise.all([
+    admin
+      .from("courses")
+      .select("id, title, slug, description, price, published, duration, thumbnail_url, cover_image_url, created_at")
+      .order("created_at", { ascending: false }),
+    admin.from("enrollments").select("course_id").eq("status", "active"),
+  ]);
+
+  const countByCourse: Record<string, number> = {};
+  for (const e of (enrollmentsResult.data ?? [])) {
+    countByCourse[e.course_id] = (countByCourse[e.course_id] ?? 0) + 1;
+  }
+
+  const courses = (coursesResult.data ?? []).map((c: { id: string; [k: string]: unknown }) => ({
+    ...c,
+    enrollment_count: countByCourse[c.id] ?? 0,
+  }));
+
+  return NextResponse.json({ courses });
 }
 
 export async function POST(request: Request) {
