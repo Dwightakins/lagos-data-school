@@ -26,7 +26,12 @@
       "Bash(git checkout *)",
       "Bash(git merge *)",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(dir \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\public\")",
+      "Bash(npx next *)",
+      "Bash(dir \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\\\(admin\\)\" /s /b)",
+      "Bash(dir \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\api\" /s /b)",
+      "Bash(xargs grep -l \"storage\\\\|bucket\")"
     ]
   }
 }

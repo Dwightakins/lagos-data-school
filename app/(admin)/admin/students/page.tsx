@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Users, Search, Download, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
@@ -54,45 +53,27 @@ export default function AdminStudentsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient();
+      const res = await fetch("/api/admin/students?withEnrollments=true");
+      if (!res.ok) { setLoading(false); return; }
+      const d = await res.json() as { students: Array<Student & { enrollments: Array<RawEnrollmentRow & { courses: { title: string } | null }> }> };
 
-      const [{ data: users }, { data: enrollments }] = await Promise.all([
-        supabase
-          .from("users")
-          .select("id, full_name, email, student_id, created_at, role")
-          .eq("role", "student")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("enrollments")
-          .select("id, user_id, course_id, status, type, enrolled_at, courses(title)")
-          .eq("status", "active"),
-      ]);
-
-      const rawEnrollments = (enrollments ?? []) as RawEnrollmentRow[];
-
-      const studentList: Student[] = (users ?? []).map((u) => {
-        const userEnrollments = rawEnrollments
-          .filter((e) => e.user_id === u.id)
-          .map((e) => {
-            const courseObj = Array.isArray(e.courses) ? e.courses[0] : e.courses;
-            return {
-              id: e.id,
-              course_id: e.course_id,
-              type: e.type,
-              enrolled_at: e.enrolled_at,
-              course_title: courseObj?.title ?? null,
-            };
-          });
-
-        return {
-          id: u.id,
-          full_name: u.full_name,
-          email: u.email,
-          student_id: u.student_id,
-          created_at: u.created_at,
-          enrollments: userEnrollments,
-        };
-      });
+      const studentList: Student[] = (d.students ?? []).map((u) => ({
+        id: u.id,
+        full_name: u.full_name,
+        email: u.email,
+        student_id: u.student_id,
+        created_at: u.created_at,
+        enrollments: (u.enrollments ?? []).map((e) => {
+          const courseObj = Array.isArray(e.courses) ? e.courses[0] : e.courses;
+          return {
+            id: e.id,
+            course_id: e.course_id,
+            type: e.type,
+            enrolled_at: e.enrolled_at,
+            course_title: courseObj?.title ?? null,
+          };
+        }),
+      }));
 
       setStudents(studentList);
       setLoading(false);

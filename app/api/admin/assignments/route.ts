@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-async function requireAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const admin = createAdminClient();
-  const { data } = await admin.from("users").select("role").eq("id", user.id).single();
-  return (data as { role?: string } | null)?.role === "admin" ? user : null;
-}
-
 export async function GET(request: Request) {
-  const user = await requireAdmin();
-  if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const { searchParams } = new URL(request.url);
   const courseId = searchParams.get("courseId");
@@ -32,43 +23,69 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const user = await requireAdmin();
-  if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const body = await request.json() as {
-    courseId: string; lessonId?: string; moduleId?: string; title: string;
-    instructions: string; dueDate?: string; pointsPossible: number; submissionType: string;
+    // accept both snake_case (from page) and camelCase
+    course_id?: string; courseId?: string;
+    lesson_id?: string; lessonId?: string;
+    module_id?: string; moduleId?: string;
+    title: string;
+    instructions?: string;
+    due_date?: string; dueDate?: string;
+    points_possible?: number; pointsPossible?: number;
+    submission_type?: string; submissionType?: string;
   };
+
+  const courseId = body.course_id ?? body.courseId;
+  const lessonId = body.lesson_id ?? body.lessonId ?? null;
+  const moduleId = body.module_id ?? body.moduleId ?? null;
+  const dueDate = body.due_date ?? body.dueDate ?? null;
+  const pointsPossible = body.points_possible ?? body.pointsPossible ?? 100;
+  const submissionType = body.submission_type ?? body.submissionType ?? "file";
+
+  if (!courseId) return NextResponse.json({ error: "course_id is required" }, { status: 400 });
 
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("assignments")
     .insert({
-      course_id: body.courseId, lesson_id: body.lessonId || null, module_id: body.moduleId || null,
-      title: body.title, instructions: body.instructions, due_date: body.dueDate || null,
-      points_possible: body.pointsPossible, submission_type: body.submissionType,
+      course_id: courseId,
+      lesson_id: lessonId,
+      module_id: moduleId,
+      title: body.title,
+      instructions: body.instructions ?? null,
+      due_date: dueDate,
+      points_possible: pointsPossible,
+      submission_type: submissionType,
     })
-    .select().single();
+    .select()
+    .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ assignment: data });
 }
 
 export async function PATCH(request: Request) {
-  const user = await requireAdmin();
-  if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const body = await request.json() as { submissionId: string; score: number; feedback: string };
   if (!body.submissionId) return NextResponse.json({ error: "Missing submissionId" }, { status: 400 });
 
   const admin = createAdminClient();
-  await admin.from("submissions").update({ score: body.score, feedback: body.feedback, graded_at: new Date().toISOString() }).eq("id", body.submissionId);
+  await admin
+    .from("submissions")
+    .update({ score: body.score, feedback: body.feedback, graded_at: new Date().toISOString() })
+    .eq("id", body.submissionId);
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(request: Request) {
-  const user = await requireAdmin();
-  if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });

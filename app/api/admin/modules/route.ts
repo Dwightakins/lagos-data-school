@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const { searchParams } = new URL(request.url);
   const courseId = searchParams.get("courseId");
@@ -22,13 +21,27 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
-  const body = await request.json();
+  const body = await request.json() as {
+    courseId?: string; course_id?: string;
+    title: string;
+    orderIndex?: number; order_index?: number;
+    description?: string;
+  };
+
+  const courseId = body.courseId ?? body.course_id;
+  const orderIndex = body.orderIndex ?? body.order_index ?? 0;
+
+  if (!courseId) return NextResponse.json({ error: "courseId is required" }, { status: 400 });
+
   const admin = createAdminClient();
-  const { data, error } = await admin.from("modules").insert(body).select().single();
+  const { data, error } = await admin
+    .from("modules")
+    .insert({ course_id: courseId, title: body.title, order_index: orderIndex, description: body.description ?? null })
+    .select()
+    .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ module: data });
 }
