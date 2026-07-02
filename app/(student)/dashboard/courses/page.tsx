@@ -10,7 +10,7 @@ interface EnrolledCourse {
   id: string;
   course_id: string;
   enrolled_at: string;
-  payment_type: "full" | "scholarship" | null;
+  type: "full" | "scholarship" | null;
   courses: {
     title: string;
     slug: string;
@@ -33,12 +33,12 @@ interface CertRow {
   course_id: string;
 }
 
-function PayBadge({ type }: { type: "full" | "scholarship" | null }) {
+function PayBadge({ type }: { type: "full" | "scholarship" | null | string }) {
   if (!type) return null;
   const label = type === "scholarship" ? "Scholarship" : "Full Pay";
   const cls = type === "scholarship"
-    ? "bg-amber-100 text-amber-700 border-amber-200"
-    : "bg-emerald-100 text-emerald-700 border-emerald-200";
+    ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700/50"
+    : "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700/50";
   return (
     <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${cls}`}>
       {label}
@@ -71,9 +71,10 @@ export default function MyCoursesPage() {
       const [enrollResult, certsResult] = await Promise.all([
         supabase
           .from("enrollments")
-          .select("id, course_id, enrolled_at, payment_type, courses(title, slug, description, duration, thumbnail_url, cover_image_url)")
+          .select("id, course_id, enrolled_at, type, courses(title, slug, description, duration, thumbnail_url, cover_image_url)")
           .eq("user_id", user.id)
           .or("status.eq.active,status.is.null")
+          .or("payment_status.eq.paid,payment_status.is.null")
           .order("enrolled_at", { ascending: false }),
         supabase
           .from("certificates")
@@ -172,7 +173,7 @@ export default function MyCoursesPage() {
                   )}
                   {/* Payment type badge */}
                   <div className="absolute top-3 left-3">
-                    <PayBadge type={enr.payment_type} />
+                    <PayBadge type={enr.type} />
                   </div>
                   {/* Completion badge */}
                   {pct === 100 && (

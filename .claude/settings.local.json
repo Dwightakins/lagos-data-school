@@ -46,7 +46,8 @@
       "Bash(grep -rn '\"https://\\\\|http://localhost' app/ lib/ --include=\"*.ts\" --include=\"*.tsx\")",
       "Bash(grep -v \".next\\\\|supabase.co\\\\|paystack.co\\\\|resend.com\\\\|//localhost:3000\")",
       "Bash(grep -rn \"\\\\/\\\\*\" app/ lib/ components/ --include=\"*.ts\" --include=\"*.tsx\")",
-      "Bash(grep -v \".next\\\\|\\\\/\\\\*\\\\*\\\\|\\\\/\\\\* =\")"
+      "Bash(grep -v \".next\\\\|\\\\/\\\\*\\\\*\\\\|\\\\/\\\\* =\")",
+      "Bash(echo \"Exit: $?\")"
     ]
   }
 }

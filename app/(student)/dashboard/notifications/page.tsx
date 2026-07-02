@@ -9,18 +9,18 @@ type Filter = typeof FILTERS[number];
 
 function typeIcon(type: string) {
   if (type === "new_lesson") return <BookOpen className="w-4 h-4 text-brand" />;
-  if (type === "assignment") return <Clock className="w-4 h-4 text-orange-400" />;
-  if (type === "certificate") return <Trophy className="w-4 h-4 text-yellow-400" />;
-  if (type === "payment") return <DollarSign className="w-4 h-4 text-green-400" />;
-  if (type === "scholarship") return <BadgeCheck className="w-4 h-4 text-purple-400" />;
-  return <Bell className="w-4 h-4 text-blue-400" />;
+  if (type === "assignment") return <Clock className="w-4 h-4 text-orange-500" />;
+  if (type === "certificate") return <Trophy className="w-4 h-4 text-yellow-500" />;
+  if (type === "payment") return <DollarSign className="w-4 h-4 text-emerald-500" />;
+  if (type === "scholarship") return <BadgeCheck className="w-4 h-4 text-purple-500" />;
+  return <Bell className="w-4 h-4 text-blue-500" />;
 }
 
 function typeBg(type: string) {
   if (type === "new_lesson") return "bg-teal-500/15";
   if (type === "assignment") return "bg-orange-500/15";
   if (type === "certificate") return "bg-yellow-500/15";
-  if (type === "payment") return "bg-green-500/15";
+  if (type === "payment") return "bg-emerald-500/15";
   if (type === "scholarship") return "bg-purple-500/15";
   return "bg-blue-500/15";
 }
@@ -51,7 +51,7 @@ export default function NotificationsPage() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function changeFilter(f: Filter) {
     setFilter(f);
@@ -80,20 +80,34 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <h1 className="text-[1.5rem] font-bold text-foreground">Notifications</h1>
-          {unreadCount > 0 && <span className="bg-brand text-brand-foreground text-[11px] font-bold px-2.5 py-0.5 rounded-full">{unreadCount}</span>}
+          {unreadCount > 0 && (
+            <span className="bg-brand text-brand-foreground text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+              {unreadCount}
+            </span>
+          )}
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="flex items-center gap-1.5 text-[12px] text-brand hover:opacity-80 font-medium min-h-[44px] px-2">
+          <button
+            onClick={markAllRead}
+            className="flex items-center gap-1.5 text-[12px] text-brand hover:opacity-80 font-medium min-h-[44px] px-2"
+          >
             <CheckCheck className="w-4 h-4" /> Mark all read
           </button>
         )}
       </div>
 
       <div>
-        {/* Filter pills */}
         <div className="flex gap-2 mb-6">
           {FILTERS.map((f) => (
-            <button key={f} onClick={() => changeFilter(f)} className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors ${filter === f ? "bg-teal-500 text-foreground" : "bg-foreground/5 text-muted-foreground hover:text-foreground"}`}>
+            <button
+              key={f}
+              onClick={() => changeFilter(f)}
+              className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
+                filter === f
+                  ? "bg-brand text-brand-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
               {f}
             </button>
           ))}
@@ -101,33 +115,52 @@ export default function NotificationsPage() {
 
         {loading ? (
           <div className="space-y-3">
-            {[...Array(5)].map((_, i) => <div key={i} className="h-20 bg-foreground/5 rounded-2xl animate-pulse" />)}
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-20 bg-muted/50 rounded-2xl animate-pulse" />
+            ))}
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-20">
             <Bell className="w-12 h-12 text-border mx-auto mb-4" />
-            <p className="text-[15px] font-semibold text-muted-foreground/60">No notifications</p>
-            <p className="text-[13px] text-muted-foreground/40 mt-1">You are all caught up!</p>
+            <p className="text-[15px] font-semibold text-muted-foreground">No notifications</p>
+            <p className="text-[13px] text-muted-foreground mt-1">You are all caught up!</p>
           </div>
         ) : (
           <div className="space-y-2">
             {notifications.map((n) => (
-              <div key={n.id} className={`flex gap-4 p-4 rounded-2xl border transition-colors ${n.read ? "bg-white/3 border-white/5" : "bg-teal-500/5 border-teal-500/20"}`}>
+              <div
+                key={n.id}
+                className={`flex gap-4 p-4 rounded-2xl border transition-colors ${
+                  n.read
+                    ? "bg-card border-border"
+                    : "bg-brand/5 border-brand/20"
+                }`}
+              >
                 <div className={`w-9 h-9 rounded-xl ${typeBg(n.type)} flex items-center justify-center shrink-0 mt-0.5`}>
                   {typeIcon(n.type)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={`text-[13px] font-semibold ${n.read ? "text-white/70" : "text-foreground"}`}>{n.title}</p>
-                    <span className="text-[11px] text-muted-foreground/60 shrink-0">{relativeTime(n.created_at)}</span>
+                    <p className={`text-[13px] font-semibold ${n.read ? "text-muted-foreground" : "text-foreground"}`}>
+                      {n.title}
+                    </p>
+                    <span className="text-[11px] text-muted-foreground shrink-0">{relativeTime(n.created_at)}</span>
                   </div>
-                  <p className="text-[12px] text-white/45 mt-0.5 line-clamp-2">{n.message}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => markRead(n.id, !n.read)} title={n.read ? "Mark unread" : "Mark read"} className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-brand hover:bg-brand/10 transition-colors">
+                  <button
+                    onClick={() => markRead(n.id, !n.read)}
+                    title={n.read ? "Mark unread" : "Mark read"}
+                    className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground hover:text-brand hover:bg-brand/10 transition-colors"
+                  >
                     <Check className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => deleteNotif(n.id)} title="Delete" className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                  <button
+                    onClick={() => deleteNotif(n.id)}
+                    title="Delete"
+                    className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
