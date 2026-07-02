@@ -16,6 +16,10 @@ export default function VerifyPage() {
   const [message, setMessage] = useState("Verifying payment...");
 
   useEffect(() => {
+    // Certificate verification shortcut: /verify?id=LDSL-xxx → /verify/LDSL-xxx
+    const certId = searchParams.get("id");
+    if (certId) { router.replace(`/verify/${encodeURIComponent(certId)}`); return; }
+
     const verifyPayment = async () => {
       try {
         const reference = searchParams.get("reference");

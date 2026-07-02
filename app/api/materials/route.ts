@@ -9,16 +9,46 @@ export async function GET() {
 
   const admin = createAdminClient();
 
-  const { data: enrollments } = await admin.from("enrollments").select("course_id").eq("user_id", user.id).eq("payment_status", "paid");
+  // Get all courses this student is actively enrolled in
+  const { data: enrollments } = await admin
+    .from("enrollments")
+    .select("course_id")
+    .eq("user_id", user.id)
+    .eq("status", "active");
+
   const courseIds = (enrollments ?? []).map((e: { course_id: string }) => e.course_id);
   if (courseIds.length === 0) return NextResponse.json({ materials: [] });
 
-  const { data, error } = await admin
+  // Get module IDs for enrolled courses (needed for lesson-linked materials)
+  const { data: modules } = await admin
+    .from("modules")
+    .select("id")
+    .in("course_id", courseIds);
+
+  const moduleIds = (modules ?? []).map((m: { id: string }) => m.id);
+
+  let lessonIds: string[] = [];
+  if (moduleIds.length > 0) {
+    const { data: lessons } = await admin
+      .from("lessons")
+      .select("id")
+      .in("module_id", moduleIds);
+    lessonIds = (lessons ?? []).map((l: { id: string }) => l.id);
+  }
+
+  let query = admin
     .from("lesson_materials")
-    .select("*, lessons(title, modules(courses(title))), courses(title)")
-    .or(`course_id.in.(${courseIds.join(",")}),lesson_id.not.is.null`)
+    .select("id, file_name, file_url, file_type, file_size, course_id, lesson_id, created_at, lessons(title, modules(title, courses(title)))")
     .order("created_at", { ascending: false });
 
+  if (lessonIds.length > 0) {
+    query = query.or(`course_id.in.(${courseIds.join(",")}),lesson_id.in.(${lessonIds.join(",")})`);
+  } else {
+    query = query.in("course_id", courseIds);
+  }
+
+  const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
   return NextResponse.json({ materials: data ?? [] });
 }
