@@ -44,6 +44,7 @@ export default function CourseMaterialsPage() {
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState("");
+  const [visibleToAll, setVisibleToAll] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
@@ -72,6 +73,7 @@ export default function CourseMaterialsPage() {
       formData.append("file", files[i]);
       formData.append("course_id", id);
       if (selectedLessonId) formData.append("lesson_id", selectedLessonId);
+      formData.append("visible_to_all", String(visibleToAll));
       const res = await fetch("/api/admin/materials", { method: "POST", body: formData });
       if (res.ok) {
         const d = await res.json();
@@ -85,7 +87,7 @@ export default function CourseMaterialsPage() {
     setUploadProgress("");
     if (fileRef.current) fileRef.current.value = "";
     if (errors.length) setError(errors.join(" · "));
-  }, [id, selectedLessonId]);
+  }, [id, selectedLessonId, visibleToAll]);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -161,6 +163,30 @@ export default function CourseMaterialsPage() {
           {error}
         </div>
       )}
+
+      {/* Visibility toggle */}
+      <div className="flex items-center gap-3 mb-4 bg-muted/30 border border-border rounded-xl px-4 py-3">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={visibleToAll}
+          onClick={() => setVisibleToAll((v) => !v)}
+          className={`relative inline-flex w-10 h-5.5 rounded-full transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-brand/40 ${visibleToAll ? "bg-brand" : "bg-muted-foreground/30"}`}
+          style={{ height: "22px", width: "40px" }}
+        >
+          <span
+            className={`absolute top-[3px] left-[3px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${visibleToAll ? "translate-x-[18px]" : ""}`}
+          />
+        </button>
+        <div>
+          <p className="text-[13px] font-semibold text-foreground">Make available to all enrolled students</p>
+          <p className="text-[11.5px] text-muted-foreground">
+            {visibleToAll
+              ? "All students enrolled in any course will see this file"
+              : "Only students enrolled in this course will see this file"}
+          </p>
+        </div>
+      </div>
 
       {/* Lesson selector */}
       {allLessons.length > 0 && (
@@ -245,9 +271,11 @@ export default function CourseMaterialsPage() {
                   >
                     {m.file_name}
                   </a>
-                  <p className="text-[11px] text-muted-foreground">
-                    {m.file_size ? formatSize(m.file_size) : ""}
-                    {m.lessons?.title ? ` · ${m.lessons.title}` : ""}
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-2">
+                    <span>{m.file_size ? formatSize(m.file_size) : ""}{m.lessons?.title ? ` · ${m.lessons.title}` : ""}</span>
+                    {m.visible_to_all && (
+                      <span className="text-[10px] font-bold text-teal-700 bg-teal-100 px-1.5 py-0.5 rounded-full">All Students</span>
+                    )}
                   </p>
                 </div>
                 <button

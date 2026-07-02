@@ -98,13 +98,14 @@ export default function PaymentsPage() {
                     <div>
                       <p className="text-[15px] font-black text-foreground">{formatNaira(p.amount)}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(p.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</p>
+                      {p.reference && <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate max-w-[160px]">{p.reference}</p>}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${(p.payment_intents?.payment_type === "scholarship") ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
                         {p.payment_intents?.payment_type === "scholarship" ? "Scholarship" : "Full Pay"}
                       </span>
                       <a href={`/api/invoice/${p.id}`} className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline">
-                        <Download className="w-3 h-3" /> Invoice
+                        <Download className="w-3 h-3" /> Receipt
                       </a>
                     </div>
                   </div>
@@ -118,7 +119,7 @@ export default function PaymentsPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border bg-muted/40">
-                      {["Date", "Course", "Amount", "Type", "Status", "Invoice"].map((h) => (
+                      {["Date", "Course", "Amount", "Type", "Status", "Reference", "Receipt"].map((h) => (
                         <th key={h} className="text-left text-[12px] font-bold text-muted-foreground uppercase tracking-wide px-5 py-3">{h}</th>
                       ))}
                     </tr>
@@ -145,12 +146,15 @@ export default function PaymentsPage() {
                             {p.status}
                           </span>
                         </td>
+                        <td className="px-5 py-4 text-[12px] text-muted-foreground font-mono max-w-[130px] truncate">
+                          {p.reference || "—"}
+                        </td>
                         <td className="px-5 py-4">
                           <a
                             href={`/api/invoice/${p.id}`}
                             className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline"
                           >
-                            <Download className="w-3 h-3" /> Invoice
+                            <Download className="w-3 h-3" /> Receipt
                           </a>
                         </td>
                       </tr>

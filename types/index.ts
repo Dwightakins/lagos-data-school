@@ -133,6 +133,7 @@ export interface LessonMaterial {
   file_url: string;
   file_type: string;
   file_size?: number;
+  visible_to_all?: boolean;
   created_at: string;
   lessons?: { title: string } | null;
 }

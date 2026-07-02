@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   const file = formData.get("file") as File | null;
   const courseId = formData.get("course_id") as string | null ?? formData.get("courseId") as string | null;
   const lessonId = formData.get("lesson_id") as string | null ?? formData.get("lessonId") as string | null;
+  const visibleToAll = formData.get("visible_to_all") === "true";
 
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
   if (!courseId) return NextResponse.json({ error: "course_id is required" }, { status: 400 });
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       file_url: publicUrl,
       file_type: file.type || `application/${ext}`,
       file_size: file.size,
+      visible_to_all: visibleToAll,
     })
     .select()
     .single();

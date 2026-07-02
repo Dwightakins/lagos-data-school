@@ -17,37 +17,19 @@ export async function GET() {
     .or("status.eq.active,status.is.null");
 
   const courseIds = (enrollments ?? []).map((e: { course_id: string }) => e.course_id);
+
+  // No enrollments → nothing to show
   if (courseIds.length === 0) return NextResponse.json({ materials: [] });
 
-  // Get module IDs for enrolled courses (needed for lesson-linked materials)
-  const { data: modules } = await admin
-    .from("modules")
-    .select("id")
-    .in("course_id", courseIds);
+  // Return materials for enrolled courses OR marked visible to all enrolled students
+  const orFilter = `course_id.in.(${courseIds.join(",")}),visible_to_all.eq.true`;
 
-  const moduleIds = (modules ?? []).map((m: { id: string }) => m.id);
-
-  let lessonIds: string[] = [];
-  if (moduleIds.length > 0) {
-    const { data: lessons } = await admin
-      .from("lessons")
-      .select("id")
-      .in("module_id", moduleIds);
-    lessonIds = (lessons ?? []).map((l: { id: string }) => l.id);
-  }
-
-  let query = admin
+  const { data, error } = await admin
     .from("lesson_materials")
-    .select("id, file_name, file_url, file_type, file_size, course_id, lesson_id, created_at, lessons(title, modules(title, courses(title)))")
+    .select("id, file_name, file_url, file_type, file_size, course_id, lesson_id, visible_to_all, created_at, lessons(title, modules(title, courses(title)))")
+    .or(orFilter)
     .order("created_at", { ascending: false });
 
-  if (lessonIds.length > 0) {
-    query = query.or(`course_id.in.(${courseIds.join(",")}),lesson_id.in.(${lessonIds.join(",")})`);
-  } else {
-    query = query.in("course_id", courseIds);
-  }
-
-  const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ materials: data ?? [] });
