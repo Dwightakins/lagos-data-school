@@ -64,7 +64,7 @@ export async function GET() {
     admin
       .from("users")
       .select("id", { count: "exact", head: true })
-      .eq("role", "student"),
+      .neq("role", "admin"),
     admin
       .from("payments")
       .select("amount")

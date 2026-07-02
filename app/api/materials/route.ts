@@ -14,7 +14,7 @@ export async function GET() {
     .from("enrollments")
     .select("course_id")
     .eq("user_id", user.id)
-    .eq("status", "active");
+    .or("status.eq.active,status.is.null");
 
   const courseIds = (enrollments ?? []).map((e: { course_id: string }) => e.course_id);
   if (courseIds.length === 0) return NextResponse.json({ materials: [] });

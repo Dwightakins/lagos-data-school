@@ -73,7 +73,7 @@ export default function MyCoursesPage() {
           .from("enrollments")
           .select("id, course_id, enrolled_at, payment_type, courses(title, slug, description, duration, thumbnail_url, cover_image_url)")
           .eq("user_id", user.id)
-          .eq("status", "active")
+          .or("status.eq.active,status.is.null")
           .order("enrolled_at", { ascending: false }),
         supabase
           .from("certificates")

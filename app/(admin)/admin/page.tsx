@@ -6,8 +6,8 @@ import Link from "next/link";
 async function getStats() {
   const admin = createAdminClient();
   const [students, enrollments, scholarships, certificates, courses, payments] = await Promise.all([
-    admin.from("users").select("id", { count: "exact", head: true }).eq("role", "student"),
-    admin.from("enrollments").select("id", { count: "exact", head: true }).eq("payment_status", "paid"),
+    admin.from("users").select("id", { count: "exact", head: true }).neq("role", "admin"),
+    admin.from("enrollments").select("id", { count: "exact", head: true }).or("status.eq.active,status.is.null"),
     admin.from("scholarship_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
     admin.from("certificates").select("id", { count: "exact", head: true }),
     admin.from("courses").select("id", { count: "exact", head: true }).eq("published", true),
