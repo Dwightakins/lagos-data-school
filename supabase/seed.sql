@@ -15,10 +15,12 @@ VALUES
    'Master the full data analytics toolkit used by top Nigerian companies. Learn to clean, analyse, and visualise data using Microsoft Excel, SQL, and Power BI — then build dashboards that drive real business decisions.',
    120000, NULL, true),
 
+
   ('c0000000-0000-0000-0000-000000000002',
    'Machine Learning with Python',
    'machine-learning',
-   'Go from beginner to job-ready ML engineer. Cover the complete pipeline — data wrangling, feature engineering, model training, evaluation, and deployment — using Python, scikit-learn, and TensorFlow.',
+   'Go from beginner to 
+   job-ready ML engineer. Cover the complete pipeline — data wrangling, feature engineering, model training, evaluation, and deployment — using Python, scikit-learn, and TensorFlow.',
    180000, NULL, true),
 
   ('c0000000-0000-0000-0000-000000000003',

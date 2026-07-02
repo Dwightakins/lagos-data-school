@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft, User, Mail, Phone, Shield, Award, CreditCard,
   BookOpen, AlertTriangle, CheckCircle, Lock, Trash2, FileText,
-  Plus, X, RotateCcw,
+  Plus, X,
 } from "lucide-react";
 
 interface Enrollment {

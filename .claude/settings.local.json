@@ -40,7 +40,13 @@
       "Bash(cat \"components/auth/steps/Step2Course.tsx\")",
       "Bash(cat \"components/auth/types.ts\")",
       "Bash(cat \"app/api/admin/certificates/list/route.ts\")",
-      "Bash(ls \"app/api/admin/certificates/\")"
+      "Bash(ls \"app/api/admin/certificates/\")",
+      "Bash(npx knip *)",
+      "Bash(python3 -c ' *)",
+      "Bash(grep -rn '\"https://\\\\|http://localhost' app/ lib/ --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(grep -v \".next\\\\|supabase.co\\\\|paystack.co\\\\|resend.com\\\\|//localhost:3000\")",
+      "Bash(grep -rn \"\\\\/\\\\*\" app/ lib/ components/ --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(grep -v \".next\\\\|\\\\/\\\\*\\\\*\\\\|\\\\/\\\\* =\")"
     ]
   }
 }

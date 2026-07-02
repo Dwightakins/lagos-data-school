@@ -3,8 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { User, Lock, Bell, Trash2, Eye, EyeOff, Upload, Camera } from "lucide-react";
+import { User, Trash2, Eye, EyeOff, Camera } from "lucide-react";
 
 const TABS = ["Profile", "Security", "Notifications", "Account"] as const;
 type Tab = typeof TABS[number];
