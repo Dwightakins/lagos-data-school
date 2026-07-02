@@ -33,7 +33,14 @@
       "Bash(dir \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\api\" /s /b)",
       "Bash(xargs grep -l \"storage\\\\|bucket\")",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in deps.items\\(\\) if any\\(x in k for x in ['toast','sonner','notify','alert']\\)]\")",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "PowerShell(ls \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\api\\\\lessons\\\\\" 2>$null | Select-Object Name; if \\(-not \\(Test-Path \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\api\\\\lessons\\\\\"\\)\\) { \"DIR NOT FOUND\" })",
+      "PowerShell(ls \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\api\\\\certificates\\\\\" 2>$null | Select-Object Name; if \\(-not \\(Test-Path \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\app\\\\api\\\\certificates\\\\\"\\)\\) { \"DIR NOT FOUND\" })",
+      "PowerShell(ls \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\supabase\\\\migrations\\\\\" 2>$null | Select-Object Name; if \\(-not \\(Test-Path \"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\supabase\\\\migrations\\\\\"\\)\\) { \"DIR NOT FOUND\" })",
+      "Bash(cat \"components/auth/steps/Step2Course.tsx\")",
+      "Bash(cat \"components/auth/types.ts\")",
+      "Bash(cat \"app/api/admin/certificates/list/route.ts\")",
+      "Bash(ls \"app/api/admin/certificates/\")"
     ]
   }
 }
