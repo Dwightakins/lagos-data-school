@@ -67,7 +67,7 @@ export default function SupportPage() {
       {/* Contact info cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
         <a
-          href="mailto:support@lagosdataschool.com"
+          href="mailto:support@lagosdataschoolltd.com"
           className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4 hover:border-brand/30 hover:shadow-sm transition-all group"
         >
           <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center shrink-0 group-hover:bg-brand/15 transition-colors">
@@ -75,7 +75,7 @@ export default function SupportPage() {
           </div>
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-foreground">Email Us</p>
-            <p className="text-[12px] text-muted-foreground truncate">support@lagosdataschool.com</p>
+            <p className="text-[12px] text-muted-foreground truncate">support@lagosdataschoolltd.com</p>
           </div>
         </a>
         <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">

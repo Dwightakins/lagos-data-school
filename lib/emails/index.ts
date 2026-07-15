@@ -10,7 +10,7 @@ export const FROM_ADDRESS =
   process.env.RESEND_FROM_EMAIL ?? "Lagos Data School <onboarding@resend.dev>";
 
 export const SUPPORT_EMAIL =
-  process.env.SUPPORT_EMAIL ?? "support@lagosdataschool.com";
+  process.env.SUPPORT_EMAIL ?? "support@lagosdataschoolltd.com";
 
 interface SendEmailOptions {
   to: string;

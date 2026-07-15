@@ -161,7 +161,7 @@ export default async function VerifyCertificatePage({
 
         <p className="text-center text-[12px] text-muted-foreground mt-8">
           Questions about this certificate?{" "}
-          <a href="mailto:hello@lagosdataschool.com" className="text-brand hover:underline font-medium">
+          <a href="mailto:support@lagosdataschoolltd.com" className="text-brand hover:underline font-medium">
             Contact us
           </a>
         </p>

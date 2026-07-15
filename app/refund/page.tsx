@@ -16,7 +16,7 @@ const SECTIONS = [
   },
   {
     title: "2. How to Request a Refund",
-    content: `To request a refund, email hello@lagosdataschool.com with your full name, registered email address, order reference, and the reason for your request. We will acknowledge your request within 2 business days.`,
+    content: `To request a refund, email support@lagosdataschoolltd.com with your full name, registered email address, order reference, and the reason for your request. We will acknowledge your request within 2 business days.`,
   },
   {
     title: "3. Processing Time",
@@ -32,7 +32,7 @@ const SECTIONS = [
   },
   {
     title: "6. Disputes",
-    content: `If you are unsatisfied with our refund decision, you may escalate the matter by contacting hello@lagosdataschool.com with the subject line "Refund Dispute". We will conduct a second review within 5 business days.`,
+    content: `If you are unsatisfied with our refund decision, you may escalate the matter by contacting support@lagosdataschoolltd.com with the subject line "Refund Dispute". We will conduct a second review within 5 business days.`,
   },
 ];
 

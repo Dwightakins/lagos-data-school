@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
             </table>
             <p style="margin:0 0 28px;font-size:14px;color:#64748B;line-height:1.7;">
               Questions? Reach us at
-              <a href="mailto:hello@lagosdataschool.com" style="color:#0D9488;font-weight:600;">hello@lagosdataschool.com</a>.
+              <a href="mailto:support@lagosdataschoolltd.com" style="color:#0D9488;font-weight:600;">support@lagosdataschoolltd.com</a>.
             </p>
             <a href="https://lagosdataschool.com/courses" style="display:inline-block;background:#0D9488;color:#ffffff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;">
               Browse Courses →
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
             <p style="margin:0;color:#94A3B8;font-size:11px;">
               <a href="https://lagosdataschool.com" style="color:#0D9488;">lagosdataschool.com</a>
               &nbsp;·&nbsp;
-              <a href="mailto:hello@lagosdataschool.com" style="color:#0D9488;">hello@lagosdataschool.com</a>
+              <a href="mailto:support@lagosdataschoolltd.com" style="color:#0D9488;">support@lagosdataschoolltd.com</a>
             </p>
           </td>
         </tr>

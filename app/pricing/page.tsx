@@ -44,7 +44,7 @@ const FAQ = [
   },
   {
     q: "Can I pay in installments?",
-    a: "We currently offer full payment or the scholarship option. Contact us at hello@lagosdataschool.com to discuss your situation.",
+    a: "We currently offer full payment or the scholarship option. Contact us at support@lagosdataschoolltd.com to discuss your situation.",
   },
   {
     q: "Is there a refund policy?",

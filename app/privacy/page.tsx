@@ -28,15 +28,15 @@ const SECTIONS = [
   },
   {
     title: "Data Retention",
-    content: `We retain your account data for as long as your account is active or as required by applicable Nigerian law. You may request deletion of your account and personal data by contacting us at hello@lagosdataschool.com.`,
+    content: `We retain your account data for as long as your account is active or as required by applicable Nigerian law. You may request deletion of your account and personal data by contacting us at support@lagosdataschoolltd.com.`,
   },
   {
     title: "Your Rights",
-    content: `Under applicable law, you have the right to access, correct, or delete your personal data. To exercise these rights, contact us at hello@lagosdataschool.com. We will respond within 30 days.`,
+    content: `Under applicable law, you have the right to access, correct, or delete your personal data. To exercise these rights, contact us at support@lagosdataschoolltd.com. We will respond within 30 days.`,
   },
   {
     title: "Contact",
-    content: `For privacy-related queries, contact our Data Protection Officer at hello@lagosdataschool.com or write to us at Lagos Data School Limited, Lagos Island, Lagos, Nigeria.`,
+    content: `For privacy-related queries, contact our Data Protection Officer at support@lagosdataschoolltd.com or write to us at Lagos Data School Limited, 125 Ijegun Road, Isheri Osun, Almaroof Gate Bus Stop, Lagos, Nigeria.`,
   },
 ];
 

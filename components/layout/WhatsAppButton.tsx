@@ -20,7 +20,7 @@ export function WhatsAppButton() {
   if (isHidden) return null;
 
   const message = encodeURIComponent("Hi, I'm interested in Lagos Data School courses");
-  const href = `https://wa.me/2348000000000?text=${message}`;
+  const href = `https://wa.me/2348082845543?text=${message}`;
 
   return (
     <a

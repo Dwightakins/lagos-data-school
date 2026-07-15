@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 };
 
 const CONTACT_INFO = [
-  { Icon: Mail, label: "Email", value: "hello@lagosdataschool.com", href: "mailto:hello@lagosdataschool.com" },
-  { Icon: Phone, label: "Phone / WhatsApp", value: "+234 800 000 0000", href: "tel:+2348000000000" },
-  { Icon: MapPin, label: "Address", value: "Lagos Island, Lagos, Nigeria", href: null },
+  { Icon: Mail, label: "Email", value: "support@lagosdataschoolltd.com", href: "mailto:support@lagosdataschoolltd.com" },
+  { Icon: Phone, label: "Phone / WhatsApp", value: "+234 808 284 5543", href: "tel:+2348082845543" },
+  { Icon: MapPin, label: "Address", value: "125 Ijegun Road, Isheri Osun, Almaroof Gate Bus Stop, Lagos, Nigeria", href: null },
   { Icon: MessageSquare, label: "Live Chat", value: "Available Mon–Fri, 9am–5pm WAT", href: null },
 ];
 

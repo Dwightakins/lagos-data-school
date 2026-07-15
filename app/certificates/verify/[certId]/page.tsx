@@ -90,7 +90,7 @@ export default async function CertificateVerifyPage({ params }: PageProps) {
         </div>
 
         <p className="text-center text-[11.5px] text-muted-foreground mt-4">
-          Verified at lagosdata.school · Questions? Contact <span className="text-brand">support@lagosdata.school</span>
+          Verified at lagosdata.school · Questions? Contact <span className="text-brand">support@lagosdataschoolltd.com</span>
         </p>
       </div>
     </div>
