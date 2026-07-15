@@ -7,6 +7,8 @@ import { CheckCircle } from "lucide-react";
 export function ContactForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, phone, subject, message }),
       });
       const data = await res.json() as { error?: string; success?: boolean };
       if (!res.ok) {
@@ -35,6 +37,8 @@ export function ContactForm() {
       setLoading(false);
     }
   }
+
+  const inputCls = "w-full px-4 py-2.5 rounded-lg border border-border text-[14px] text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors";
 
   return (
     <div className="relative bg-card rounded-2xl border border-border p-7 shadow-sm">
@@ -60,7 +64,7 @@ export function ContactForm() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 placeholder="Your full name"
-                className="w-full px-4 py-2.5 rounded-lg border border-border text-[14px] text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                className={inputCls}
               />
             </div>
             <div>
@@ -71,7 +75,30 @@ export function ContactForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full px-4 py-2.5 rounded-lg border border-border text-[14px] text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className="block text-[12.5px] font-semibold text-foreground mb-1.5">
+                Phone Number <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+234 808 284 5543"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className="block text-[12.5px] font-semibold text-foreground mb-1.5">Subject</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                required
+                placeholder="What is this about?"
+                className={inputCls}
               />
             </div>
             <div>
@@ -82,7 +109,7 @@ export function ContactForm() {
                 required
                 rows={4}
                 placeholder="How can we help you?"
-                className="w-full px-4 py-2.5 rounded-lg border border-border text-[14px] text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors resize-none"
+                className={`${inputCls} resize-none`}
               />
             </div>
 

@@ -16,6 +16,7 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
 }
 
 /** Send an email via Resend. Returns true on success, false on failure (non-throwing). */
@@ -27,6 +28,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
+      ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
     });
     if (error) {
       console.error("[email] Resend error:", error);

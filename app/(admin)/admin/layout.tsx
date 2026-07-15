@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, Award,
   DollarSign, Megaphone, Tag, UserCheck, Mail, Sun, Moon, Menu, X, Settings,
-  MessageSquare, LifeBuoy,
+  MessageSquare, LifeBuoy, Inbox,
 } from "lucide-react";
 import { AppLogo } from "@/components/layout/logo";
 import { useTheme } from "@/components/theme-provider";
@@ -21,6 +21,7 @@ const NAV = [
   { href: "/admin/revenue", label: "Revenue", Icon: DollarSign },
   { href: "/admin/announcements", label: "Announcements", Icon: Megaphone },
   { href: "/admin/messages", label: "Messages", Icon: MessageSquare },
+  { href: "/admin/contact", label: "Contact", Icon: Inbox },
   { href: "/admin/support", label: "Support", Icon: LifeBuoy },
   { href: "/admin/coupons", label: "Coupons", Icon: Tag },
   { href: "/admin/instructors", label: "Instructors", Icon: UserCheck },
@@ -49,6 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [adminName, setAdminName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadContact, setUnreadContact] = useState(0);
 
   useEffect(() => {
     const check = async () => {
@@ -67,6 +69,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       fetch("/api/admin/messages?type=inbox")
         .then(r => r.json())
         .then((d: { unread?: number }) => setUnreadMessages(d.unread ?? 0))
+        .catch(() => {});
+
+      fetch("/api/admin/contact?status=new")
+        .then(r => r.json())
+        .then((d: { unread?: number }) => setUnreadContact(d.unread ?? 0))
         .catch(() => {});
     };
     check();
@@ -148,7 +155,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {NAV.map((item) => {
             const active = isActive(item);
-            const badge = item.href === "/admin/messages" && unreadMessages > 0 ? unreadMessages : 0;
+            const badge =
+              item.href === "/admin/messages" && unreadMessages > 0 ? unreadMessages :
+              item.href === "/admin/contact" && unreadContact > 0 ? unreadContact :
+              0;
             return (
               <Link
                 key={item.href}

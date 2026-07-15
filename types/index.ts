@@ -148,6 +148,17 @@ export interface LessonComment {
   created_at: string;
 }
 
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  status: "new" | "read" | "replied";
+  created_at: string;
+}
+
 export interface SupportTicket {
   id: string;
   user_id: string;
