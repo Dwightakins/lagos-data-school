@@ -107,8 +107,20 @@ export default function AdminCharts() {
     );
   }
 
-  if (!data || (data.monthly.length === 0 && data.bycourse.length === 0)) {
-    return null;
+  const hasMonthlyData =
+    !!data && data.monthly.some((m) => m.enrollments > 0 || m.revenue > 0);
+  if (!data || (!hasMonthlyData && data.bycourse.length === 0)) {
+    return (
+      <div className="mt-6">
+        <h2 className="text-[14px] font-bold text-foreground mb-4">Analytics</h2>
+        <div className="bg-card border border-border rounded-2xl p-12 text-center">
+          <p className="text-foreground font-semibold mb-1">No data yet</p>
+          <p className="text-muted-foreground text-[13px]">
+            Charts will appear here once students start enrolling and paying.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const shortName = (n: string) => n.length > 14 ? n.slice(0, 13) + "…" : n;

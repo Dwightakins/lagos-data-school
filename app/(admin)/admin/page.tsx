@@ -1,7 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Users, BookOpen, GraduationCap, Award, DollarSign, Plus, Megaphone, Clock } from "lucide-react";
 import AdminCharts from "@/components/admin/AdminCharts";
+import DashboardAutoRefresh from "@/components/admin/DashboardAutoRefresh";
 import Link from "next/link";
+
+// Always render with fresh data so the auto-refresh interval picks up changes
+export const dynamic = "force-dynamic";
 
 async function getStats() {
   const admin = createAdminClient();
@@ -117,6 +121,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="p-4 md:p-8">
+      <DashboardAutoRefresh />
       <div className="mb-6">
         <p className="text-[11px] font-bold text-brand uppercase tracking-[0.28em] mb-1">Admin Panel</p>
         <h1 className="text-[1.75rem] font-bold text-foreground">Dashboard</h1>
@@ -139,7 +144,7 @@ export default async function AdminDashboardPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
         <Link
-          href="/admin/courses"
+          href="/admin/courses/new"
           className="flex items-center gap-3 bg-brand hover:opacity-90 text-brand-foreground font-semibold text-[14px] px-5 py-3.5 rounded-xl transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4 shrink-0" />

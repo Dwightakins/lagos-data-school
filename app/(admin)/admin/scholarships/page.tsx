@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { Fragment, useEffect, useState, useCallback } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -9,17 +8,24 @@ import {
   Clock,
   Search,
   AlertCircle,
+  BadgeCheck,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 type Status = "pending" | "approved" | "rejected" | "revoked";
+type DisplayStatus = Status | "paid";
 
 interface Application {
   id: string;
   created_at: string;
+  course_id: string | null;
   course_name: string;
   status: Status;
   payment_reference: string | null;
   amount_paid: number | null;
+  payment_completed: boolean | null;
+  essay: string | null;
   users: { full_name: string; email: string } | null;
   applicant_name: string | null;
   applicant_email: string | null;
@@ -31,11 +37,17 @@ interface Notification {
   message: string;
 }
 
-function StatusBadge({ status }: { status: Status }) {
+function StatusBadge({ status }: { status: DisplayStatus }) {
   const map: Record<
-    Status,
+    DisplayStatus,
     { label: string; className: string; Icon: typeof CheckCircle2 }
   > = {
+    paid: {
+      label: "Paid",
+      className:
+        "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-800/50",
+      Icon: BadgeCheck,
+    },
     pending: {
       label: "Pending",
       className:
@@ -86,7 +98,11 @@ export default function ScholarshipsPage() {
   const [filter, setFilter] = useState<Status | "all">("pending");
   const [search, setSearch] = useState("");
   const [actioning, setActioning] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notification | null>(null);
+
+  const displayStatus = (a: Application): DisplayStatus =>
+    a.status === "approved" && a.payment_completed ? "paid" : a.status;
 
   const showNotification = (type: Notification["type"], message: string) => {
     setNotification({ type, message });
@@ -94,21 +110,13 @@ export default function ScholarshipsPage() {
   };
 
   const loadApps = useCallback(async () => {
-    const supabase = createClient();
-    let query = supabase
-      .from("scholarship_applications")
-      .select(
-        "id, created_at, course_name, status, payment_reference, amount_paid, applicant_name, applicant_email, applicant_phone, users(full_name, email)"
-      )
-      .order("created_at", { ascending: false });
-
-    if (filter !== "all") query = query.eq("status", filter);
-
-    const { data, error } = await query;
-    if (error) {
+    try {
+      const res = await fetch(`/api/admin/scholarship?status=${filter}`);
+      if (!res.ok) throw new Error("request failed");
+      const json = (await res.json()) as { applications?: Application[] };
+      setApps(json.applications ?? []);
+    } catch {
       showNotification("error", "Failed to load applications.");
-    } else {
-      setApps((data ?? []) as unknown as Application[]);
     }
     setLoading(false);
   }, [filter]);
@@ -299,12 +307,22 @@ export default function ScholarshipsPage() {
               </thead>
               <tbody>
                 {filtered.map((app) => (
+                  <Fragment key={app.id}>
                   <tr
-                    key={app.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
+                    className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
+                    onClick={() =>
+                      setExpanded((prev) => (prev === app.id ? null : app.id))
+                    }
                   >
                     <td className="px-5 py-4 font-semibold text-foreground">
-                      {(app.users?.full_name ?? app.applicant_name ?? "—")}
+                      <span className="inline-flex items-center gap-1.5">
+                        {expanded === app.id ? (
+                          <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                        {(app.users?.full_name ?? app.applicant_name ?? "—")}
+                      </span>
                     </td>
                     <td className="px-5 py-4 text-muted-foreground">
                       {(app.users?.email ?? app.applicant_email ?? "—")}
@@ -323,9 +341,12 @@ export default function ScholarshipsPage() {
                       {fmtDate(app.created_at)}
                     </td>
                     <td className="px-5 py-4">
-                      <StatusBadge status={app.status} />
+                      <StatusBadge status={displayStatus(app)} />
                     </td>
-                    <td className="px-5 py-4">
+                    <td
+                      className="px-5 py-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex items-center gap-2">
                         {app.status === "pending" && (
                           <>
@@ -373,6 +394,33 @@ export default function ScholarshipsPage() {
                       </div>
                     </td>
                   </tr>
+                  {expanded === app.id && (
+                    <tr className="border-b border-border last:border-0 bg-muted/20">
+                      <td colSpan={6} className="px-5 py-4">
+                        <div className="grid sm:grid-cols-[1fr_auto] gap-4">
+                          <div>
+                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
+                              Applicant&apos;s Reason
+                            </p>
+                            <p className="text-[13px] text-foreground leading-relaxed whitespace-pre-wrap max-w-3xl">
+                              {app.essay?.trim() || "No reason provided."}
+                            </p>
+                          </div>
+                          {app.applicant_phone && (
+                            <div className="shrink-0">
+                              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
+                                Phone
+                              </p>
+                              <p className="text-[13px] text-foreground">
+                                {app.applicant_phone}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -394,7 +442,7 @@ export default function ScholarshipsPage() {
                       {(app.users?.email ?? app.applicant_email ?? "—")}
                     </p>
                   </div>
-                  <StatusBadge status={app.status} />
+                  <StatusBadge status={displayStatus(app)} />
                 </div>
 
                 <div className="text-[12.5px] space-y-1">
@@ -412,6 +460,30 @@ export default function ScholarshipsPage() {
                     {fmtDate(app.created_at)}
                   </p>
                 </div>
+
+                {app.essay?.trim() && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpanded((prev) => (prev === app.id ? null : app.id))
+                      }
+                      className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand"
+                    >
+                      {expanded === app.id ? (
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      )}
+                      {expanded === app.id ? "Hide reason" : "View reason"}
+                    </button>
+                    {expanded === app.id && (
+                      <p className="mt-2 text-[12.5px] text-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 border border-border rounded-lg p-3">
+                        {app.essay}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {app.status === "pending" && (
                   <div className="flex gap-2 pt-1">

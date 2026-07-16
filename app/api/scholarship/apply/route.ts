@@ -151,5 +151,28 @@ export async function POST(req: NextRequest) {
 </html>`,
   });
 
+  // Notify the admin team — non-blocking
+  void sendEmail({
+    to: "support@lagosdataschoolltd.com",
+    subject: `New Scholarship Application — ${name} (${courseTitle})`,
+    html: `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+  <h2 style="color:#134E4A;margin:0 0 16px;">New Scholarship Application</h2>
+  <table cellpadding="6" cellspacing="0" style="font-size:14px;color:#1e293b;">
+    <tr><td style="color:#64748B;">Applicant</td><td><strong>${name}</strong></td></tr>
+    <tr><td style="color:#64748B;">Email</td><td>${email}</td></tr>
+    <tr><td style="color:#64748B;">Phone</td><td>${phone || "—"}</td></tr>
+    <tr><td style="color:#64748B;">Course</td><td>${courseTitle}</td></tr>
+    <tr><td style="color:#64748B;">Date</td><td>${appliedDate}</td></tr>
+  </table>
+  <p style="font-size:13px;color:#64748B;margin:16px 0 6px;"><strong>Reason:</strong></p>
+  <p style="font-size:13px;color:#1e293b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;white-space:pre-wrap;">${essay.replace(/</g, "&lt;")}</p>
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://lagosdataschoolltd.com"}/admin/scholarships"
+     style="display:inline-block;margin-top:16px;background:#0D9488;color:#fff;font-size:13px;font-weight:700;padding:12px 24px;border-radius:8px;text-decoration:none;">
+    Review in Admin Panel →
+  </a>
+</div>`,
+  });
+
   return NextResponse.json({ success: true });
 }

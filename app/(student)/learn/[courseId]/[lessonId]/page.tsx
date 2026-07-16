@@ -11,6 +11,7 @@ import {
   FileText, Send, ThumbsUp, Trash2, Edit3, Check, Plus, File,
   FileText as FileTxt, Film, Archive, Image as Img,
   Bookmark, BookmarkCheck, ChevronDown, ChevronUp, AlertCircle,
+  Lock, ClipboardList, HelpCircle, Upload, Link2,
 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────── */
@@ -30,6 +31,26 @@ interface Note { id: string; note_text: string; created_at: string; }
 // API returns "title" field, not "file_name"
 interface Material { id: string; title: string; file_url: string; file_type: string; file_size?: number | null; }
 interface BookmarkEntry { id: string; lessons: { id: string } | null; }
+interface Quiz {
+  id: string; module_id: string | null; title: string;
+  passing_score: number; time_limit: number | null;
+  attempt: { score: number | null; passed: boolean } | null;
+}
+interface QuizQuestion {
+  id: string; question_text: string;
+  question_type: "multiple_choice" | "true_false" | "short_answer";
+  points: number; options: string[];
+}
+interface Assignment {
+  id: string; title: string; instructions: string;
+  due_date: string | null; points_possible: number;
+  submission_type: "file" | "text" | "url";
+  submission: {
+    id: string; file_url: string | null; text_content: string | null;
+    url_content: string | null; score: number | null; feedback: string | null;
+    graded_at: string | null; submitted_at: string;
+  } | null;
+}
 
 type Tab = "overview" | "materials" | "discussion" | "notes";
 
@@ -455,6 +476,310 @@ function NotesTab({ lessonId }: { lessonId: string }) {
   );
 }
 
+/* ── Quiz section ─────────────────────────────────────── */
+function QuizSection({ quiz, onResult }: { quiz: Quiz; onResult: (quizId: string, score: number, passed: boolean) => void }) {
+  const [open, setOpen] = useState(false);
+  const [questions, setQuestions] = useState<QuizQuestion[] | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function startQuiz() {
+    setOpen(true);
+    setResult(null);
+    setAnswers({});
+    setError(null);
+    if (!questions) {
+      try {
+        const res = await fetch(`/api/quiz?quizId=${quiz.id}`);
+        const d = await res.json() as { questions?: QuizQuestion[]; error?: string };
+        if (d.questions) setQuestions(d.questions);
+        else setError(d.error ?? "Failed to load quiz.");
+      } catch {
+        setError("Network error loading quiz.");
+      }
+    }
+  }
+
+  async function submit() {
+    if (!questions) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/quiz/attempt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quizId: quiz.id,
+          answers: questions.map(q => ({ questionId: q.id, answer: answers[q.id] ?? "" })),
+        }),
+      });
+      const d = await res.json() as { score?: number; passed?: boolean; error?: string };
+      if (typeof d.score === "number") {
+        setResult({ score: d.score, passed: !!d.passed });
+        onResult(quiz.id, d.score, !!d.passed);
+      } else {
+        setError(d.error ?? "Failed to submit quiz.");
+      }
+    } catch {
+      setError("Network error submitting quiz.");
+    }
+    setSubmitting(false);
+  }
+
+  const answeredAll = questions ? questions.every(q => (answers[q.id] ?? "").trim() !== "") : false;
+
+  return (
+    <div className="mt-6 bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center shrink-0">
+            <HelpCircle className="w-5 h-5 text-brand" />
+          </div>
+          <div>
+            <p className="text-[14px] font-bold text-foreground">{quiz.title}</p>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              Module quiz · pass mark {quiz.passing_score}%
+              {quiz.time_limit ? ` · ${quiz.time_limit} min` : ""}
+              {quiz.attempt && (
+                <span className={`ml-2 font-bold ${quiz.attempt.passed ? "text-brand" : "text-red-500"}`}>
+                  Best: {quiz.attempt.score ?? 0}% {quiz.attempt.passed ? "(Passed)" : "(Not passed)"}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+        <button type="button" onClick={startQuiz}
+          className="shrink-0 bg-brand hover:opacity-90 text-white font-bold text-[13px] px-5 py-2.5 rounded-xl transition-opacity">
+          {quiz.attempt ? (quiz.attempt.passed ? "Review Quiz" : "Retake Quiz") : "Take Quiz"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !submitting && setOpen(false)} />
+          <div className="relative bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-[16px] font-black text-foreground">{quiz.title}</h3>
+              <button type="button" onClick={() => setOpen(false)} disabled={submitting}
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 dark:bg-red-950/40 dark:border-red-800/50 dark:text-red-400 rounded-xl px-4 py-3 text-[13px] mb-4">
+                <AlertCircle className="w-4 h-4 shrink-0" />{error}
+              </div>
+            )}
+
+            {result ? (
+              <div className="text-center py-8">
+                <p className={`text-[2.5rem] font-black mb-2 ${result.passed ? "text-brand" : "text-red-500"}`}>
+                  {result.score}%
+                </p>
+                <p className="text-[15px] font-bold text-foreground mb-1">
+                  {result.passed ? "🎉 You passed!" : "Not quite — try again"}
+                </p>
+                <p className="text-[13px] text-muted-foreground mb-6">
+                  Pass mark is {quiz.passing_score}%.
+                  {!result.passed && " Review the lessons and retake the quiz."}
+                </p>
+                <div className="flex gap-2 justify-center">
+                  {!result.passed && (
+                    <button type="button" onClick={() => { setResult(null); setAnswers({}); }}
+                      className="bg-brand text-white font-bold text-[13px] px-5 py-2.5 rounded-xl">
+                      Retake Quiz
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setOpen(false)}
+                    className="border border-border text-foreground font-semibold text-[13px] px-5 py-2.5 rounded-xl hover:bg-muted transition-colors">
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : !questions ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
+              </div>
+            ) : questions.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground text-center py-8">This quiz has no questions yet.</p>
+            ) : (
+              <>
+                <div className="space-y-5">
+                  {questions.map((q, qi) => (
+                    <div key={q.id} className="bg-muted/30 border border-border rounded-xl p-4">
+                      <p className="text-[13.5px] font-bold text-foreground mb-3">
+                        {qi + 1}. {q.question_text}
+                        <span className="text-[11px] text-muted-foreground font-medium ml-2">({q.points} pt{q.points === 1 ? "" : "s"})</span>
+                      </p>
+                      {q.question_type === "short_answer" ? (
+                        <input value={answers[q.id] ?? ""} onChange={e => setAnswers(p => ({ ...p, [q.id]: e.target.value }))}
+                          placeholder="Type your answer…"
+                          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-brand/50" />
+                      ) : (
+                        <div className="space-y-1.5">
+                          {q.options.map(opt => (
+                            <label key={opt} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors text-[13px] ${
+                              answers[q.id] === opt ? "border-brand bg-brand/8 text-foreground font-semibold" : "border-border bg-background text-foreground/80 hover:border-brand/30"
+                            }`}>
+                              <input type="radio" name={q.id} checked={answers[q.id] === opt}
+                                onChange={() => setAnswers(p => ({ ...p, [q.id]: opt }))}
+                                className="accent-[var(--brand,#722F37)]" />
+                              {opt}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end mt-6">
+                  <button type="button" onClick={submit} disabled={submitting || !answeredAll}
+                    className="bg-brand hover:opacity-90 disabled:opacity-50 text-white font-bold text-[13px] px-6 py-2.5 rounded-xl transition-opacity">
+                    {submitting ? "Submitting…" : "Submit Quiz"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Assignment section ────────────────────────────────── */
+function AssignmentSection({ lessonId }: { lessonId: string }) {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [inputs, setInputs] = useState<Record<string, string>>({});
+  const [files, setFiles] = useState<Record<string, File | null>>({});
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/assignments?lessonId=${lessonId}`)
+      .then(r => r.json())
+      .then((d: { assignments?: Assignment[] }) => { setAssignments(d.assignments ?? []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [lessonId]);
+
+  async function submit(a: Assignment) {
+    setBusy(a.id);
+    try {
+      let fileUrl: string | undefined;
+      if (a.submission_type === "file") {
+        const file = files[a.id];
+        if (!file) { setToast({ message: "Choose a file first.", type: "error" }); setBusy(null); return; }
+        const form = new FormData();
+        form.append("file", file);
+        form.append("assignmentId", a.id);
+        const up = await fetch("/api/assignments/upload", { method: "POST", body: form });
+        const upData = await up.json() as { fileUrl?: string; error?: string };
+        if (!upData.fileUrl) { setToast({ message: upData.error ?? "Upload failed.", type: "error" }); setBusy(null); return; }
+        fileUrl = upData.fileUrl;
+      }
+
+      const res = await fetch("/api/assignments/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignmentId: a.id,
+          textContent: a.submission_type === "text" ? (inputs[a.id] ?? "").trim() : undefined,
+          urlContent: a.submission_type === "url" ? (inputs[a.id] ?? "").trim() : undefined,
+          fileUrl,
+        }),
+      });
+      const d = await res.json() as { submission?: Assignment["submission"]; error?: string };
+      if (d.submission) {
+        setAssignments(prev => prev.map(x => x.id === a.id ? { ...x, submission: d.submission ?? null } : x));
+        setToast({ message: "Assignment submitted!", type: "success" });
+      } else {
+        setToast({ message: d.error ?? "Failed to submit.", type: "error" });
+      }
+    } catch {
+      setToast({ message: "Network error.", type: "error" });
+    }
+    setBusy(null);
+  }
+
+  if (loading || assignments.length === 0) return null;
+
+  return (
+    <div className="mt-6 space-y-4">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {assignments.map(a => (
+        <div key={a.id} className="bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center shrink-0">
+              <ClipboardList className="w-5 h-5 text-brand" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-foreground">{a.title}</p>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                Assignment · {a.points_possible} points
+                {a.due_date && ` · due ${new Date(a.due_date).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}`}
+              </p>
+            </div>
+            {a.submission && (
+              <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-800/50">
+                <CheckCircle2 className="w-3 h-3" />
+                {a.submission.graded_at ? `Graded: ${a.submission.score}/${a.points_possible}` : "Submitted"}
+              </span>
+            )}
+          </div>
+
+          {a.instructions && (
+            <p className="text-[13px] text-foreground/80 leading-relaxed whitespace-pre-wrap mb-4">{a.instructions}</p>
+          )}
+
+          {a.submission?.feedback && (
+            <div className="bg-muted/40 border border-border rounded-xl px-4 py-3 mb-4">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1">Instructor Feedback</p>
+              <p className="text-[13px] text-foreground/80">{a.submission.feedback}</p>
+            </div>
+          )}
+
+          {!a.submission?.graded_at && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              {a.submission_type === "text" && (
+                <textarea value={inputs[a.id] ?? ""} onChange={e => setInputs(p => ({ ...p, [a.id]: e.target.value }))}
+                  rows={3} placeholder="Type your answer…"
+                  className="flex-1 bg-background border border-border rounded-xl px-3 py-2.5 text-[13px] text-foreground focus:outline-none focus:border-brand/50 resize-none" />
+              )}
+              {a.submission_type === "url" && (
+                <div className="flex-1 relative">
+                  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input value={inputs[a.id] ?? ""} onChange={e => setInputs(p => ({ ...p, [a.id]: e.target.value }))}
+                    placeholder="https://…" type="url"
+                    className="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-2.5 text-[13px] text-foreground focus:outline-none focus:border-brand/50" />
+                </div>
+              )}
+              {a.submission_type === "file" && (
+                <label className="flex-1 flex items-center gap-2 bg-background border border-dashed border-border hover:border-brand/40 rounded-xl px-4 py-2.5 cursor-pointer transition-colors">
+                  <Upload className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="text-[13px] text-muted-foreground truncate">
+                    {files[a.id]?.name ?? "Choose a file (max 20 MB)…"}
+                  </span>
+                  <input type="file" className="hidden"
+                    onChange={e => setFiles(p => ({ ...p, [a.id]: e.target.files?.[0] ?? null }))} />
+                </label>
+              )}
+              <button type="button" onClick={() => submit(a)} disabled={busy === a.id}
+                className="shrink-0 bg-brand hover:opacity-90 disabled:opacity-50 text-white font-bold text-[13px] px-5 py-2.5 rounded-xl transition-opacity">
+                {busy === a.id ? "Submitting…" : a.submission ? "Resubmit" : "Submit"}
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════
    MAIN LESSON PLAYER
 ══════════════════════════════════════════════ */
@@ -475,6 +800,7 @@ export default function LessonPlayerPage() {
   const [collapsedModules, setCollapsedModules] = useState<Set<string>>(new Set());
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const load = useCallback(async () => {
@@ -511,6 +837,15 @@ export default function LessonPlayerPage() {
     const allLessons = withLessons.flatMap(m => m.lessons);
     const current = allLessons.find(l => l.id === lessonId) ?? allLessons[0];
     setCurrentLesson(current ?? null);
+
+    // Module quizzes with the user's best attempt (used for gating)
+    try {
+      const quizRes = await fetch(`/api/quiz?courseId=${courseId}`);
+      if (quizRes.ok) {
+        const quizData = await quizRes.json() as { quizzes?: Quiz[] };
+        setQuizzes(quizData.quizzes ?? []);
+      }
+    } catch { /* non-critical */ }
 
     const progressRes = await fetch(`/api/progress?courseId=${courseId}`);
     if (progressRes.ok) {
@@ -549,7 +884,9 @@ export default function LessonPlayerPage() {
       setProgress(p => ({ ...p, [currentLesson.id]: true }));
       const next = getAdjacentLesson(1);
       setMarking(false);
-      if (next) {
+      if (next && lockedModuleIds.has(next.module_id)) {
+        setToast({ message: "Lesson saved! Pass this module's quiz to unlock the next module.", type: "success" });
+      } else if (next) {
         router.push(`/learn/${courseId}/${next.id}`);
       } else {
         await fetch("/api/certificates/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ courseId }) });
@@ -601,6 +938,31 @@ export default function LessonPlayerPage() {
   const prevLesson = getAdjacentLesson(-1);
   const nextLesson = getAdjacentLesson(1);
   const isCompleted = currentLesson ? !!progress[currentLesson.id] : false;
+
+  // A module is locked when an earlier module's quiz has not been passed yet
+  const quizByModule = new Map(quizzes.filter(q => q.module_id).map(q => [q.module_id as string, q]));
+  const lockedModuleIds = new Set<string>();
+  {
+    let gateFailed = false;
+    for (const mod of modules) {
+      if (gateFailed) lockedModuleIds.add(mod.id);
+      const quiz = quizByModule.get(mod.id);
+      if (quiz && !quiz.attempt?.passed) gateFailed = true;
+    }
+  }
+  const currentModule = currentLesson ? modules.find(m => m.id === currentLesson.module_id) : null;
+  const currentModuleQuiz = currentModule ? quizByModule.get(currentModule.id) : undefined;
+  const isLastLessonOfModule = !!currentModule && !!currentLesson &&
+    currentModule.lessons[currentModule.lessons.length - 1]?.id === currentLesson.id;
+  const currentLocked = !!currentModule && lockedModuleIds.has(currentModule.id);
+
+  function handleQuizResult(quizId: string, score: number, passed: boolean) {
+    setQuizzes(prev => prev.map(q => {
+      if (q.id !== quizId) return q;
+      const best = Math.max(score, q.attempt?.score ?? 0);
+      return { ...q, attempt: { score: best, passed: passed || !!q.attempt?.passed } };
+    }));
+  }
 
   const filteredModules = modules.map(m => ({
     ...m,
@@ -697,6 +1059,7 @@ export default function LessonPlayerPage() {
             {filteredModules.map((mod, mi) => {
               const collapsed = collapsedModules.has(mod.id);
               const moduleDone = mod.lessons.filter(l => progress[l.id]).length;
+              const locked = lockedModuleIds.has(mod.id);
 
               return (
                 <div key={mod.id} className="border-b border-border last:border-0">
@@ -704,9 +1067,11 @@ export default function LessonPlayerPage() {
                     className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors text-left">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-5 h-5 rounded bg-brand/10 flex items-center justify-center shrink-0">
-                        <span className="text-[9px] font-black text-brand">{mi + 1}</span>
+                        {locked
+                          ? <Lock className="w-2.5 h-2.5 text-muted-foreground" />
+                          : <span className="text-[9px] font-black text-brand">{mi + 1}</span>}
                       </div>
-                      <span className="text-[12px] font-bold text-foreground truncate">{mod.title}</span>
+                      <span className={`text-[12px] font-bold truncate ${locked ? "text-muted-foreground" : "text-foreground"}`}>{mod.title}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
                       <span className="text-[10px] text-muted-foreground">{moduleDone}/{mod.lessons.length}</span>
@@ -719,6 +1084,19 @@ export default function LessonPlayerPage() {
                   {!collapsed && mod.lessons.map(lesson => {
                     const done = !!progress[lesson.id];
                     const active = lesson.id === lessonId;
+                    if (locked) {
+                      return (
+                        <div key={lesson.id}
+                          className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground/50 cursor-not-allowed"
+                          title="Pass the previous module's quiz to unlock">
+                          <Lock className="w-4 h-4 shrink-0" />
+                          <span className="truncate flex-1 text-[12.5px]">{lesson.title}</span>
+                          {lesson.duration_minutes && (
+                            <span className="text-[10.5px] shrink-0">{lesson.duration_minutes}m</span>
+                          )}
+                        </div>
+                      );
+                    }
                     return (
                       <Link key={lesson.id} href={`/learn/${courseId}/${lesson.id}`}
                         className={[
@@ -763,6 +1141,16 @@ export default function LessonPlayerPage() {
                 <p className="text-[15px] font-bold text-foreground mb-2">No lesson selected</p>
                 <p className="text-[13px] text-muted-foreground">Choose a lesson from the sidebar to get started.</p>
               </div>
+            ) : currentLocked ? (
+              <div className="text-center py-24">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-7 h-7 text-muted-foreground" />
+                </div>
+                <p className="text-[15px] font-bold text-foreground mb-2">This module is locked</p>
+                <p className="text-[13px] text-muted-foreground max-w-sm mx-auto">
+                  Pass the previous module&apos;s quiz to unlock this lesson.
+                </p>
+              </div>
             ) : (
               <>
                 {/* Lesson header */}
@@ -803,10 +1191,17 @@ export default function LessonPlayerPage() {
                       </Link>
                     )}
                     {nextLesson && (
-                      <Link href={`/learn/${courseId}/${nextLesson.id}`}
-                        className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-brand/40 px-4 py-2.5 rounded-xl transition-colors min-h-[44px]">
-                        Next<ChevronRight className="w-4 h-4" />
-                      </Link>
+                      lockedModuleIds.has(nextLesson.module_id) ? (
+                        <span title="Pass this module's quiz to unlock the next module"
+                          className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground/50 border border-border px-4 py-2.5 rounded-xl min-h-[44px] cursor-not-allowed">
+                          <Lock className="w-3.5 h-3.5" />Next
+                        </span>
+                      ) : (
+                        <Link href={`/learn/${courseId}/${nextLesson.id}`}
+                          className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-brand/40 px-4 py-2.5 rounded-xl transition-colors min-h-[44px]">
+                          Next<ChevronRight className="w-4 h-4" />
+                        </Link>
+                      )
                     )}
                   </div>
 
@@ -859,6 +1254,14 @@ export default function LessonPlayerPage() {
                     {activeTab === "notes"      && <NotesTab      lessonId={currentLesson.id} />}
                   </div>
                 </div>
+
+                {/* Module quiz — shown on the module's last lesson */}
+                {currentModuleQuiz && isLastLessonOfModule && (
+                  <QuizSection quiz={currentModuleQuiz} onResult={handleQuizResult} />
+                )}
+
+                {/* Lesson assignments */}
+                <AssignmentSection lessonId={currentLesson.id} />
 
                 {/* Course complete banner */}
                 {allComplete && (

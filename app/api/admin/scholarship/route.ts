@@ -1,10 +1,39 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/api-auth";
 
 interface ScholarshipActionBody {
   applicationId?: string;
   action?: "revoke";
+}
+
+// GET /api/admin/scholarship?status=pending|approved|rejected|revoked|all
+// List scholarship applications for the admin dashboard (service-role, bypasses RLS)
+export async function GET(request: Request) {
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
+
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status") ?? "all";
+
+  const admin = createAdminClient();
+  let query = admin
+    .from("scholarship_applications")
+    .select(
+      "id, created_at, course_id, course_name, status, payment_reference, amount_paid, payment_completed, applicant_name, applicant_email, applicant_phone, essay, users(full_name, email)"
+    )
+    .order("created_at", { ascending: false });
+
+  if (status !== "all") query = query.eq("status", status);
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("[admin/scholarship] list error:", error);
+    return NextResponse.json({ error: "Failed to load applications." }, { status: 500 });
+  }
+
+  return NextResponse.json({ applications: data ?? [] });
 }
 
 // POST /api/admin/scholarship — revoke a scholarship enrollment
