@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { AppLogo } from "@/components/layout/logo";
 import {
   CheckCircle2, Circle, ChevronDown, ChevronUp,
   Award, ArrowLeft, Play, Clock, BookOpen,
@@ -152,15 +153,7 @@ export default function CourseDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-foreground text-white px-6 py-4 flex items-center justify-between border-b border-white/8">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0D9488] to-[#134E4A] flex items-center justify-center shadow-md shadow-brand/30">
-            <span className="font-black text-white text-[11px] tracking-tight">LDS</span>
-          </div>
-          <div className="hidden sm:flex flex-col leading-none">
-            <span className="font-bold text-[13px] tracking-tight">Lagos Data School</span>
-            <span className="text-[9px] text-brand/80 font-bold tracking-[0.2em] uppercase">Limited</span>
-          </div>
-        </Link>
+        <AppLogo size="sm" href="/dashboard" onDark />
         <div className="flex items-center gap-4">
           <span className="text-[13px] text-white/70">{firstName}</span>
           <button

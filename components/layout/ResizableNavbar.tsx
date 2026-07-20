@@ -104,7 +104,7 @@ export function ResizableNavbar() {
       ═══════════════════════════════════════ */}
       <div className="md:hidden fixed top-0 inset-x-0 z-50 border-b border-border/70 bg-background/95 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
         <div className="flex h-16 items-center justify-between gap-3 px-4">
-          <LdslLogo className="min-w-0 [&>span:last-child]:max-w-[11rem] [&>span:last-child]:truncate" />
+          <LdslLogo className="min-w-0" />
           <div className="flex shrink-0 items-center gap-1.5">
             {/* Theme toggle */}
             <button

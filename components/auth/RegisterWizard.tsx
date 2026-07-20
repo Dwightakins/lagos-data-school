@@ -236,7 +236,7 @@ function RegisterWizardContent() {
   if (!preselectedLoaded) {
     return (
       <div className="bg-card rounded-2xl border border-border shadow-elevated px-8 py-10">
-        <div className="flex justify-center mb-6"><AppLogo size="md" /></div>
+        <div className="flex justify-center mb-6"><AppLogo size="lg" /></div>
         <div className="flex items-center justify-center py-16">
           <div className="animate-spin w-6 h-6 border-2 border-brand border-t-transparent rounded-full" />
         </div>
@@ -248,7 +248,7 @@ function RegisterWizardContent() {
     <>
       <div ref={cardRef} className="bg-card rounded-2xl border border-border shadow-elevated px-8 py-10">
         <div className="flex justify-center mb-6">
-          <AppLogo size="md" />
+          <AppLogo size="lg" />
         </div>
 
         <ProgressBar
@@ -333,7 +333,7 @@ export default function RegisterWizard() {
   return (
     <Suspense fallback={
       <div className="bg-card rounded-2xl border border-border shadow-elevated px-8 py-10">
-        <div className="flex justify-center mb-6"><AppLogo size="md" /></div>
+        <div className="flex justify-center mb-6"><AppLogo size="lg" /></div>
         <div className="flex items-center justify-center py-16">
           <div className="animate-spin w-6 h-6 border-2 border-brand border-t-transparent rounded-full" />
         </div>

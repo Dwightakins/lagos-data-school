@@ -146,7 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Logo — hidden on mobile (already shown in top bar) */}
         <div className="px-5 py-5 border-b border-background/10 hidden md:block">
-          <AppLogo size="sm" href="/admin" onDark />
+          <AppLogo size="md" href="/admin" onDark />
         </div>
 
         {/* Extra top padding on mobile so content clears the OS status area */}

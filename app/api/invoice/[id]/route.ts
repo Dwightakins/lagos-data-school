@@ -31,6 +31,16 @@ async function buildReceiptPdf(
   doc.setFillColor(13, 148, 136);
   doc.rect(0, 0, W, 42, "F");
 
+  // Official logo — left side of the header (PNG is 3:2, white background)
+  try {
+    const { readFile } = await import("fs/promises");
+    const { join } = await import("path");
+    const logoData = await readFile(join(process.cwd(), "public", "images", "logo.png"));
+    doc.addImage(`data:image/png;base64,${logoData.toString("base64")}`, "PNG", 14, 8, 26, 17.3);
+  } catch {
+    // Logo is decorative — receipt still generates without it
+  }
+
   // School name
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");

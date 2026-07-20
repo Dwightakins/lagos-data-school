@@ -170,7 +170,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Desktop sidebar (hidden on mobile) ─────────────────── */}
       <aside className="hidden md:flex fixed top-0 left-0 h-screen w-64 bg-foreground text-background flex-col z-40">
         <div className="px-5 py-5 border-b border-background/10">
-          <AppLogo size="sm" onDark />
+          <AppLogo size="md" onDark />
         </div>
         <ProfileStrip />
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -204,7 +204,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         aria-label="Navigation menu"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-background/10">
-          <AppLogo size="sm" onDark />
+          <AppLogo size="md" onDark />
           <button
             type="button"
             onClick={() => setDrawerOpen(false)}

@@ -84,7 +84,7 @@ export default function LoginForm() {
   return (
     <div className="bg-card rounded-2xl border border-border shadow-elevated px-8 py-10">
       <div className="flex justify-center mb-8">
-        <AppLogo size="md" />
+        <AppLogo size="lg" />
       </div>
 
       <h1 className="text-[1.5rem] font-bold text-foreground text-center mb-1">

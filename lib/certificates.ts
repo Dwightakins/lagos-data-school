@@ -42,6 +42,16 @@ async function generateCertificatePdf(
     doc.setFillColor(13, 148, 136);
     doc.rect(14, 14, W - 28, 7, "F");
 
+    // Official logo — top-left of the card (PNG is 3:2, white background)
+    try {
+      const { readFile } = await import("fs/promises");
+      const { join } = await import("path");
+      const logoData = await readFile(join(process.cwd(), "public", "images", "logo.png"));
+      doc.addImage(`data:image/png;base64,${logoData.toString("base64")}`, "PNG", 20, 25, 24, 16);
+    } catch {
+      // Logo is decorative — certificate still generates without it
+    }
+
     // School name
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
@@ -291,8 +301,7 @@ export async function issueCourseCertificate(
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
             <div style="text-align: center; margin-bottom: 32px;">
-              <div style="background: linear-gradient(135deg, #0D9488, #134E4A); color: white; font-weight: 900; font-size: 14px; width: 56px; height: 56px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; letter-spacing: -0.5px;">LDS</div>
-              <p style="margin: 6px 0 0; font-size: 10px; font-weight: 700; color: #0D9488; letter-spacing: 3px; text-transform: uppercase;">LIMITED</p>
+              <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display: inline-block; width: 140px; max-width: 60%; height: auto; border-radius: 14px;" />
               <h1 style="color: #134E4A; margin-top: 20px; font-size: 26px; font-weight: 800;">Congratulations, ${studentName}! 🎉</h1>
             </div>
             <p style="color: #374151; font-size: 16px; line-height: 1.6;">

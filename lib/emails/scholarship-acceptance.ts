@@ -19,6 +19,7 @@ export async function sendScholarshipAcceptanceEmail(
   p: ScholarshipAcceptanceParams,
 ): Promise<boolean> {
   const paymentUrl = p.paymentUrl;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   const html = `
 <!DOCTYPE html>
@@ -32,10 +33,7 @@ export async function sendScholarshipAcceptanceEmail(
       <!-- Header -->
       <tr>
         <td style="background:linear-gradient(135deg,#0a5c4a 0%,#0D9488 100%);padding:40px 40px 36px;text-align:center;">
-          <div style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.15);border-radius:14px;width:56px;height:56px;margin-bottom:12px;">
-            <span style="color:#ffffff;font-weight:900;font-size:15px;letter-spacing:-0.5px;line-height:1;">LD</span>
-          </div>
-          <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">Lagos Data School Limited</p>
+          <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display:inline-block;width:140px;max-width:60%;height:auto;border-radius:14px;margin-bottom:12px;" />
           <h1 style="margin:18px 0 8px;color:#ffffff;font-size:28px;font-weight:800;line-height:1.2;">
             Your Scholarship Has Been Accepted!
           </h1>
@@ -184,10 +182,7 @@ export async function sendScholarshipRejectionEmail(
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
       <tr>
         <td style="background:linear-gradient(135deg,#374151 0%,#1f2937 100%);padding:40px 40px 36px;text-align:center;">
-          <div style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border-radius:14px;width:56px;height:56px;margin-bottom:12px;">
-            <span style="color:#ffffff;font-weight:900;font-size:15px;letter-spacing:-0.5px;line-height:1;">LD</span>
-          </div>
-          <p style="margin:0 0 4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">Lagos Data School Limited</p>
+          <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display:inline-block;width:140px;max-width:60%;height:auto;border-radius:14px;margin-bottom:12px;" />
           <h1 style="margin:18px 0 8px;color:#ffffff;font-size:26px;font-weight:800;line-height:1.2;">Scholarship Application Update</h1>
         </td>
       </tr>

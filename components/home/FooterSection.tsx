@@ -49,7 +49,7 @@ export function FooterSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 md:py-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 md:gap-10">
           <div className="col-span-1 sm:col-span-2 md:col-span-3">
-            <AppLogo size="sm" onDark />
+            <AppLogo size="xs" onDark />
             <p className="mt-6 max-w-xs text-sm text-background/60 leading-relaxed">
               Lagos Data School Limited. Training Nigeria's next generation of tech enthusiasts since 2024.
             </p>

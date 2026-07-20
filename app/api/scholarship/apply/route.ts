@@ -72,6 +72,8 @@ export async function POST(req: NextRequest) {
     day: "numeric", month: "long", year: "numeric",
   });
 
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+
   void sendEmail({
     to: email,
     subject: "LDSL Scholarship Application Received",
@@ -85,15 +87,7 @@ export async function POST(req: NextRequest) {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);border:1px solid #e2f5f1;">
         <tr>
           <td style="background:#134E4A;padding:32px 40px;text-align:center;">
-            <div style="display:inline-flex;align-items:center;gap:12px;">
-              <div style="width:40px;height:40px;background:#0D9488;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;">
-                <span style="color:#fff;font-weight:900;font-size:10px;letter-spacing:0.05em;">LDSL</span>
-              </div>
-              <div style="text-align:left;">
-                <div style="color:#ffffff;font-weight:700;font-size:15px;">Lagos Data School</div>
-                <div style="color:#2DD4BF;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;font-weight:700;">Limited</div>
-              </div>
-            </div>
+            <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display:inline-block;width:140px;max-width:60%;height:auto;border-radius:12px;" />
           </td>
         </tr>
         <tr>

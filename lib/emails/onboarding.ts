@@ -33,10 +33,7 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
       <!-- Header -->
       <tr>
         <td style="background:linear-gradient(135deg,#0a5c4a 0%,#0D9488 100%);padding:40px 40px 36px;text-align:center;">
-          <div style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.15);border-radius:14px;width:56px;height:56px;margin-bottom:12px;">
-            <span style="color:#ffffff;font-weight:900;font-size:15px;letter-spacing:-0.5px;line-height:1;">LD</span>
-          </div>
-          <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">Lagos Data School Limited</p>
+          <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display:inline-block;width:140px;max-width:60%;height:auto;border-radius:14px;margin-bottom:12px;" />
           <h1 style="margin:18px 0 8px;color:#ffffff;font-size:28px;font-weight:800;line-height:1.2;">
             Welcome, ${p.studentName}!
           </h1>

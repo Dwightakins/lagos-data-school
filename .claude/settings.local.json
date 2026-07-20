@@ -47,7 +47,11 @@
       "Bash(grep -v \".next\\\\|supabase.co\\\\|paystack.co\\\\|resend.com\\\\|//localhost:3000\")",
       "Bash(grep -rn \"\\\\/\\\\*\" app/ lib/ components/ --include=\"*.ts\" --include=\"*.tsx\")",
       "Bash(grep -v \".next\\\\|\\\\/\\\\*\\\\*\\\\|\\\\/\\\\* =\")",
-      "Bash(echo \"Exit: $?\")"
+      "Bash(echo \"Exit: $?\")",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\public\\\\images\\\\logo.png\"\\); \"$\\($img.Width\\) x $\\($img.Height\\)\"; $img.Dispose\\(\\))",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = New-Object System.Drawing.Bitmap\\(\"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\public\\\\images\\\\logo.png\"\\); \"PixelFormat: $\\($img.PixelFormat\\)\"; $corner = $img.GetPixel\\(2,2\\); \"Corner pixel: A=$\\($corner.A\\) R=$\\($corner.R\\) G=$\\($corner.G\\) B=$\\($corner.B\\)\"; $img.Dispose\\(\\))",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40; \"Exit: $LASTEXITCODE\")"
     ]
   }
 }
