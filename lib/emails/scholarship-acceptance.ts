@@ -33,7 +33,7 @@ export async function sendScholarshipAcceptanceEmail(
       <!-- Header -->
       <tr>
         <td style="background:linear-gradient(135deg,#0a5c4a 0%,#0D9488 100%);padding:40px 40px 36px;text-align:center;">
-          <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display:inline-block;width:140px;max-width:60%;height:auto;border-radius:14px;margin-bottom:12px;" />
+          <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="120" style="display:inline-block;width:120px;max-width:50%;height:auto;background:#ffffff;padding:8px 14px;border-radius:12px;margin-bottom:14px;" />
           <h1 style="margin:18px 0 8px;color:#ffffff;font-size:28px;font-weight:800;line-height:1.2;">
             Your Scholarship Has Been Accepted!
           </h1>
@@ -182,7 +182,7 @@ export async function sendScholarshipRejectionEmail(
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
       <tr>
         <td style="background:linear-gradient(135deg,#374151 0%,#1f2937 100%);padding:40px 40px 36px;text-align:center;">
-          <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display:inline-block;width:140px;max-width:60%;height:auto;border-radius:14px;margin-bottom:12px;" />
+          <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="120" style="display:inline-block;width:120px;max-width:50%;height:auto;background:#ffffff;padding:8px 14px;border-radius:12px;margin-bottom:14px;" />
           <h1 style="margin:18px 0 8px;color:#ffffff;font-size:26px;font-weight:800;line-height:1.2;">Scholarship Application Update</h1>
         </td>
       </tr>

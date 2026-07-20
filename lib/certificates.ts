@@ -42,12 +42,12 @@ async function generateCertificatePdf(
     doc.setFillColor(13, 148, 136);
     doc.rect(14, 14, W - 28, 7, "F");
 
-    // Official logo — top-left of the card (PNG is 3:2, white background)
+    // Official logo — top-left of the card (transparent PNG, ~2.41:1)
     try {
       const { readFile } = await import("fs/promises");
       const { join } = await import("path");
       const logoData = await readFile(join(process.cwd(), "public", "images", "logo.png"));
-      doc.addImage(`data:image/png;base64,${logoData.toString("base64")}`, "PNG", 20, 25, 24, 16);
+      doc.addImage(`data:image/png;base64,${logoData.toString("base64")}`, "PNG", 20, 25, 26, 10.8);
     } catch {
       // Logo is decorative — certificate still generates without it
     }
@@ -301,7 +301,7 @@ export async function issueCourseCertificate(
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
             <div style="text-align: center; margin-bottom: 32px;">
-              <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="140" style="display: inline-block; width: 140px; max-width: 60%; height: auto; border-radius: 14px;" />
+              <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="150" style="display: inline-block; width: 150px; max-width: 60%; height: auto;" />
               <h1 style="color: #134E4A; margin-top: 20px; font-size: 26px; font-weight: 800;">Congratulations, ${studentName}! 🎉</h1>
             </div>
             <p style="color: #374151; font-size: 16px; line-height: 1.6;">

@@ -10,47 +10,48 @@ interface LogoProps {
   subtitle?: string | false;
   /** Wrap in a Next.js Link. Defaults to "/". Pass false for no link. */
   href?: string | false;
-  /** Kept for call-site compatibility — the logo carries its own white background. */
+  /** Use on permanently dark surfaces (sidebars, dark headers) — renders the logo in white. */
   onDark?: boolean;
   className?: string;
 }
 
-// The official logo file is 1535×1024 (~3:2). Dimensions below preserve that
-// ratio while fitting each placement's height/width budget:
+// Transparent logo file is 480×199 (~2.41:1).
 //   xs → footer, sm → navbar & page headers, md → dashboard sidebars, lg → login/register
 const sizeMap: Record<LogoSize, { width: number; height: number }> = {
-  xs: { width: 120, height: 80 },
-  sm: { width: 75, height: 50 },
-  md: { width: 160, height: 107 },
-  lg: { width: 200, height: 133 },
+  xs: { width: 68, height: 28 },
+  sm: { width: 82, height: 34 },
+  md: { width: 92, height: 38 },
+  lg: { width: 125, height: 52 },
 };
 
-export function AppLogo({ size = "sm", href = "/", className }: LogoProps) {
+export function AppLogo({
+  size = "sm",
+  href = "/",
+  onDark = false,
+  className,
+}: LogoProps) {
   const s = sizeMap[size];
 
   const inner = (
-    <span
+    <Image
+      src="/images/logo.png"
+      alt="Lagos Data School"
+      width={s.width}
+      height={s.height}
+      priority
       className={cn(
-        // White backing keeps the logo legible on dark headers/sidebars and in dark mode
-        "inline-flex shrink-0 items-center overflow-hidden rounded-lg bg-white p-0.5",
+        "h-auto w-auto max-w-full shrink-0 select-none",
+        // Dark navy wordmark is unreadable on dark surfaces — render as white monochrome
+        onDark ? "brightness-0 invert" : "dark:brightness-0 dark:invert",
         className,
       )}
-    >
-      <Image
-        src="/images/logo.png"
-        alt="Lagos Data School"
-        width={s.width}
-        height={s.height}
-        className="h-auto w-auto max-w-full"
-        priority
-      />
-    </span>
+    />
   );
 
   if (href === false) return inner;
 
   return (
-    <Link href={href} className="inline-flex">
+    <Link href={href} className="inline-flex items-center">
       {inner}
     </Link>
   );

@@ -31,12 +31,14 @@ async function buildReceiptPdf(
   doc.setFillColor(13, 148, 136);
   doc.rect(0, 0, W, 42, "F");
 
-  // Official logo — left side of the header (PNG is 3:2, white background)
+  // Official logo — white chip on the teal header (transparent PNG, ~2.41:1)
   try {
     const { readFile } = await import("fs/promises");
     const { join } = await import("path");
     const logoData = await readFile(join(process.cwd(), "public", "images", "logo.png"));
-    doc.addImage(`data:image/png;base64,${logoData.toString("base64")}`, "PNG", 14, 8, 26, 17.3);
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(12, 8, 34, 17, 2, 2, "F");
+    doc.addImage(`data:image/png;base64,${logoData.toString("base64")}`, "PNG", 14, 10.3, 30, 12.4);
   } catch {
     // Logo is decorative — receipt still generates without it
   }

@@ -51,7 +51,10 @@
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\public\\\\images\\\\logo.png\"\\); \"$\\($img.Width\\) x $\\($img.Height\\)\"; $img.Dispose\\(\\))",
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img = New-Object System.Drawing.Bitmap\\(\"C:\\\\Users\\\\USER\\\\Desktop\\\\lagos-data-school\\\\public\\\\images\\\\logo.png\"\\); \"PixelFormat: $\\($img.PixelFormat\\)\"; $corner = $img.GetPixel\\(2,2\\); \"Corner pixel: A=$\\($corner.A\\) R=$\\($corner.R\\) G=$\\($corner.G\\) B=$\\($corner.B\\)\"; $img.Dispose\\(\\))",
       "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40)",
-      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40; \"Exit: $LASTEXITCODE\")"
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40; \"Exit: $LASTEXITCODE\")",
+      "PowerShell(Test-Path node_modules/sharp; node -e \"try{require\\('sharp'\\);console.log\\('sharp OK'\\)}catch\\(e\\){console.log\\('no sharp'\\)}\")",
+      "PowerShell(node \"C:\\\\Users\\\\USER\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-USER-Desktop-lagos-data-school\\\\91049fce-bd07-433d-bffc-63be02e12244\\\\scratchpad\\\\process-logo.js\")",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30; \"Exit: $LASTEXITCODE\")"
     ]
   }
 }
