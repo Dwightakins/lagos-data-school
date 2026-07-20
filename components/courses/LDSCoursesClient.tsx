@@ -1,92 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
-import {
-  BarChart2, Cpu, Code2, Wrench, Terminal, Database,
-  BookOpen, TrendingUp, ArrowRight, Users, Award, Clock,
-} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { Award, BookOpen, Clock, Users } from "lucide-react";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { ContainerTextFlip } from "@/components/ui/container-text-flip";
-import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
-import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { CourseDetailModal } from "@/components/courses/CourseDetailModal";
+import {
+  COURSE_FILTERS,
+  CourseCard,
+  getCourseMeta,
+  type CourseFilter,
+} from "@/components/courses/CourseCard";
 import type { Course } from "@/types";
-
-function getCourseStyle(slug: string | null | undefined): { gradient: string; Icon: React.ElementType } {
-  const s = slug ?? "";
-  if (s.includes("data-anal") || s.includes("analytics"))
-    return { gradient: "from-emerald-600 to-teal-800", Icon: BarChart2 };
-  if (s.includes("machine") || s.includes("ml") || s.includes("ai"))
-    return { gradient: "from-teal-600 to-cyan-800", Icon: Cpu };
-  if (s.includes("software") || s.includes("web") || s.includes("dev"))
-    return { gradient: "from-teal-700 to-emerald-900", Icon: Code2 };
-  if (s.includes("data-eng") || s.includes("pipeline"))
-    return { gradient: "from-emerald-700 to-teal-900", Icon: Wrench };
-  if (s.includes("python"))
-    return { gradient: "from-emerald-500 to-teal-700", Icon: Terminal };
-  if (s.includes("sql") || s.includes("database"))
-    return { gradient: "from-cyan-600 to-teal-700", Icon: Database };
-  if (s.includes("power-bi") || s.includes("tableau") || s.includes("viz"))
-    return { gradient: "from-teal-500 to-emerald-700", Icon: TrendingUp };
-  return { gradient: "from-teal-600 to-emerald-800", Icon: BookOpen };
-}
-
-function CourseCardHeader({ course, onOpen }: { course: Course; onOpen: () => void }) {
-  const { gradient, Icon } = getCourseStyle(course.slug);
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="w-full text-left cursor-pointer group"
-    >
-      <div className={`relative h-36 rounded-xl bg-gradient-to-br ${gradient} flex items-end p-4 overflow-hidden`}>
-        <Icon className="w-16 h-16 text-white/15 absolute right-3 top-1/2 -translate-y-1/2 transition-transform group-hover:scale-110 duration-300" />
-        <div className="relative z-10">
-          <div className="text-[11px] text-white/60 font-medium">Per course</div>
-          <div className="text-[1.2rem] font-black text-white">
-            ₦{course.price.toLocaleString("en-NG")}
-          </div>
-          {course.duration && (
-            <div className="flex items-center gap-1 text-[10px] text-white/70 mt-0.5">
-              <Clock className="w-3 h-3" />
-              {course.duration}
-            </div>
-          )}
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function CourseItemContent({ course, onOpen }: { course: Course; onOpen: () => void }) {
-  return (
-    <div className="relative">
-      <GlowingEffect
-        spread={25}
-        glow={false}
-        disabled={false}
-        proximity={50}
-        inactiveZone={0.1}
-        borderWidth={2}
-      />
-      <p className="text-muted-foreground text-[13px] leading-relaxed mb-3 line-clamp-2">
-        {course.description?.slice(0, 80) ?? ""}…
-      </p>
-      <button
-        type="button"
-        onClick={onOpen}
-        className="inline-flex items-center gap-1 text-brand font-bold text-[13px] hover:gap-2 transition-all"
-      >
-        View Course <ArrowRight className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  );
-}
 
 export default function LDSCoursesClient({ courses }: { courses: Course[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<CourseFilter>("All");
+
+  const filtered = useMemo(
+    () =>
+      filter === "All"
+        ? courses
+        : courses.filter((c) => getCourseMeta(c.slug, c.title).category === filter),
+    [courses, filter],
+  );
 
   return (
     <>
@@ -128,35 +67,58 @@ export default function LDSCoursesClient({ courses }: { courses: Course[] }) {
             <BookOpen className="w-12 h-12 text-brand mx-auto mb-4" />
             <h2 className="text-[20px] font-bold text-foreground mb-2">No courses available yet</h2>
             <p className="text-[14px] text-muted-foreground mb-6">New courses are coming soon — check back shortly.</p>
-            <Link href="/" className="inline-flex items-center gap-2 gradient-brand text-brand-foreground font-bold text-[14px] px-6 py-2.5 rounded-xl">
+            <Link href="/" className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-[14px] px-6 py-2.5 rounded-xl transition-colors">
               ← Back to home
             </Link>
           </div>
         ) : (
           <>
-            <p className="text-[13.5px] text-muted-foreground mb-6 font-medium">
-              {courses.length} course{courses.length !== 1 ? "s" : ""} available
-            </p>
-            <BentoGrid className="md:auto-rows-[22rem] gap-5">
-              {courses.map((course, i) => (
-                <motion.div
-                  key={course.id}
-                  data-mobile-motion-visible="true"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.06 }}
-                  className={i === 0 || i === 3 ? "md:col-span-2" : ""}
+            {/* Filter tabs */}
+            <div className="mb-8 flex flex-wrap items-center gap-2">
+              {COURSE_FILTERS.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  className={
+                    f === filter
+                      ? "rounded-full bg-green-600 px-4 py-1.5 text-[13px] font-semibold text-white transition-colors"
+                      : "rounded-full border border-gray-200 dark:border-border px-4 py-1.5 text-[13px] font-medium text-gray-500 dark:text-muted-foreground transition-colors hover:text-foreground hover:border-green-600/40"
+                  }
                 >
-                  <BentoGridItem
-                    className="border-border bg-card hover:border-brand/30 h-full"
-                    header={<CourseCardHeader course={course} onOpen={() => setSelectedId(course.id)} />}
-                    icon={null}
-                    title={<span className="font-bold text-foreground text-[15px]">{course.title}</span>}
-                    description={<CourseItemContent course={course} onOpen={() => setSelectedId(course.id)} />}
-                  />
-                </motion.div>
+                  {f}
+                </button>
               ))}
-            </BentoGrid>
+              <span className="ml-auto text-[13px] text-muted-foreground font-medium">
+                {filtered.length} course{filtered.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-[14.5px] text-muted-foreground">
+                  No courses in this category yet — try another filter.
+                </p>
+              </div>
+            ) : (
+              <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence mode="popLayout">
+                  {filtered.map((course) => (
+                    <motion.div
+                      key={course.id}
+                      layout
+                      data-mobile-motion-visible="true"
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <CourseCard course={course} onOpen={() => setSelectedId(course.id)} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
           </>
         )}
       </main>
@@ -170,13 +132,13 @@ export default function LDSCoursesClient({ courses }: { courses: Course[] }) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 gradient-brand text-brand-foreground font-bold text-[15px] px-10 py-4 rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-[15px] px-10 py-4 rounded-xl transition-colors shadow-lg"
           >
             Enroll Now →
           </Link>
           <Link
             href="/apply-scholarship"
-            className="inline-flex items-center gap-2 border-2 border-brand text-brand font-bold text-[15px] px-10 py-4 rounded-xl hover:bg-brand hover:text-brand-foreground transition-all"
+            className="inline-flex items-center gap-2 border-2 border-green-600 text-green-600 dark:text-green-500 font-bold text-[15px] px-10 py-4 rounded-xl hover:bg-green-600 hover:text-white transition-all"
           >
             Apply for Scholarship
           </Link>

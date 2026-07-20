@@ -18,7 +18,7 @@ const FALLBACK: CourseSummary[] = [
 ];
 
 export async function CoursesShowcaseSection() {
-  let courses: CourseSummary[] = FALLBACK;
+  let courses: CourseSummary[] = FALLBACK.slice(0, 3);
 
   try {
     const supabase = await createClient();
@@ -27,7 +27,7 @@ export async function CoursesShowcaseSection() {
       .select("id, title, slug, description, price, duration")
       .eq("published", true)
       .order("created_at", { ascending: true })
-      .limit(4);
+      .limit(3);
 
     if (data && data.length > 0) {
       courses = data as CourseSummary[];
