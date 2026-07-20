@@ -10,18 +10,18 @@ interface LogoProps {
   subtitle?: string | false;
   /** Wrap in a Next.js Link. Defaults to "/". Pass false for no link. */
   href?: string | false;
-  /** Use on permanently dark surfaces (sidebars, dark headers) — renders the logo in white. */
+  /** Use on `bg-foreground` surfaces (sidebars, dark headers, footer). */
   onDark?: boolean;
   className?: string;
 }
 
-// Transparent logo file is 480×199 (~2.41:1).
+// Responsive display widths (height follows the file's ~2.41:1 ratio via h-auto).
 //   xs → footer, sm → navbar & page headers, md → dashboard sidebars, lg → login/register
-const sizeMap: Record<LogoSize, { width: number; height: number }> = {
-  xs: { width: 68, height: 28 },
-  sm: { width: 82, height: 34 },
-  md: { width: 92, height: 38 },
-  lg: { width: 125, height: 52 },
+const sizeMap: Record<LogoSize, string> = {
+  xs: "w-[100px] md:w-[120px]",
+  sm: "w-[120px] md:w-[140px] lg:w-[160px]",
+  md: "w-[120px] md:w-[140px] lg:w-[160px]",
+  lg: "w-[160px] md:w-[180px] lg:w-[200px]",
 };
 
 export function AppLogo({
@@ -30,19 +30,22 @@ export function AppLogo({
   onDark = false,
   className,
 }: LogoProps) {
-  const s = sizeMap[size];
-
   const inner = (
     <Image
       src="/images/logo.png"
       alt="Lagos Data School"
-      width={s.width}
-      height={s.height}
+      width={480}
+      height={199}
       priority
       className={cn(
-        "h-auto w-auto max-w-full shrink-0 select-none",
-        // Dark navy wordmark is unreadable on dark surfaces — render as white monochrome
-        onDark ? "brightness-0 invert" : "dark:brightness-0 dark:invert",
+        "h-auto max-w-full shrink-0 select-none",
+        sizeMap[size],
+        // `bg-foreground` surfaces are dark in light theme (white logo needed) but
+        // flip to near-white in dark theme (full-colour logo reads fine there).
+        // Plain surfaces are the opposite: dark theme needs the white version.
+        onDark
+          ? "brightness-0 invert dark:brightness-100 dark:invert-0"
+          : "dark:brightness-0 dark:invert",
         className,
       )}
     />

@@ -19,6 +19,7 @@ export function HeroSection() {
   const dur = (d: number, del?: number) =>
     prefersReducedMotion ? { duration: 0 } : { duration: d, ...(del ? { delay: del } : {}) };
 
+  
   return (
     <section className="relative isolate overflow-hidden pt-8 pb-16 sm:pt-16 md:pt-32 md:pb-32 bg-background">
       <Spotlight className="-top-40 left-0 md:-top-20 md:left-60" fill="oklch(0.72 0.16 155 / 0.4)" />
