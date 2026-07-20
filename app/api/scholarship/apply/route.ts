@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
               Questions? Reach us at
               <a href="mailto:support@lagosdataschoolltd.com" style="color:#0D9488;font-weight:600;">support@lagosdataschoolltd.com</a>.
             </p>
-            <a href="https://lagosdataschool.com/courses" style="display:inline-block;background:#0D9488;color:#ffffff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;">
+            <a href="${appUrl}/courses" style="display:inline-block;background:#0D9488;color:#ffffff;font-size:14px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;">
               Browse Courses →
             </a>
           </td>
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
             <p style="margin:0 0 4px;color:#64748B;font-size:12px;">Best regards,</p>
             <p style="margin:0 0 12px;color:#134E4A;font-size:13px;font-weight:700;">Lagos Data School Team</p>
             <p style="margin:0;color:#94A3B8;font-size:11px;">
-              <a href="https://lagosdataschool.com" style="color:#0D9488;">lagosdataschool.com</a>
+              <a href="${appUrl}" style="color:#0D9488;">lagosdataschoolltd.com</a>
               &nbsp;·&nbsp;
               <a href="mailto:support@lagosdataschoolltd.com" style="color:#0D9488;">support@lagosdataschoolltd.com</a>
             </p>

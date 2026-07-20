@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // GET /api/enrollment/check?courseId=[id]
+// Without courseId: checks whether the student has ANY paid enrollment.
 export async function GET(request: Request) {
   const supabase = await createClient();
   const {
@@ -12,10 +13,20 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const courseId = searchParams.get("courseId");
-  if (!courseId)
-    return NextResponse.json({ error: "courseId is required." }, { status: 400 });
 
   const admin = createAdminClient();
+
+  if (!courseId) {
+    const { data: anyEnrollment, error: anyError } = await admin
+      .from("enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("payment_status", "paid")
+      .limit(1)
+      .maybeSingle();
+    if (anyError) return NextResponse.json({ error: anyError.message }, { status: 500 });
+    return NextResponse.json({ enrolled: !!anyEnrollment });
+  }
   const { data: enrollment, error } = await admin
     .from("enrollments")
     .select("id, payment_reference")

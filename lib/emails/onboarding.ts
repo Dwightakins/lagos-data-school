@@ -117,7 +117,7 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
           <div style="text-align:center;margin:32px 0;">
             <a href="${p.dashboardUrl}"
               style="display:inline-block;background:linear-gradient(135deg,#0D9488,#0a5c4a);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;letter-spacing:0.2px;">
-              Go to My Dashboard →
+              Log in to Your Dashboard →
             </a>
           </div>
 

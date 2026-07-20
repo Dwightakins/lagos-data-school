@@ -102,6 +102,7 @@ function RegisterWizardContent() {
   const [step, setStep] = useState<Step>(1);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<CourseItem | null>(null);
@@ -161,11 +162,12 @@ function RegisterWizardContent() {
   }, [preselectedCourseId]);
 
   function handleChange(
-    field: "fullName" | "email" | "password" | "confirmPassword",
+    field: "fullName" | "email" | "phone" | "password" | "confirmPassword",
     value: string
   ) {
     if (field === "fullName") setFullName(value);
     else if (field === "email") { setEmail(value); setEmailTaken(false); }
+    else if (field === "phone") setPhone(value);
     else if (field === "password") setPassword(value);
     else setConfirmPassword(value);
     setError(null);
@@ -277,6 +279,7 @@ function RegisterWizardContent() {
           <Step1Personal
             fullName={fullName}
             email={email}
+            phone={phone}
             password={password}
             confirmPassword={confirmPassword}
             onChange={handleChange}
@@ -296,6 +299,7 @@ function RegisterWizardContent() {
             totalPrice={totalPrice}
             email={email}
             fullName={fullName}
+            phone={phone}
             password={password}
             initialPaymentType={paymentType}
             onBack={handleGoBack}

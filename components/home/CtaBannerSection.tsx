@@ -1,9 +1,11 @@
 "use client";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LayoutDashboard } from "lucide-react";
 import { BackgroundBeamsCollision } from "@/components/ui/background-beams-collision";
 import { Noise } from "@/components/ui/noise";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 
 export function CtaBannerSection() {
+  const enrollment = useEnrollmentStatus();
   return (
     <section className="relative py-16 md:py-24 bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -18,14 +20,25 @@ export function CtaBannerSection() {
               Application now open.
             </p>
             <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
-              <a
-                href="/register"
-                className="relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl gradient-brand px-7 py-3.5 text-sm font-semibold text-brand-foreground shadow-brand hover:opacity-95 transition"
-              >
-                <Noise className="opacity-40" />
-                <span className="relative">Apply now</span>
-                <ArrowRight className="relative h-4 w-4" />
-              </a>
+              {enrollment === "enrolled" ? (
+                <a
+                  href="/dashboard"
+                  className="relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl gradient-brand px-7 py-3.5 text-sm font-semibold text-brand-foreground shadow-brand hover:opacity-95 transition"
+                >
+                  <Noise className="opacity-40" />
+                  <LayoutDashboard className="relative h-4 w-4" />
+                  <span className="relative">Go to Dashboard</span>
+                </a>
+              ) : (
+                <a
+                  href="/register"
+                  className="relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl gradient-brand px-7 py-3.5 text-sm font-semibold text-brand-foreground shadow-brand hover:opacity-95 transition"
+                >
+                  <Noise className="opacity-40" />
+                  <span className="relative">Apply now</span>
+                  <ArrowRight className="relative h-4 w-4" />
+                </a>
+              )}
               <a
                 href="/contact"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background/70 backdrop-blur px-7 py-3.5 text-sm font-semibold text-foreground hover:bg-accent transition"

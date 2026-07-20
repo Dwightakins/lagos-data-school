@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Award, BookOpen, Clock, Users } from "lucide-react";
+import { Award, BookOpen, Clock, LayoutDashboard, Users } from "lucide-react";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { ContainerTextFlip } from "@/components/ui/container-text-flip";
 import { CourseDetailModal } from "@/components/courses/CourseDetailModal";
@@ -18,6 +19,7 @@ import type { Course } from "@/types";
 export default function LDSCoursesClient({ courses }: { courses: Course[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<CourseFilter>("All");
+  const enrollment = useEnrollmentStatus();
 
   const filtered = useMemo(
     () =>
@@ -130,18 +132,29 @@ export default function LDSCoursesClient({ courses }: { courses: Course[] }) {
           Join 2,400+ students building careers in data and technology.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-[15px] px-10 py-4 rounded-xl transition-colors shadow-lg"
-          >
-            Enroll Now →
-          </Link>
-          <Link
-            href="/apply-scholarship"
-            className="inline-flex items-center gap-2 border-2 border-green-600 text-green-600 dark:text-green-500 font-bold text-[15px] px-10 py-4 rounded-xl hover:bg-green-600 hover:text-white transition-all"
-          >
-            Apply for Scholarship
-          </Link>
+          {enrollment === "enrolled" ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-[15px] px-10 py-4 rounded-xl transition-colors shadow-lg"
+            >
+              <LayoutDashboard className="w-4 h-4" /> Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-[15px] px-10 py-4 rounded-xl transition-colors shadow-lg"
+              >
+                Enroll Now →
+              </Link>
+              <Link
+                href="/apply-scholarship"
+                className="inline-flex items-center gap-2 border-2 border-green-600 text-green-600 dark:text-green-500 font-bold text-[15px] px-10 py-4 rounded-xl hover:bg-green-600 hover:text-white transition-all"
+              >
+                Apply for Scholarship
+              </Link>
+            </>
+          )}
         </div>
       </div>
 

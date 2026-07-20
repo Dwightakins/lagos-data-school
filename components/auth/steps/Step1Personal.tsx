@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Nigerian numbers: +234 or 0 prefix, then 70/80/81/90/91-style mobile ranges (spaces/dashes allowed)
+const PHONE_RE = /^(\+?234|0)[789][01]\d{8}$/;
 
 const BASE_INPUT =
   "w-full px-3.5 py-2.5 rounded-lg border text-[14px] text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 transition-all";
@@ -49,9 +51,10 @@ function PasswordStrength({ password }: { password: string }) {
 interface Step1Props {
   fullName: string;
   email: string;
+  phone: string;
   password: string;
   confirmPassword: string;
-  onChange: (field: "fullName" | "email" | "password" | "confirmPassword", value: string) => void;
+  onChange: (field: "fullName" | "email" | "phone" | "password" | "confirmPassword", value: string) => void;
   onContinue: () => void;
   disabled?: boolean;
 }
@@ -59,6 +62,7 @@ interface Step1Props {
 export default function Step1Personal({
   fullName,
   email,
+  phone,
   password,
   confirmPassword,
   onChange,
@@ -67,14 +71,16 @@ export default function Step1Personal({
 }: Step1Props) {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [errors, setErrors] = useState({ fullName: "", email: "", password: "", confirmPassword: "" });
-  const [touched, setTouched] = useState({ fullName: false, email: false, password: false, confirmPassword: false });
+  const [errors, setErrors] = useState({ fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
+  const [touched, setTouched] = useState({ fullName: false, email: false, phone: false, password: false, confirmPassword: false });
 
-  function validate(values = { fullName, email, password, confirmPassword }) {
-    const e = { fullName: "", email: "", password: "", confirmPassword: "" };
+  function validate(values = { fullName, email, phone, password, confirmPassword }) {
+    const e = { fullName: "", email: "", phone: "", password: "", confirmPassword: "" };
     if (!values.fullName.trim()) e.fullName = "Full name is required.";
     if (!values.email.trim()) e.email = "Email is required.";
     else if (!EMAIL_RE.test(values.email)) e.email = "Please enter a valid email address.";
+    if (!values.phone.trim()) e.phone = "Phone number is required.";
+    else if (!PHONE_RE.test(values.phone.replace(/[\s-]/g, ""))) e.phone = "Please enter a valid Nigerian phone number (e.g. +234 800 000 0000).";
     if (!values.password) e.password = "Password is required.";
     else if (values.password.length < 8) e.password = "Password must be at least 8 characters.";
     if (!values.confirmPassword) e.confirmPassword = "Please confirm your password.";
@@ -89,7 +95,7 @@ export default function Step1Personal({
   }
 
   function handleContinue() {
-    const allTouched = { fullName: true, email: true, password: true, confirmPassword: true };
+    const allTouched = { fullName: true, email: true, phone: true, password: true, confirmPassword: true };
     setTouched(allTouched);
     const e = validate();
     setErrors(e);
@@ -134,6 +140,22 @@ export default function Step1Personal({
             className={field(err("email"))}
           />
           {err("email") && <p className="mt-1 text-[12px] text-red-600">{err("email")}</p>}
+        </div>
+
+        {/* Phone Number */}
+        <div>
+          <label className="block text-[13px] font-semibold text-foreground mb-1.5">Phone Number</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => onChange("phone", e.target.value)}
+            onBlur={() => blur("phone")}
+            placeholder="+234 800 000 0000"
+            autoComplete="tel"
+            inputMode="tel"
+            className={field(err("phone"))}
+          />
+          {err("phone") && <p className="mt-1 text-[12px] text-red-600">{err("phone")}</p>}
         </div>
 
         {/* Password */}

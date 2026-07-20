@@ -316,8 +316,8 @@ export async function issueCourseCertificate(
               <a href="${appUrl}/verify/${certRecord.id}" style="color: #0D9488; font-weight: 600;">${appUrl}/verify/${certRecord.id}</a>
             </p>
             <div style="text-align: center; margin: 32px 0;">
-              <a href="${appUrl}/dashboard/certificates" style="background: #EA580C; color: white; padding: 16px 36px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block;">
-                View My Certificate →
+              <a href="${appUrl}/login" style="background: #EA580C; color: white; padding: 16px 36px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block;">
+                Log in to View My Certificate →
               </a>
             </div>
             <hr style="border: none; border-top: 1px solid #e7e9ea; margin: 32px 0;">

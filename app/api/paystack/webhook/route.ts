@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
           orderId: reference,
           studentId: p.student_id ?? null,
           enrolledAt: new Date().toISOString(),
-          dashboardUrl: `${appUrl}/dashboard`,
+          dashboardUrl: `${appUrl}/login`,
         });
       }
     }

@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   let body: {
     fullName?: string;
     email?: string;
+    phone?: string;
     password?: string;
   };
 
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
 
   const fullName = body.fullName?.trim() ?? "";
   const email = body.email?.trim().toLowerCase() ?? "";
+  const phone = body.phone?.trim() ?? "";
   const password = body.password ?? "";
 
   if (!fullName || !email || !password) {
@@ -59,6 +61,7 @@ export async function POST(request: Request) {
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
+        ...(phone ? { phone } : {}),
       },
     });
 
@@ -79,6 +82,7 @@ export async function POST(request: Request) {
         id: data.user.id,
         email,
         full_name: fullName,
+        ...(phone ? { phone } : {}),
         role: "student",
       },
       { onConflict: "id" }

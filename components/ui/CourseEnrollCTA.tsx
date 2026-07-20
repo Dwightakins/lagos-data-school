@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Loader2 } from "lucide-react";
+import { ArrowRight, BookOpen, LayoutDashboard, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
   price: number;
 }
 
-type State = "loading" | "enrolled" | "loggedIn" | "loggedOut";
+type State = "loading" | "enrolled" | "enrolledOther" | "loggedIn" | "loggedOut";
 
 export default function CourseEnrollCTA({ courseId, price }: Props) {
   const [state, setState] = useState<State>("loading");
@@ -22,9 +22,15 @@ export default function CourseEnrollCTA({ courseId, price }: Props) {
       fetch(`/api/enrollment/check?courseId=${courseId}`)
         .then((r) => r.json())
         .catch(() => ({ enrolled: false })) as Promise<{ enrolled: boolean }>,
-    ]).then(([{ data: { user } }, enrollment]) => {
+      fetch("/api/enrollment/check")
+        .then((r) => r.json())
+        .catch(() => ({ enrolled: false })) as Promise<{ enrolled: boolean }>,
+    ]).then(([{ data: { user } }, enrollment, anyEnrollment]) => {
       if (enrollment.enrolled) {
         setState("enrolled");
+      } else if (anyEnrollment.enrolled) {
+        // Paid student browsing a different course — never show payment options
+        setState("enrolledOther");
       } else if (user) {
         setState("loggedIn");
       } else {
@@ -52,6 +58,18 @@ export default function CourseEnrollCTA({ courseId, price }: Props) {
       >
         <BookOpen className="w-4 h-4" />
         Continue Learning
+      </Link>
+    );
+  }
+
+  if (state === "enrolledOther") {
+    return (
+      <Link
+        href="/dashboard"
+        className="w-full flex items-center justify-center gap-2 gradient-brand text-brand-foreground font-bold text-[15px] py-3 rounded-xl transition-opacity hover:opacity-90 shadow-sm"
+      >
+        <LayoutDashboard className="w-4 h-4" />
+        Go to Dashboard
       </Link>
     );
   }

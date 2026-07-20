@@ -1,5 +1,8 @@
-import { Check, GraduationCap, Zap } from "lucide-react";
+"use client";
+
+import { Check, GraduationCap, LayoutDashboard, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 
 const tiers = [
   {
@@ -41,6 +44,7 @@ const tiers = [
 ];
 
 export function PricingSection() {
+  const enrollment = useEnrollmentStatus();
   return (
     <section id="pricing" className="relative py-14 md:py-36 bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -98,15 +102,16 @@ export function PricingSection() {
                 ))}
               </ul>
               <a
-                href={tier.href}
+                href={enrollment === "enrolled" ? "/dashboard" : tier.href}
                 className={cn(
-                  "mt-9 inline-flex w-full items-center justify-center rounded-xl px-5 py-3.5 text-sm font-semibold transition",
+                  "mt-9 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold transition",
                   tier.primary
                     ? "gradient-brand text-brand-foreground hover:opacity-95 shadow-brand"
                     : "bg-foreground text-background hover:opacity-90",
                 )}
               >
-                {tier.cta}
+                {enrollment === "enrolled" && <LayoutDashboard className="h-4 w-4" />}
+                {enrollment === "enrolled" ? "Go to Dashboard" : tier.cta}
               </a>
             </div>
           ))}

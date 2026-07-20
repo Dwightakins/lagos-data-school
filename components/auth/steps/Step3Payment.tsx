@@ -40,6 +40,7 @@ interface Step3Props {
   totalPrice: number;
   email: string;
   fullName: string;
+  phone: string;
   password: string;
   initialPaymentType?: "full" | "scholarship";
   onBack: () => void;
@@ -51,6 +52,7 @@ export default function Step3Payment({
   totalPrice,
   email,
   fullName,
+  phone,
   password,
   onBack,
   onPaymentSuccess,
@@ -74,7 +76,7 @@ export default function Step3Payment({
       res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, password }),
+        body: JSON.stringify({ fullName, email, phone, password }),
       });
     } catch {
       setError("Network error. Please check your connection and try again.");

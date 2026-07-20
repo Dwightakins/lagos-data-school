@@ -3,9 +3,10 @@
 import Link from "next/link";
 import {
   ArrowRight, BarChart3, BookOpen, Brain, Clock, Cloud, Code2, Cpu,
-  Database, GitBranch, Kanban, Link as LinkIcon, Megaphone, Palette,
-  Shield, Smartphone, Terminal,
+  Database, GitBranch, Kanban, LayoutDashboard, Link as LinkIcon,
+  Megaphone, Palette, Shield, Smartphone, Terminal,
 } from "lucide-react";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 
 export type CourseCategory = "Data & AI" | "Development" | "Security" | "Business" | "Design";
 
@@ -60,6 +61,7 @@ export function CourseCard({
   onOpen: () => void;
 }) {
   const { Icon, category } = getCourseMeta(course.slug, course.title);
+  const enrollment = useEnrollmentStatus();
 
   return (
     <div className="group flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-200 hover:border-green-500 hover:shadow-lg dark:border-border dark:bg-card dark:hover:border-green-500">
@@ -98,21 +100,33 @@ export function CourseCard({
         <p className="mb-4 text-[20px] font-bold text-gray-900 dark:text-foreground">
           ₦{course.price.toLocaleString("en-NG")}
         </p>
-        <div className="flex items-center justify-between gap-3 border-t border-green-600/15 pt-4">
-          <button
-            type="button"
-            onClick={onOpen}
-            className="rounded-lg bg-green-600 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-green-700"
-          >
-            Enroll Now
-          </button>
-          <Link
-            href="/apply-scholarship"
-            className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-green-600 transition-all hover:gap-1.5 dark:text-green-500"
-          >
-            97% Scholarship <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
+        {enrollment === "enrolled" ? (
+          <div className="border-t border-green-600/15 pt-4">
+            <Link
+              href="/dashboard"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-green-700"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Go to Dashboard
+            </Link>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3 border-t border-green-600/15 pt-4">
+            <button
+              type="button"
+              onClick={onOpen}
+              className="rounded-lg bg-green-600 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-green-700"
+            >
+              Enroll Now
+            </button>
+            <Link
+              href="/apply-scholarship"
+              className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-green-600 transition-all hover:gap-1.5 dark:text-green-500"
+            >
+              97% Scholarship <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

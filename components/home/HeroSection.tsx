@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, PlayCircle, Sparkles } from "lucide-react";
+import { ArrowRight, LayoutDashboard, PlayCircle } from "lucide-react";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 import Image from "next/image";
 import { Spotlight } from "@/components/ui/spotlight";
 import { ContainerTextFlip } from "@/components/ui/container-text-flip";
@@ -10,6 +11,7 @@ import { MovingBorderButton } from "@/components/ui/moving-border-button";
 
 export function HeroSection() {
   const prefersReducedMotion = useReducedMotion();
+  const enrollment = useEnrollmentStatus();
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setReady(true));
@@ -26,19 +28,6 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-grid-light dark:bg-grid-dark mask-radial-fade opacity-60" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-        <motion.div
-          animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-          transition={dur(0.6)}
-          className="mx-auto mb-6 inline-flex w-full justify-center"
-        >
-          <a href="#" className="group inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/50 backdrop-blur px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition">
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">
-              <Sparkles className="h-3 w-3" /> 
-            </span>
-            <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
-          </a>
-        </motion.div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           <div className="lg:col-span-7 text-center lg:text-left">
             <motion.h1
@@ -68,16 +57,26 @@ export function HeroSection() {
               transition={dur(0.6, 0.28)}
               className="mt-9 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
             >
-              <MovingBorderButton
-                as="a"
-                href="/register"
-                borderRadius="0.85rem"
-                transparent
-                className="!px-7 !py-3.5 gap-2 text-foreground"
-              >
-                Get started
-                <ArrowRight className="h-4 w-4" />
-              </MovingBorderButton>
+              {enrollment === "enrolled" ? (
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 rounded-[0.85rem] bg-brand px-7 py-3.5 text-sm font-semibold text-brand-foreground shadow-brand hover:opacity-90 transition"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <MovingBorderButton
+                  as="a"
+                  href="/register"
+                  borderRadius="0.85rem"
+                  transparent
+                  className="!px-7 !py-3.5 gap-2 text-foreground"
+                >
+                  Get started
+                  <ArrowRight className="h-4 w-4" />
+                </MovingBorderButton>
+              )}
               <Link
                 href="/courses"
                 className="inline-flex items-center justify-center gap-2 rounded-[0.85rem] border border-border/70 bg-background/60 backdrop-blur px-7 py-3.5 text-sm font-semibold text-foreground hover:bg-accent transition"
