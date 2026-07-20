@@ -35,12 +35,14 @@ const items: GridItemProps[] = [
     icon: Users,
     title: "Student Community",
     desc: "1,200+ peers in private channels — pair‑program, share wins and find your next co‑founder.",
+    image: "/images/community.jpg",
   },
   {
     area: "md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]",
     icon: Briefcase,
     title: "Job Placement Support",
     desc: "Mock interviews, CV reviews and warm intros to 60+ partner companies hiring African talent.",
+    image: "/images/job-placement.jpg",
   },
 ];
 
