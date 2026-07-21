@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AppLogo } from "@/components/layout/logo";
 import { CheckCircle2, ArrowLeft, UserPlus } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
@@ -14,7 +15,10 @@ const INPUT_CLASS =
 // UUID v4 pattern — used to distinguish real DB IDs from text stubs
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default function ApplyScholarshipPage() {
+function ApplyScholarshipContent() {
+  const searchParams = useSearchParams();
+  const preselectedCourseId = searchParams.get("course") ?? searchParams.get("courseId");
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [coursesLoaded, setCoursesLoaded] = useState(false);
 
@@ -34,11 +38,14 @@ export default function ApplyScholarshipPage() {
       .then((d: { courses?: Course[] }) => {
         if (d?.courses?.length) {
           setCourses(d.courses);
+          if (preselectedCourseId && d.courses.some((c) => c.id === preselectedCourseId)) {
+            setSelectedCourseId(preselectedCourseId);
+          }
         }
         setCoursesLoaded(true);
       })
       .catch(() => setCoursesLoaded(true)); // show form even if courses fail
-  }, []);
+  }, [preselectedCourseId]);
 
   const selectedCourse = courses.find((c) => c.id === selectedCourseId);
 
@@ -286,5 +293,17 @@ export default function ApplyScholarshipPage() {
         </p>
       </footer>
     </div>
+  );
+}
+
+export default function ApplyScholarshipPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin h-6 w-6 border-2 border-brand border-t-transparent rounded-full" />
+      </div>
+    }>
+      <ApplyScholarshipContent />
+    </Suspense>
   );
 }

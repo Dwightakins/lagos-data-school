@@ -44,6 +44,7 @@ function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const courseId = searchParams.get("courseId");
+  const isScholarship = searchParams.get("type") === "scholarship";
 
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -58,6 +59,11 @@ function CheckoutContent() {
   useEffect(() => {
     if (!courseId) {
       router.replace("/courses");
+      return;
+    }
+
+    if (isScholarship) {
+      router.replace(`/apply-scholarship?course=${courseId}`);
       return;
     }
 
@@ -102,7 +108,7 @@ function CheckoutContent() {
       setPageLoading(false);
     }
     void init();
-  }, [courseId, router]);
+  }, [courseId, isScholarship, router]);
 
   // Poll until PaystackPop is available on window (loaded via Script afterInteractive)
   useEffect(() => {
@@ -264,13 +270,12 @@ function CheckoutContent() {
 
       <main className="flex-1 flex items-start justify-center px-4 py-10">
         <div className="w-full max-w-md">
-          <button
-            type="button"
-            onClick={() => router.back()}
+          <Link
+            href={courseId ? `/courses/${courseId}` : "/courses"}
             className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back
-          </button>
+          </Link>
 
           <h1 className="text-[1.6rem] font-bold text-foreground mb-1">Complete Enrollment</h1>
           {course && (

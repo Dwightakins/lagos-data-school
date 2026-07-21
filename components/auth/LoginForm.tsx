@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppLogo } from "@/components/layout/logo";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -14,8 +14,24 @@ const LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
 const INPUT_CLASS =
   "w-full px-4 py-2.5 rounded-lg border border-border text-[14px] text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors";
 
+// Only allow relative, same-origin paths — blocks "//evil.com", "https://evil.com",
+// and any other absolute or protocol-relative redirect target.
+function getSafeRedirect(raw: string | null): string {
+  if (!raw) return "/dashboard";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
+  try {
+    // A relative path resolved against a fixed base must stay on that same origin.
+    const resolved = new URL(raw, "http://localhost");
+    if (resolved.origin !== "http://localhost") return "/dashboard";
+    return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+  } catch {
+    return "/dashboard";
+  }
+}
+
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -75,7 +91,7 @@ export default function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(getSafeRedirect(searchParams.get("redirect")));
     router.refresh();
   }
 
