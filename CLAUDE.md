@@ -224,7 +224,7 @@ NEXT_PUBLIC_APP_URL=https://lagosdataschoolltd.com
 - Prevent duplicate enrollments with unique constraint
 - Scholarship payments only via approved token link
 
----
+---                                                                                                                                             
 
 ## Contact Information
 - WhatsApp: +2348082845543
