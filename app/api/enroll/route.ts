@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyAlatpayTransaction } from "@/lib/payments/alatpay";
 
 export async function POST(request: Request) {
-  // No session check — called during registration before email verification.
-  // userId comes from the client immediately after signUp returns the new user id.
-
-  // 1. Parse body
   let body: { userId?: string; courseId?: string; paymentReference?: string };
   try {
     body = (await request.json()) as typeof body;
@@ -18,31 +15,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
 
-  // 3. Verify payment with Paystack before recording anything
-  let paystackOk = false;
   try {
-    const verify = await fetch(
-      `https://api.paystack.co/transaction/verify/${encodeURIComponent(paymentReference)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-        },
-      }
-    );
-    const result = (await verify.json()) as { data?: { status?: string } };
-    paystackOk = result.data?.status === "success";
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "Unknown error";
-    console.error("[enroll] Paystack verify failed:", msg);
-    return NextResponse.json({ error: "Could not verify payment. Please try again." }, { status: 502 });
-  }
+    const verified = await verifyAlatpayTransaction(paymentReference);
+    if (!verified.ok || verified.status !== "success") {
+      return NextResponse.json({ error: "Payment verification failed." }, { status: 400 });
+    }
 
-  if (!paystackOk) {
-    return NextResponse.json({ error: "Payment verification failed." }, { status: 400 });
-  }
-
-  // 4. Record enrollment
-  try {
     const admin = createAdminClient();
     const { error } = await admin.from("enrollments").insert({
       user_id: userId as string,
@@ -60,7 +38,7 @@ export async function POST(request: Request) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("[enroll]", msg);
     return NextResponse.json(
-      { error: "Could not record your enrollment. Please contact support." },
+      { error: "Could not verify or record your enrollment. Please contact support." },
       { status: 500 }
     );
   }

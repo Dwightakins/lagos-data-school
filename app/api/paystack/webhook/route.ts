@@ -1,64 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import crypto from "crypto";
 import { assignStudentId } from "@/lib/student-id";
 import { sendOnboardingEmail } from "@/lib/emails/onboarding";
-
-const SCHOLARSHIP_PRICE = 10000;
-const BULK_DISCOUNT_THRESHOLD = 3;
-const BULK_DISCOUNT_RATE = 0.1;
-
-function computeFullPrice(prices: number[]): number {
-  const total = prices.reduce((sum, p) => sum + p, 0);
-  return prices.length >= BULK_DISCOUNT_THRESHOLD
-    ? Math.round(total * (1 - BULK_DISCOUNT_RATE))
-    : total;
-}
+import { verifyAlatpayTransaction } from "@/lib/payments/alatpay";
+import { getExpectedPaymentAmount } from "@/lib/payment-config";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
-    const signature = req.headers.get("x-paystack-signature");
-
-    // Verify this is really from Paystack
-    const hash = crypto
-      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
-      .update(body)
-      .digest("hex");
-
-    if (hash !== signature) {
-      return NextResponse.json(
-        { error: "Invalid signature" },
-        { status: 401 }
-      );
-    }
-
     const event = JSON.parse(body) as {
-      event: string;
-      data: {
-        reference: string;
-        amount: number; // kobo
+      event?: string;
+      data?: {
+        reference?: string;
+        amount?: number;
         metadata?: {
           userId?: string;
           fullName?: string;
           courseIds?: string[];
-          courseId?: string; // backward compat
+          courseId?: string;
           courseNames?: string;
           paymentType?: "full" | "scholarship";
         };
-        customer: { email: string };
+        customer?: { email?: string };
       };
     };
 
-    if (event.event !== "charge.success") {
+    const reference = event.data?.reference;
+    if (!reference) {
       return NextResponse.json({ received: true });
     }
 
-    const { reference, customer, amount, metadata } = event.data;
-    const userId = metadata?.userId;
-    const fullName = metadata?.fullName ?? "";
-    const courseIds = metadata?.courseIds ?? (metadata?.courseId ? [metadata.courseId] : []);
-    const paymentType = metadata?.paymentType ?? "full";
+    const verified = await verifyAlatpayTransaction(reference);
+    if (!verified.ok || verified.status !== "success") {
+      return NextResponse.json({ received: true });
+    }
+
+    const { data } = event;
+    const metadata = data?.metadata ?? {};
+    const userId = metadata.userId;
+    const fullName = metadata.fullName ?? "";
+    const courseIds = metadata.courseIds ?? (metadata.courseId ? [metadata.courseId] : []);
+    const paymentType = metadata.paymentType ?? "full";
 
     if (!userId || courseIds.length === 0) {
       console.error("[webhook] Missing userId or courseIds in metadata", { reference });
@@ -67,14 +49,12 @@ export async function POST(req: NextRequest) {
 
     const admin = createAdminClient();
 
-    // Validate user exists
     const { data: authData, error: authError } = await admin.auth.admin.getUserById(userId);
     if (authError || !authData.user) {
       console.error("[webhook] User not found:", userId);
       return NextResponse.json({ received: true });
     }
 
-    // Re-derive expected amount from DB (tamper protection — Paystack metadata is unsigned)
     const { data: courses } = await admin
       .from("courses")
       .select("id, price")
@@ -82,24 +62,22 @@ export async function POST(req: NextRequest) {
 
     if (courses && courses.length > 0) {
       type CourseRow = { id: string; price: number };
-      const expectedAmount =
-        paymentType === "scholarship"
-          ? SCHOLARSHIP_PRICE
-          : computeFullPrice((courses as CourseRow[]).map((c) => c.price));
+      const expectedAmount = getExpectedPaymentAmount(
+        (courses as CourseRow[]).map((c) => c.price),
+        paymentType
+      );
 
-      if (amount / 100 < expectedAmount) {
-        console.error(`[webhook] Amount mismatch: paid ₦${amount / 100}, expected ₦${expectedAmount}`);
+      if (verified.amountNaira < expectedAmount) {
+        console.error(`[webhook] Amount mismatch: paid ₦${verified.amountNaira}, expected ₦${expectedAmount}`);
         return NextResponse.json({ received: true });
       }
     }
 
-    // Upsert user profile
     await admin.from("users").upsert(
-      { id: userId, email: customer.email, full_name: fullName, role: "student" },
+      { id: userId, email: data?.customer?.email ?? "", full_name: fullName, role: "student" },
       { onConflict: "id" }
     );
 
-    // Record payment — check first so we know if this is a new transaction
     const { data: existingPayment } = await admin
       .from("payments")
       .select("id")
@@ -112,10 +90,10 @@ export async function POST(req: NextRequest) {
       {
         user_id: userId,
         course_id: courseIds[0],
-        amount: amount / 100,
+        amount: verified.amountNaira,
         reference,
         status: "paid",
-        provider: "paystack",
+        provider: "alatpay",
       },
       { onConflict: "reference" }
     );
@@ -134,22 +112,21 @@ export async function POST(req: NextRequest) {
             user_id: userId,
             course_id: courseIds[0],
             status: "approved",
-            amount_paid: amount / 100,
+            amount_paid: verified.amountNaira,
           })
           .eq("id", existingApplication.id);
       } else {
         await admin.from("scholarship_applications").insert({
           user_id: userId,
           course_id: courseIds[0],
-          course_name: metadata?.courseNames ?? "",
+          course_name: metadata.courseNames ?? "",
           status: "approved",
           payment_reference: reference,
-          amount_paid: amount / 100,
+          amount_paid: verified.amountNaira,
         });
       }
     }
 
-    // Enroll in all selected courses (idempotent)
     const { data: existingEnrollments } = await admin
       .from("enrollments")
       .select("course_id")
@@ -172,7 +149,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Assign student ID (idempotent — returns existing if already set)
     const { data: primaryCourse } = await admin
       .from("courses")
       .select("title")
@@ -184,8 +160,6 @@ export async function POST(req: NextRequest) {
       await assignStudentId(userId, primaryTitle);
     }
 
-    // Send onboarding email only if this webhook fired before the verify route
-    // (i.e. the payment record didn't already exist when we checked above)
     if (isNewPayment) {
       const { data: profile } = await admin
         .from("users")
@@ -201,7 +175,7 @@ export async function POST(req: NextRequest) {
           to: p.email,
           studentName: p.full_name ?? "Student",
           courseName: primaryTitle || courseIds[0],
-          amountPaid: amount / 100,
+          amountPaid: verified.amountNaira,
           paymentType,
           orderId: reference,
           studentId: p.student_id ?? null,
@@ -214,9 +188,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook error:", error);
-    return NextResponse.json(
-      { error: "Webhook failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
   }
 }

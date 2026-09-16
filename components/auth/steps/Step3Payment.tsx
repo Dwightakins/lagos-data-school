@@ -105,9 +105,8 @@ export default function Step3Payment({
   const handlePayment = async () => {
     setError(null);
 
-    // @ts-ignore — PaystackPop is loaded via global script in app/layout.tsx
-    const PaystackPop = window.PaystackPop as Window["PaystackPop"] | undefined;
-    if (!PaystackPop) {
+    const AlatpayPopup = window.Alatpay;
+    if (!AlatpayPopup) {
       setError("Payment system not loaded. Please refresh the page and try again.");
       return;
     }
@@ -117,11 +116,13 @@ export default function Step3Payment({
 
     setLoadingStep("initializing");
     type InitOk = {
-      publicKey: string;
-      reference: string;
-      email: string;
+      apiKey: string;
+      businessId: string;
       amount: number;
-      courseIds: string[];
+      email: string;
+      firstName: string;
+      lastName: string;
+      metadata?: Record<string, unknown>;
     };
     type InitResult = InitOk & { error?: string; alreadyEnrolled?: boolean };
 
@@ -146,7 +147,7 @@ export default function Step3Payment({
         return;
       }
 
-      if (!initRes.ok || !raw.reference) {
+      if (!initRes.ok || !raw.apiKey || !raw.businessId) {
         setError(raw.error ?? "Could not set up payment. Please try again.");
         setLoadingStep(null);
         return;
@@ -160,57 +161,30 @@ export default function Step3Payment({
 
     setLoadingStep(null);
 
-    const doVerify = async (reference: string) => {
-      setLoadingStep("verifying");
-      try {
-        const verifyRes = await fetch("/api/paystack/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reference,
-            userId,
-            courseIds: initData.courseIds,
-            paymentType: "full",
-          }),
-        });
-        const verifyData = (await verifyRes.json()) as { success?: boolean; error?: string };
-
-        if (!verifyRes.ok || !verifyData.success) {
-          setError(
-            verifyData.error ??
-              "Payment verification failed. If money was debited, please contact support."
-          );
-          setLoadingStep(null);
-          return;
-        }
-
-        try { sessionStorage.removeItem(UID_CACHE_KEY); } catch { /* ignore */ }
-        setLoadingStep(null);
-        onPaymentSuccess("full");
-      } catch {
-        setError(
-          "Verification failed. If money was debited, please contact support with your email address."
-        );
-        setLoadingStep(null);
-      }
-    };
-
-    const handler = PaystackPop.setup({
-      key: initData.publicKey,
+    const popup = AlatpayPopup.setup({
+      apiKey: initData.apiKey,
+      businessId: initData.businessId,
       email: initData.email,
+      phone: "",
+      firstName: initData.firstName,
+      lastName: initData.lastName,
       amount: initData.amount,
       currency: "NGN",
-      ref: initData.reference,
-      callback: (transaction: { reference?: string; trxref?: string }) => {
-        const ref = transaction.reference ?? transaction.trxref ?? initData.reference;
-        void doVerify(ref);
+      metadata: initData.metadata ?? { userId, paymentType: "full" },
+      onTransaction: (response) => {
+        if (response?.status) {
+          try { sessionStorage.removeItem(UID_CACHE_KEY); } catch { /* ignore */ }
+          onPaymentSuccess("full");
+          return;
+        }
+        setError(response?.message ?? "Payment could not be completed.");
       },
       onClose: () => {
         setLoadingStep(null);
       },
     });
 
-    handler.openIframe();
+    popup.show();
   };
 
   const loadingMessage = loadingStep ? LOADING_MESSAGES[loadingStep] : null;

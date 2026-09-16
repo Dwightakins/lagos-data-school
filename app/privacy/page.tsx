@@ -20,7 +20,7 @@ const SECTIONS = [
   },
   {
     title: "Payment Data",
-    content: `Payments are processed by Paystack, a PCI-DSS-compliant payment processor. Lagos Data School Limited does not store your card details. Paystack's privacy policy governs the handling of payment information.`,
+    content: `Payments are processed by ALATPay, a secure payment processor supported by Wema Bank. Lagos Data School Limited does not store your card details. ALATPay's privacy policy governs the handling of payment information.`,
   },
   {
     title: "Cookies",

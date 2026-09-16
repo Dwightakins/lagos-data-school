@@ -13,7 +13,7 @@ export interface ScholarshipRejectionParams {
   courseName: string;
 }
 
-const SCHOLARSHIP_FEE = "₦8,000";
+const SCHOLARSHIP_FEE = `₦${Number(process.env.NEXT_PUBLIC_SCHOLARSHIP_FEE ?? process.env.SCHOLARSHIP_FEE ?? 8000).toLocaleString("en-NG")}`;
 
 export async function sendScholarshipAcceptanceEmail(
   p: ScholarshipAcceptanceParams,

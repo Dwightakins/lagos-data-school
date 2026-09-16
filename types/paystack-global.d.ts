@@ -1,17 +1,26 @@
 interface Window {
-  PaystackPop: {
+  Alatpay?: {
     setup(opts: {
-      key: string;
+      apiKey: string;
+      businessId: string;
       email: string;
+      phone?: string;
+      firstName: string;
+      lastName: string;
       amount: number;
-      currency: string;
-      ref: string;
-      label?: string;
+      currency: "NGN" | "USD";
       metadata?: Record<string, unknown>;
-      callback(transaction: { reference?: string; trxref?: string }): void;
-      onClose(): void;
-      onSuccess?(transaction: { reference?: string; trxref?: string }): void;
-      onCancel?(): void;
-    }): { openIframe(): void };
+      onTransaction: (response: {
+        status?: boolean;
+        message?: string;
+        data?: {
+          id?: string;
+          transactionId?: string;
+          status?: string;
+          amount?: number;
+        };
+      }) => void;
+      onClose?: () => void;
+    }): { show(): void };
   };
 }

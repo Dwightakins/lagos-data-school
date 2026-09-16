@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const SCHOLARSHIP_FEE_KOBO = 800_000; // ₦8,000 in kobo
+import { verifyAlatpayTransaction } from "@/lib/payments/alatpay";
+import { PAYMENT_CONFIG } from "@/lib/payment-config";
 
 export async function POST(req: NextRequest) {
   let body: { token?: string; reference?: string };
@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Re-verify token
   const { data: app, error } = await admin
     .from("scholarship_applications")
     .select("id, user_id, course_id, status, payment_completed, token_expires_at")
@@ -43,7 +42,7 @@ export async function POST(req: NextRequest) {
   const row = app as unknown as AppRow;
 
   if (row.payment_completed) {
-    return NextResponse.json({ success: true }); // idempotent
+    return NextResponse.json({ success: true });
   }
   if (row.status !== "approved") {
     return NextResponse.json({ error: "Application not approved." }, { status: 400 });
@@ -52,49 +51,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Payment link has expired." }, { status: 410 });
   }
 
-  // Verify payment with Paystack
-  const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
-  if (!paystackSecret) {
-    return NextResponse.json({ error: "Payment configuration error." }, { status: 500 });
-  }
-
-  let paystackData: { status: boolean; data?: { status: string; amount: number } };
   try {
-    const psRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
-      headers: { Authorization: `Bearer ${paystackSecret}` },
+    const verified = await verifyAlatpayTransaction(reference);
+    if (!verified.ok || verified.status !== "success" || verified.amountNaira < PAYMENT_CONFIG.scholarshipFee) {
+      return NextResponse.json({ error: "Payment not confirmed. Please contact support." }, { status: 400 });
+    }
+
+    const { error: enrollError } = await admin.from("enrollments").insert({
+      user_id: row.user_id,
+      course_id: row.course_id,
+      type: "scholarship",
+      status: "active",
+      payment_status: "paid",
     });
-    paystackData = (await psRes.json()) as typeof paystackData;
+
+    if (enrollError && !enrollError.message.includes("duplicate")) {
+      console.error("[scholarship/complete-payment] enroll error", enrollError);
+      return NextResponse.json({ error: "Failed to create enrollment. Contact support." }, { status: 500 });
+    }
+
+    await admin
+      .from("scholarship_applications")
+      .update({ payment_completed: true })
+      .eq("id", row.id);
+
+    return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Could not verify payment with Paystack." }, { status: 502 });
+    return NextResponse.json({ error: "Could not verify payment with ALATPay." }, { status: 502 });
   }
-
-  if (
-    !paystackData.status ||
-    paystackData.data?.status !== "success" ||
-    (paystackData.data?.amount ?? 0) < SCHOLARSHIP_FEE_KOBO
-  ) {
-    return NextResponse.json({ error: "Payment not confirmed. Please contact support." }, { status: 400 });
-  }
-
-  // Create enrollment
-  const { error: enrollError } = await admin.from("enrollments").insert({
-    user_id: row.user_id,
-    course_id: row.course_id,
-    type: "scholarship",
-    status: "active",
-    payment_status: "paid",
-  });
-
-  if (enrollError && !enrollError.message.includes("duplicate")) {
-    console.error("[scholarship/complete-payment] enroll error", enrollError);
-    return NextResponse.json({ error: "Failed to create enrollment. Contact support." }, { status: 500 });
-  }
-
-  // Mark payment complete
-  await admin
-    .from("scholarship_applications")
-    .update({ payment_completed: true })
-    .eq("id", row.id);
-
-  return NextResponse.json({ success: true });
 }

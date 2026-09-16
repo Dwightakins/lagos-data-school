@@ -40,7 +40,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange={false}>
           {children}
           <WhatsAppButton />
-          <Script src="https://js.paystack.co/v1/inline.js" strategy="afterInteractive" />
+          <Script src="https://web.alatpay.ng/js/alatpay.js" strategy="afterInteractive" />
         </ThemeProvider>
       </body>
     </html>

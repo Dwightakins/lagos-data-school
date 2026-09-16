@@ -121,7 +121,7 @@ async function buildReceiptPdf(
   row("Course", payment.courses?.title ?? "—");
   row("Amount Paid", `₦${Number(payment.amount).toLocaleString("en-NG")}`);
   row("Payment Type", payment.payment_intents?.payment_type === "scholarship" ? "Scholarship" : "Full Pay");
-  row("Payment Method", "Paystack");
+  row("Payment Method", "ALATPay");
   row("Transaction Reference", payment.reference || "—");
 
   // Status badge

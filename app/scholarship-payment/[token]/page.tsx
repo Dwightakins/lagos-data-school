@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AppLogo } from "@/components/layout/logo";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
-const SCHOLARSHIP_FEE = 8_000;
+const SCHOLARSHIP_FEE = Number(process.env.NEXT_PUBLIC_SCHOLARSHIP_FEE ?? process.env.SCHOLARSHIP_FEE ?? 8000);
 
 function fmt(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -75,18 +75,33 @@ export default function ScholarshipPaymentPage() {
     if (!appInfo) return;
     setError(null);
 
-    // @ts-ignore — PaystackPop loaded via global script
-    const PaystackPop = window.PaystackPop as Window["PaystackPop"] | undefined;
-    if (!PaystackPop) {
+    const AlatpayPopup = window.Alatpay;
+    if (!AlatpayPopup) {
       setError("Payment system not loaded. Please refresh the page.");
       return;
     }
 
     setPaying(true);
 
-    // Initialize payment
-    type InitResult = { publicKey?: string; reference?: string; amount?: number; error?: string };
-    let initData: { publicKey: string; reference: string; amount: number };
+    type InitResult = {
+      apiKey?: string;
+      businessId?: string;
+      reference?: string;
+      amount?: number;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      error?: string;
+    };
+    let initData: {
+      apiKey: string;
+      businessId: string;
+      reference: string;
+      amount: number;
+      email: string;
+      firstName: string;
+      lastName: string;
+    };
 
     try {
       const initRes = await fetch("/api/scholarship/token-initialize", {
@@ -95,12 +110,20 @@ export default function ScholarshipPaymentPage() {
         body: JSON.stringify({ token }),
       });
       const raw = (await initRes.json()) as InitResult;
-      if (!initRes.ok || !raw.reference) {
+      if (!initRes.ok || !raw.reference || !raw.apiKey || !raw.businessId) {
         setError(raw.error ?? "Could not set up payment. Please try again.");
         setPaying(false);
         return;
       }
-      initData = raw as typeof initData;
+      initData = {
+        apiKey: raw.apiKey,
+        businessId: raw.businessId,
+        reference: raw.reference,
+        amount: raw.amount ?? SCHOLARSHIP_FEE,
+        email: raw.email ?? appInfo.email,
+        firstName: (appInfo.studentName || "Student").split(" ")[0] || "Student",
+        lastName: (appInfo.studentName || "Student").split(" ").slice(1).join(" ") || "User",
+      };
     } catch {
       setError("Network error. Please try again.");
       setPaying(false);
@@ -109,44 +132,54 @@ export default function ScholarshipPaymentPage() {
 
     setPaying(false);
 
-    const doComplete = async (reference: string) => {
-      setPaying(true);
-      try {
-        const res = await fetch("/api/scholarship/complete-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, reference }),
-        });
-        const data = (await res.json()) as { success?: boolean; error?: string };
-
-        if (!res.ok || !data.success) {
-          setError(data.error ?? "Payment verification failed. If money was debited, please contact support.");
+    const popup = AlatpayPopup.setup({
+      apiKey: initData.apiKey,
+      businessId: initData.businessId,
+      email: initData.email,
+      phone: "",
+      firstName: initData.firstName,
+      lastName: initData.lastName,
+      amount: initData.amount,
+      currency: "NGN",
+      metadata: {
+        token,
+        applicationId: appInfo.id,
+        courseId: appInfo.courseId,
+        userId: appInfo.userId,
+      },
+      onTransaction: async (response) => {
+        if (!response?.status) {
+          setError(response?.message ?? "Payment could not be completed.");
           setPaying(false);
           return;
         }
 
-        setPageState("success");
-        setPaying(false);
-      } catch {
-        setError("Verification failed. If money was debited, please contact support.");
-        setPaying(false);
-      }
-    };
+        setPaying(true);
+        try {
+          const res = await fetch("/api/scholarship/complete-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, reference: initData.reference }),
+          });
+          const data = (await res.json()) as { success?: boolean; error?: string };
 
-    const handler = PaystackPop.setup({
-      key: initData.publicKey,
-      email: appInfo.email,
-      amount: initData.amount,
-      currency: "NGN",
-      ref: initData.reference,
-      callback: (tx: { reference?: string; trxref?: string }) => {
-        const ref = tx.reference ?? tx.trxref ?? initData.reference;
-        void doComplete(ref);
+          if (!res.ok || !data.success) {
+            setError(data.error ?? "Payment verification failed. If money was debited, please contact support.");
+            setPaying(false);
+            return;
+          }
+
+          setPageState("success");
+          setPaying(false);
+        } catch {
+          setError("Verification failed. If money was debited, please contact support.");
+          setPaying(false);
+        }
       },
       onClose: () => setPaying(false),
     });
 
-    handler.openIframe();
+    popup.show();
   };
 
   if (pageState === "loading") {
@@ -297,7 +330,7 @@ export default function ScholarshipPaymentPage() {
             </button>
 
             <p className="text-[11.5px] text-muted-foreground text-center mt-4">
-              Payments secured by Paystack · Nigerian Naira (NGN)
+              Payments secured by ALATPay · Nigerian Naira (NGN)
             </p>
           </div>
         </div>

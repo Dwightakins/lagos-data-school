@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const SCHOLARSHIP_FEE = 8_000;
+import { getAlatpayConfig } from "@/lib/payments/alatpay";
+import { PAYMENT_CONFIG } from "@/lib/payment-config";
 
 export async function POST(req: NextRequest) {
   let body: { token?: string };
@@ -17,8 +17,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing token." }, { status: 400 });
   }
 
-  if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
-    return NextResponse.json({ error: "Paystack public key is not configured." }, { status: 500 });
+  const { apiKey, businessId } = getAlatpayConfig();
+  if (!apiKey || !businessId) {
+    return NextResponse.json({ error: "ALATPay credentials are not configured." }, { status: 500 });
   }
 
   const admin = createAdminClient();
@@ -59,9 +60,10 @@ export async function POST(req: NextRequest) {
   const reference = `LDS-SCH-${Date.now()}-${randomBytes(6).toString("hex")}`;
 
   return NextResponse.json({
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+    apiKey,
+    businessId,
     reference,
     email,
-    amount: SCHOLARSHIP_FEE * 100, // kobo
+    amount: PAYMENT_CONFIG.scholarshipFee,
   });
 }

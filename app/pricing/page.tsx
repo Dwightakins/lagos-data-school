@@ -52,7 +52,7 @@ const FAQ = [
   },
   {
     q: "How is payment processed?",
-    a: "Payments are processed securely through Paystack, Nigeria's leading payment gateway. We accept cards, bank transfers, and USSD.",
+    a: "Payments are processed securely through ALATPay, a Wema Bank-powered payment gateway. We accept cards, bank transfers, and other supported channels.",
   },
 ];
 
@@ -138,7 +138,7 @@ export default function PricingPage() {
         <div className="flex flex-wrap items-center justify-center gap-5 mt-10 pt-8 border-t border-border">
           <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
             <Lock className="w-3.5 h-3.5 text-brand" />
-            Secured by Paystack
+            Secured by ALATPay
           </span>
           <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
             <BadgeCheck className="w-3.5 h-3.5 text-brand" />

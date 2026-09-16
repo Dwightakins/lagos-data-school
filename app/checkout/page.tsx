@@ -53,7 +53,7 @@ function CheckoutContent() {
   const [pageLoading, setPageLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState<LoadingStep>(null);
   const [error, setError] = useState<string | null>(null);
-  const [paystackReady, setPaystackReady] = useState(false);
+  const [alatpayReady, setAlatpayReady] = useState(false);
   const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
 
   useEffect(() => {
@@ -110,11 +110,11 @@ function CheckoutContent() {
     void init();
   }, [courseId, isScholarship, router]);
 
-  // Poll until PaystackPop is available on window (loaded via Script afterInteractive)
+  // Poll until ALATPay Web Plugin is available on window
   useEffect(() => {
-    if (window.PaystackPop) { setPaystackReady(true); return; }
+    if (window.Alatpay) { setAlatpayReady(true); return; }
     const id = setInterval(() => {
-      if (window.PaystackPop) { setPaystackReady(true); clearInterval(id); }
+      if (window.Alatpay) { setAlatpayReady(true); clearInterval(id); }
     }, 150);
     return () => clearInterval(id);
   }, []);
@@ -123,9 +123,8 @@ function CheckoutContent() {
     if (!userId || !course) return;
     setError(null);
 
-    // @ts-ignore — PaystackPop loaded via global script
-    const PaystackPop = window.PaystackPop as Window["PaystackPop"] | undefined;
-    if (!PaystackPop) {
+    const AlatpayPopup = window.Alatpay;
+    if (!AlatpayPopup) {
       setError("Payment system not loaded. Please refresh the page.");
       return;
     }
@@ -133,16 +132,18 @@ function CheckoutContent() {
     setLoadingStep("initializing");
 
     type InitResult = {
-      publicKey?: string;
-      reference?: string;
-      email?: string;
+      apiKey?: string;
+      businessId?: string;
       amount?: number;
-      courseIds?: string[];
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      metadata?: Record<string, unknown>;
       error?: string;
       alreadyEnrolled?: boolean;
     };
 
-    let initData: { publicKey: string; reference: string; email: string; amount: number; courseIds: string[] };
+    let initData: { apiKey: string; businessId: string; amount: number; email: string; firstName: string; lastName: string; metadata?: Record<string, unknown> };
     try {
       const initRes = await fetch("/api/paystack/initialize", {
         method: "POST",
@@ -163,12 +164,20 @@ function CheckoutContent() {
         return;
       }
 
-      if (!initRes.ok || !raw.reference) {
+      if (!initRes.ok || !raw.apiKey || !raw.businessId) {
         setError(raw.error ?? "Could not set up payment. Please try again.");
         setLoadingStep(null);
         return;
       }
-      initData = raw as typeof initData;
+      initData = {
+        apiKey: raw.apiKey,
+        businessId: raw.businessId,
+        amount: raw.amount ?? course.price,
+        email: raw.email ?? email,
+        firstName: fullName.split(" ")[0] || "Student",
+        lastName: fullName.split(" ").slice(1).join(" ") || "User",
+        metadata: raw.metadata ?? { courseId: course.id, paymentType: "full" },
+      };
     } catch {
       setError("Network error during payment setup. Please try again.");
       setLoadingStep(null);
@@ -177,46 +186,27 @@ function CheckoutContent() {
 
     setLoadingStep(null);
 
-    const doVerify = async (reference: string) => {
-      setLoadingStep("verifying");
-      try {
-        const verifyRes = await fetch("/api/paystack/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reference,
-            userId,
-            courseIds: initData.courseIds,
-            paymentType: "full",
-          }),
-        });
-        const verifyData = (await verifyRes.json()) as { success?: boolean; error?: string };
-        if (!verifyRes.ok || !verifyData.success) {
-          setError(verifyData.error ?? "Payment verification failed. If money was debited, contact support.");
-          setLoadingStep(null);
-          return;
-        }
-        setLoadingStep(null);
-        router.replace("/dashboard");
-      } catch {
-        setError("Verification failed. If money was debited, contact support.");
-        setLoadingStep(null);
-      }
-    };
-
-    const handler = PaystackPop.setup({
-      key: initData.publicKey,
+    const popup = AlatpayPopup.setup({
+      apiKey: initData.apiKey,
+      businessId: initData.businessId,
       email: initData.email,
+      phone: "",
+      firstName: initData.firstName,
+      lastName: initData.lastName,
       amount: initData.amount,
       currency: "NGN",
-      ref: initData.reference,
-      callback: (tx: { reference?: string; trxref?: string }) => {
-        const ref = tx.reference ?? tx.trxref ?? initData.reference;
-        void doVerify(ref);
+      metadata: initData.metadata,
+      onTransaction: (response) => {
+        if (response?.status) {
+          router.replace("/dashboard");
+          return;
+        }
+        setError(response?.message ?? "Payment could not be completed.");
       },
       onClose: () => setLoadingStep(null),
     });
-    handler.openIframe();
+
+    popup.show();
   };
 
   const loading = loadingStep !== null;
@@ -326,14 +316,14 @@ function CheckoutContent() {
               </ul>
               <button
                 onClick={() => void handlePayment()}
-                disabled={loading || !paystackReady}
+                disabled={loading || !alatpayReady}
                 className="gradient-brand text-brand-foreground font-bold px-6 py-4 rounded-xl w-full transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <Spinner /> Please wait…
                   </span>
-                ) : !paystackReady ? (
+                ) : !alatpayReady ? (
                   <span className="flex items-center justify-center gap-2">
                     <Spinner /> Loading payment system…
                   </span>
@@ -343,7 +333,7 @@ function CheckoutContent() {
               </button>
               <p className="flex items-center justify-center gap-1.5 text-[12px] text-muted-foreground mt-2">
                 <Lock className="w-3 h-3" />
-                Your payment is secured by Paystack
+                Your payment is secured by ALATPay
               </p>
             </div>
 
@@ -362,7 +352,7 @@ function CheckoutContent() {
 
       <footer className="px-6 py-4 border-t border-border text-center">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Lagos Data School Limited — Payments secured by Paystack
+          © {new Date().getFullYear()} Lagos Data School Limited — Payments secured by ALATPay
         </p>
       </footer>
     </div>

@@ -22,7 +22,7 @@ const FAQS = [
   },
   {
     q: "What payment methods do you accept?",
-    a: "We accept cards, bank transfers and USSD through Paystack, Nigeria's leading payment processor.",
+    a: "We accept cards, bank transfers, and supported digital payment channels through ALATPay.",
   },
   {
     q: "Can I learn at my own pace?",

@@ -1,10 +1,8 @@
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const SCHOLARSHIP_PRICE = 8000;
-const BULK_DISCOUNT_THRESHOLD = 3;
-const BULK_DISCOUNT_RATE = 0.1;
+import { getAlatpayConfig } from "@/lib/payments/alatpay";
+import { getExpectedPaymentAmount } from "@/lib/payment-config";
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown error";
@@ -14,20 +12,13 @@ function makeReference() {
   return `LDS-${Date.now()}-${randomBytes(6).toString("hex")}`;
 }
 
-function computeFullPrice(prices: number[]): number {
-  const total = prices.reduce((sum, p) => sum + p, 0);
-  return prices.length >= BULK_DISCOUNT_THRESHOLD
-    ? Math.round(total * (1 - BULK_DISCOUNT_RATE))
-    : total;
-}
-
 export async function POST(request: Request) {
   let body: {
     userId?: string;
     fullName?: string;
     email?: string;
-    courseIds?: string[]; // preferred: array of course IDs
-    courseId?: string;    // backward compat: single course ID
+    courseIds?: string[];
+    courseId?: string;
     paymentType?: "full" | "scholarship";
   };
 
@@ -51,8 +42,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid payment type." }, { status: 400 });
   }
 
-  if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
-    return NextResponse.json({ error: "Paystack public key is not configured." }, { status: 500 });
+  const { apiKey, businessId } = getAlatpayConfig();
+  if (!apiKey || !businessId) {
+    return NextResponse.json({ error: "ALATPay credentials are not configured." }, { status: 500 });
   }
 
   const admin = createAdminClient();
@@ -67,7 +59,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Account email does not match payment email." }, { status: 400 });
     }
 
-    // Fetch all requested courses
     const { data: courses, error: coursesError } = await admin
       .from("courses")
       .select("id, title, price, published")
@@ -85,7 +76,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "One or more courses are not currently available." }, { status: 400 });
     }
 
-    // Check for existing paid enrollments — prevent charging twice
     const { data: existingEnrollments } = await admin
       .from("enrollments")
       .select("course_id")
@@ -103,11 +93,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Server computes authoritative expected amount — prevents client-side price tampering
-    const expectedAmount =
-      paymentType === "scholarship"
-        ? SCHOLARSHIP_PRICE
-        : computeFullPrice(typedCourses.map((c) => c.price));
+    const expectedAmount = getExpectedPaymentAmount(
+      typedCourses.map((c) => c.price),
+      paymentType
+    );
 
     if (!Number.isFinite(expectedAmount) || expectedAmount <= 0) {
       return NextResponse.json({ error: "Invalid course price." }, { status: 400 });
@@ -117,13 +106,13 @@ export async function POST(request: Request) {
     const reference = makeReference();
 
     return NextResponse.json({
-      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+      apiKey,
+      businessId,
       reference,
       email,
-      amount: expectedAmount * 100, // kobo for Paystack
-      expectedAmount,               // Naira for display
-      currency: "NGN",
-      courseIds,                    // all IDs so verify can enroll each
+      amount: expectedAmount,
+      firstName: (fullName || "Student").split(" ")[0] || "Student",
+      lastName: (fullName || "Student").split(" ").slice(1).join(" ") || "User",
       metadata: {
         userId,
         fullName,

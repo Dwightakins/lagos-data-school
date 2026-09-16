@@ -9,7 +9,7 @@ const FAQS = [
   { q: "When will I receive my certificate?", a: "Certificates are automatically issued when you complete all lessons in a course. Download them from the Certificates page." },
   { q: "How do I get a scholarship?", a: "Visit any course page and click 'Apply for Scholarship'. Fill in the application form and our team will review it within 3–5 business days." },
   { q: "Can I download course videos?", a: "Videos are streamed and cannot be downloaded, but you can download all course materials and resources from the Materials page." },
-  { q: "How do I update my payment method?", a: "Payments are processed through Paystack. Each payment is independent — use your preferred card or bank at checkout." },
+  { q: "How do I update my payment method?", a: "Payments are processed through ALATPay. Each payment is independent — use your preferred card or bank at checkout." },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
