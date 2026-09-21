@@ -150,7 +150,7 @@ export default function AdminSettingsPage() {
         ))}
 
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-[13px] text-amber-800">
-          <strong>Note:</strong> Some settings (Paystack keys, Supabase credentials, Resend API key) are managed as environment variables in your deployment. Update those in your hosting provider&apos;s environment config.
+          <strong>Note:</strong> Some settings (Supabase credentials, Resend API key) are managed as environment variables in your deployment. Update those in your hosting provider&apos;s environment config.
         </div>
 
         <button

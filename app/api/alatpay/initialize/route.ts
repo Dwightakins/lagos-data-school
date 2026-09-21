@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid payment type." }, { status: 400 });
   }
 
-  const { apiKey, businessId } = getAlatpayConfig();
-  if (!apiKey || !businessId) {
+  const { publicKey, businessId } = getAlatpayConfig();
+  if (!publicKey || !businessId) {
     return NextResponse.json({ error: "ALATPay credentials are not configured." }, { status: 500 });
   }
 
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       .select("course_id")
       .eq("user_id", userId)
       .in("course_id", courseIds)
-      .eq("status", "active");
+      .or("status.eq.active,status.is.null");
 
     if (existingEnrollments && existingEnrollments.length > 0) {
       return NextResponse.json(
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     const reference = makeReference();
 
     return NextResponse.json({
-      apiKey,
+      apiKey: publicKey,
       businessId,
       reference,
       email,
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("[paystack/initialize]", error);
+    console.error("[alatpay/initialize]", error);
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

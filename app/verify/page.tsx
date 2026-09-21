@@ -42,7 +42,7 @@ export default function VerifyPage() {
         for (let attempt = 1; attempt <= 5; attempt += 1) {
           setMessage(attempt === 1 ? "Verifying payment..." : "Still confirming payment...");
 
-          const response = await fetch("/api/paystack/verify", {
+          const response = await fetch("/api/alatpay/verify", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

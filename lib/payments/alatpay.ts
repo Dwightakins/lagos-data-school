@@ -1,189 +1,115 @@
+import { createHmac, timingSafeEqual } from "crypto";
+
+// ALATPay reference: https://docs.alatpay.ng (Transaction Monitoring, Webhook Validation, Web Plugin)
+
 export type AlatpayTxStatus = "success" | "failed" | "pending" | "unknown";
 
 export type AlatpayTransactionResult = {
   ok: boolean;
   status: AlatpayTxStatus;
+  /** ALATPay transaction id (`data.id`) */
   reference: string;
   amountNaira: number;
+  currency: string;
+  email: string;
+  /** Parsed `customer.metadata` (the metadata we passed to the web plugin) */
+  metadata: Record<string, unknown>;
   raw: unknown;
 };
 
-function getFirstValue<T>(obj: Record<string, unknown>, keys: string[]): T | undefined {
-  for (const key of keys) {
-    const value = obj[key];
-    if (value !== undefined && value !== null) return value as T;
-  }
-  return undefined;
-}
+type AlatpayTransactionData = {
+  id?: string;
+  amount?: number;
+  currency?: string;
+  status?: string;
+  customer?: { email?: string; metadata?: string | null };
+};
 
-function walkForCandidateObjects(value: unknown, limit = 50): Array<Record<string, unknown>> {
-  if (limit <= 0) return [];
-  const matches: Array<Record<string, unknown>> = [];
+export function getAlatpayConfig() {
+  const publicKey = process.env.ALATPAY_PUBLIC_KEY;
+  const businessId = process.env.ALATPAY_BUSINESS_ID;
+  const secretKey = process.env.ALATPAY_SECRET_KEY;
+  const webhookSecret = process.env.ALATPAY_WEBHOOK_SECRET;
+  const apiUrl = process.env.ALATPAY_API_URL || "https://apibox.alatpay.ng";
 
-  if (value && typeof value === "object") {
-    if (!Array.isArray(value)) {
-      const obj = value as Record<string, unknown>;
-      matches.push(obj);
-      for (const child of Object.values(obj)) {
-        matches.push(...walkForCandidateObjects(child, limit - 1));
-      }
-      return matches;
-    }
-
-    for (const child of value) {
-      matches.push(...walkForCandidateObjects(child, limit - 1));
-    }
-  }
-
-  return matches;
-}
-
-function normalizeAmount(value: unknown): number {
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  if (typeof value === "string") {
-    const cleaned = value.replace(/[₦,\s]/g, "");
-    const num = Number(cleaned.replace(/[^0-9.-]/g, ""));
-    return Number.isFinite(num) ? num : 0;
-  }
-  return 0;
+  return { publicKey, businessId, secretKey, webhookSecret, apiUrl };
 }
 
 function toStatus(value: unknown): AlatpayTxStatus {
   if (typeof value !== "string") return "unknown";
   const normalized = value.trim().toLowerCase();
-  if (["success", "successful", "paid", "completed", "approved", "succeeded"].includes(normalized)) return "success";
-  if (["failed", "cancelled", "canceled", "declined", "rejected"].includes(normalized)) return "failed";
-  if (["pending", "processing", "queued", "inprogress", "in_progress"].includes(normalized)) return "pending";
+  if (normalized === "completed") return "success";
+  if (["failed", "cancelled", "canceled", "declined", "rejected", "expired"].includes(normalized)) return "failed";
+  if (["pending", "processing"].includes(normalized)) return "pending";
   return "unknown";
 }
 
-function extractTransactionPayload(payload: unknown): { status: AlatpayTxStatus; amount: number; reference: string } {
-  const roots: Array<Record<string, unknown>> = [];
-  const root = (payload ?? {}) as Record<string, unknown>;
-  roots.push(root);
-
-  const maybeData = root.data ?? root.payload ?? root.result ?? root.transaction ?? root.record;
-  if (maybeData && typeof maybeData === "object") roots.push(maybeData as Record<string, unknown>);
-
-  const candidateObjects = walkForCandidateObjects(payload, 40);
-  for (const candidate of candidateObjects) {
-    if (candidate && typeof candidate === "object") roots.push(candidate as Record<string, unknown>);
+/** Metadata is passed to the plugin as a JSON string and comes back as `customer.metadata`. */
+export function parseAlatpayMetadata(value: unknown): Record<string, unknown> {
+  if (value && typeof value === "object") return value as Record<string, unknown>;
+  if (typeof value !== "string" || !value.trim()) return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
   }
-
-  let status: unknown = "unknown";
-  let amount = 0;
-  let reference = "";
-
-  for (const current of roots) {
-    const candidateStatus =
-      getFirstValue<string>(current, [
-        "status",
-        "transactionStatus",
-        "paymentStatus",
-        "state",
-        "state_name",
-        "responseCode",
-        "transaction_state",
-      ]);
-    if (candidateStatus !== undefined && candidateStatus !== null) {
-      status = candidateStatus;
-    }
-
-    const candidateAmount =
-      getFirstValue<number | string>(current, [
-        "amount",
-        "totalAmount",
-        "amountPaid",
-        "paidAmount",
-        "transactionAmount",
-        "amount_paid",
-        "total_amount",
-      ]);
-    if (candidateAmount !== undefined && candidateAmount !== null) {
-      const normalized = normalizeAmount(candidateAmount);
-      if (normalized > 0) amount = normalized;
-    }
-
-    const candidateReference =
-      getFirstValue<string | number>(current, [
-        "reference",
-        "transactionReference",
-        "trxref",
-        "referenceCode",
-        "reference_code",
-        "id",
-        "transaction_id",
-      ]);
-    if (candidateReference !== undefined && candidateReference !== null && String(candidateReference).trim()) {
-      reference = String(candidateReference);
-    }
-  }
-
-  const normalizedAmount = amount > 1_000_000 ? amount / 100 : amount;
-  return { status: toStatus(status), amount: normalizedAmount, reference };
 }
 
-export function getAlatpayConfig() {
-  const apiKey = process.env.NEXT_PUBLIC_ALATPAY_API_KEY || process.env.ALATPAY_API_KEY;
-  const businessId = process.env.ALATPAY_BUSINESS_ID;
-  const secretKey = process.env.ALATPAY_SECRET_KEY;
-  const apiUrl = process.env.ALATPAY_API_URL || "https://apibox.alatpay.ng";
-
-  return { apiKey, businessId, secretKey, apiUrl };
-}
-
-export async function verifyAlatpayTransaction(reference: string): Promise<AlatpayTransactionResult> {
-  const { apiKey, secretKey, apiUrl } = getAlatpayConfig();
-  if (!reference || !secretKey || !apiUrl) {
+/**
+ * Looks up a transaction with the documented "Get Single Transaction" endpoint:
+ * GET {apibox}/alatpaytransaction/api/v1/transactions/{transactionId}
+ * Auth: Ocp-Apim-Subscription-Key = merchant secret key.
+ */
+export async function verifyAlatpayTransaction(transactionId: string): Promise<AlatpayTransactionResult> {
+  const { secretKey, apiUrl } = getAlatpayConfig();
+  if (!transactionId || !secretKey) {
     throw new Error("ALATPay verification is not configured.");
   }
 
-  const candidateUrls = [
-    `${apiUrl.replace(/\/$/, "")}/api/v1/transactions/${encodeURIComponent(reference)}`,
-    `${apiUrl.replace(/\/$/, "")}/api/v1/transaction/${encodeURIComponent(reference)}`,
-    `${apiUrl.replace(/\/$/, "")}/api/transactions/${encodeURIComponent(reference)}`,
-    `${apiUrl.replace(/\/$/, "")}/transactions/${encodeURIComponent(reference)}`,
-    `${apiUrl.replace(/\/$/, "")}/api/v1/transactions?reference=${encodeURIComponent(reference)}`,
-    `${apiUrl.replace(/\/$/, "")}/api/transactions?reference=${encodeURIComponent(reference)}`,
-  ];
+  const url = `${apiUrl.replace(/\/$/, "")}/alatpaytransaction/api/v1/transactions/${encodeURIComponent(transactionId)}`;
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "Ocp-Apim-Subscription-Key": secretKey,
+    },
+    cache: "no-store",
+  });
 
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${secretKey}`,
-    "Ocp-Apim-Subscription-Key": secretKey,
-    "x-api-key": apiKey ?? secretKey,
-  };
-
-  let lastError: unknown;
-
-  for (const url of candidateUrls) {
-    try {
-      const res = await fetch(url, { headers });
-      if (!res.ok) {
-        lastError = new Error(`ALATPay lookup failed with ${res.status}`);
-        continue;
-      }
-
-      const payload = await res.json();
-      const extracted = extractTransactionPayload(payload);
-      const status = extracted.status;
-      const amount = extracted.amount;
-
-      const normalizedAmount = amount > 1_000_000 ? amount / 100 : amount;
-      const referenceFromPayload = extracted.reference || reference;
-
-      return {
-        ok: status === "success",
-        status,
-        reference: referenceFromPayload,
-        amountNaira: normalizedAmount,
-        raw: payload,
-      };
-    } catch (error) {
-      lastError = error;
-    }
+  if (!res.ok) {
+    throw new Error(`ALATPay transaction lookup failed with status ${res.status}`);
   }
 
-  throw lastError instanceof Error ? lastError : new Error("Unable to query ALATPay transaction.");
+  const payload = (await res.json()) as { status?: boolean; message?: string; data?: AlatpayTransactionData | null };
+  const data = payload.data;
+  if (!payload.status || !data) {
+    throw new Error(payload.message || "ALATPay returned no transaction data.");
+  }
+
+  const status = toStatus(data.status);
+  return {
+    ok: status === "success",
+    status,
+    reference: data.id ?? transactionId,
+    amountNaira: typeof data.amount === "number" ? data.amount : 0,
+    currency: (data.currency ?? "").toUpperCase(),
+    email: data.customer?.email ?? "",
+    metadata: parseAlatpayMetadata(data.customer?.metadata),
+    raw: payload,
+  };
+}
+
+/**
+ * Webhook validation per docs: x-signature = base64(HMAC-SHA256(rawBody, webhookSecret)).
+ * `rawBody` must be the exact, unparsed request body.
+ */
+export function isValidAlatpaySignature(rawBody: string, receivedSignature: string | null): boolean {
+  const { webhookSecret } = getAlatpayConfig();
+  if (!webhookSecret || !receivedSignature) return false;
+
+  const computed = createHmac("sha256", webhookSecret).update(rawBody, "utf8").digest("base64");
+  const a = Buffer.from(computed);
+  const b = Buffer.from(receivedSignature.trim());
+  return a.length === b.length && timingSafeEqual(a, b);
 }

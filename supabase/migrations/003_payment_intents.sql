@@ -1,7 +1,7 @@
 -- ============================================================
 -- Payment intents
--- Stores the server-created payment expectation before Paystack opens.
--- Verification must match Paystack's paid amount against expected_amount.
+-- Stores the server-created payment expectation before ALATPay opens.
+-- Verification must match ALATPay's paid amount against expected_amount.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.payment_intents (

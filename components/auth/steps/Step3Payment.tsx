@@ -116,6 +116,7 @@ export default function Step3Payment({
 
     setLoadingStep("initializing");
     type InitOk = {
+      reference: string;
       apiKey: string;
       businessId: string;
       amount: number;
@@ -128,7 +129,7 @@ export default function Step3Payment({
 
     let initData: InitOk;
     try {
-      const initRes = await fetch("/api/paystack/initialize", {
+      const initRes = await fetch("/api/alatpay/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -170,14 +171,37 @@ export default function Step3Payment({
       lastName: initData.lastName,
       amount: initData.amount,
       currency: "NGN",
-      metadata: initData.metadata ?? { userId, paymentType: "full" },
+      metadata: JSON.stringify(initData.metadata ?? { userId, paymentType: "full" }),
       onTransaction: (response) => {
-        if (response?.status) {
-          try { sessionStorage.removeItem(UID_CACHE_KEY); } catch { /* ignore */ }
-          onPaymentSuccess("full");
+        if (!response?.status) {
+          setError(response?.message ?? "Payment could not be completed.");
           return;
         }
-        setError(response?.message ?? "Payment could not be completed.");
+        void (async () => {
+          setLoadingStep("verifying");
+          try {
+            const verifyRes = await fetch("/api/alatpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                reference: response.data?.transactionId ?? response.data?.id ?? initData.reference,
+                userId,
+                courseIds: selectedCourses.map((c) => c.id),
+                paymentType: "full",
+              }),
+            });
+            const result = (await verifyRes.json()) as { success?: boolean; error?: string };
+            if (verifyRes.ok && result.success) {
+              try { sessionStorage.removeItem(UID_CACHE_KEY); } catch { /* ignore */ }
+              onPaymentSuccess("full");
+              return;
+            }
+            setError(result.error ?? "We could not confirm your payment. Please contact support.");
+          } catch {
+            setError("Network error while confirming your payment. Please contact support before paying again.");
+          }
+          setLoadingStep(null);
+        })();
       },
       onClose: () => {
         setLoadingStep(null);

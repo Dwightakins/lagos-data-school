@@ -61,7 +61,7 @@ CREATE POLICY "scholarships: admin update status"
 
 
 -- ── 4. Create payments table ─────────────────────────────────
--- Referenced by /api/paystack/verify but missing from initial schema
+-- Referenced by /api/alatpay/verify but missing from initial schema
 CREATE TABLE IF NOT EXISTS public.payments (
   id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id    uuid        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
   amount     integer     NOT NULL,
   reference  text        NOT NULL UNIQUE,
   status     text        NOT NULL DEFAULT 'paid',
-  provider   text        NOT NULL DEFAULT 'paystack',
+  provider   text        NOT NULL DEFAULT 'alatpay',
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

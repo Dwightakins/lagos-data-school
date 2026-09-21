@@ -44,6 +44,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (verified.currency !== "NGN") {
+      return NextResponse.json({ error: "Unexpected payment currency." }, { status: 402 });
+    }
+
+    // The transaction must belong to the user claiming it (metadata set at checkout).
+    const metaUserId = verified.metadata.userId;
+    if (typeof metaUserId !== "string" || metaUserId !== userId) {
+      console.error("[alatpay/verify] Transaction does not belong to user", { reference, userId });
+      return NextResponse.json({ error: "This payment does not belong to your account." }, { status: 403 });
+    }
+
     const amountPaidNaira = verified.amountNaira;
 
     const { data: courses } = await admin
@@ -136,7 +147,9 @@ export async function POST(req: NextRequest) {
     const studentName = (studentProfile as { full_name: string; email: string } | null)?.full_name ?? "Student";
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
-    if (studentEmail) {
+    // Only email on the first successful verification of this reference
+    // (the webhook or a retried verify call may have already handled it).
+    if (studentEmail && !existingPayment) {
       void sendOnboardingEmail({
         to: studentEmail,
         studentName,

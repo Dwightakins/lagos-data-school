@@ -9,7 +9,7 @@ interface Window {
       lastName: string;
       amount: number;
       currency: "NGN" | "USD";
-      metadata?: Record<string, unknown>;
+      metadata?: string;
       onTransaction: (response: {
         status?: boolean;
         message?: string;

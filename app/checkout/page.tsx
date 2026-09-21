@@ -98,7 +98,7 @@ function CheckoutContent() {
         .select("id")
         .eq("user_id", user.id)
         .eq("course_id", courseId)
-        .eq("status", "active")
+        .or("status.eq.active,status.is.null")
         .maybeSingle();
 
       if (enrollment) {
@@ -132,6 +132,7 @@ function CheckoutContent() {
     setLoadingStep("initializing");
 
     type InitResult = {
+      reference?: string;
       apiKey?: string;
       businessId?: string;
       amount?: number;
@@ -143,9 +144,9 @@ function CheckoutContent() {
       alreadyEnrolled?: boolean;
     };
 
-    let initData: { apiKey: string; businessId: string; amount: number; email: string; firstName: string; lastName: string; metadata?: Record<string, unknown> };
+    let initData: { reference: string; apiKey: string; businessId: string; amount: number; email: string; firstName: string; lastName: string; metadata?: Record<string, unknown> };
     try {
-      const initRes = await fetch("/api/paystack/initialize", {
+      const initRes = await fetch("/api/alatpay/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -170,6 +171,7 @@ function CheckoutContent() {
         return;
       }
       initData = {
+        reference: raw.reference ?? "",
         apiKey: raw.apiKey,
         businessId: raw.businessId,
         amount: raw.amount ?? course.price,
@@ -195,13 +197,36 @@ function CheckoutContent() {
       lastName: initData.lastName,
       amount: initData.amount,
       currency: "NGN",
-      metadata: initData.metadata,
+      metadata: JSON.stringify(initData.metadata ?? {}),
       onTransaction: (response) => {
-        if (response?.status) {
-          router.replace("/dashboard");
+        if (!response?.status) {
+          setError(response?.message ?? "Payment could not be completed.");
           return;
         }
-        setError(response?.message ?? "Payment could not be completed.");
+        void (async () => {
+          setLoadingStep("verifying");
+          try {
+            const verifyRes = await fetch("/api/alatpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                reference: response.data?.transactionId ?? response.data?.id ?? initData.reference,
+                userId,
+                courseIds: [course.id],
+                paymentType: "full",
+              }),
+            });
+            const result = (await verifyRes.json()) as { success?: boolean; error?: string };
+            if (verifyRes.ok && result.success) {
+              router.replace("/dashboard");
+              return;
+            }
+            setError(result.error ?? "We could not confirm your payment. Please contact support.");
+          } catch {
+            setError("Network error while confirming your payment. Please contact support before paying again.");
+          }
+          setLoadingStep(null);
+        })();
       },
       onClose: () => setLoadingStep(null),
     });

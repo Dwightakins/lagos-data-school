@@ -141,12 +141,12 @@ export default function ScholarshipPaymentPage() {
       lastName: initData.lastName,
       amount: initData.amount,
       currency: "NGN",
-      metadata: {
+      metadata: JSON.stringify({
         token,
         applicationId: appInfo.id,
         courseId: appInfo.courseId,
         userId: appInfo.userId,
-      },
+      }),
       onTransaction: async (response) => {
         if (!response?.status) {
           setError(response?.message ?? "Payment could not be completed.");
@@ -159,7 +159,10 @@ export default function ScholarshipPaymentPage() {
           const res = await fetch("/api/scholarship/complete-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token, reference: initData.reference }),
+            body: JSON.stringify({
+              token,
+              reference: response.data?.transactionId ?? response.data?.id ?? initData.reference,
+            }),
           });
           const data = (await res.json()) as { success?: boolean; error?: string };
 

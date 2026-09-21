@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing token." }, { status: 400 });
   }
 
-  const { apiKey, businessId } = getAlatpayConfig();
-  if (!apiKey || !businessId) {
+  const { publicKey, businessId } = getAlatpayConfig();
+  if (!publicKey || !businessId) {
     return NextResponse.json({ error: "ALATPay credentials are not configured." }, { status: 500 });
   }
 
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   const reference = `LDS-SCH-${Date.now()}-${randomBytes(6).toString("hex")}`;
 
   return NextResponse.json({
-    apiKey,
+    apiKey: publicKey,
     businessId,
     reference,
     email,

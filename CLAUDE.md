@@ -13,7 +13,7 @@ Local path: C:\Users\USER\Desktop\lagos-data-school
 - TypeScript (strict mode — no 'any' without a comment)
 - Tailwind CSS + shadcn/ui for all UI components
 - Supabase (database + auth + storage) — project ID: bsykjkgmlghikcvcsxud
-- Paystack (Nigerian payments in Naira)
+- ALATPay (Nigerian payments in Naira)
 - Resend (transactional email) — from: noreply@lagosdataschoolltd.com
 - jsPDF (PDF certificate and receipt generation)
 - Vercel (deployment)
@@ -87,7 +87,7 @@ courses                 → id, title, slug, description, price, published, dura
 modules                 → id, course_id, title, description, order_index
 lessons                 → id, module_id, title, description, video_url, duration, is_preview, order_index
 enrollments             → id, user_id, course_id, payment_status, status, type, enrolled_at
-payments                → id, user_id, course_id, amount, status, paystack_reference, created_at
+payments                → id, user_id, course_id, amount, status, reference, provider, created_at
 scholarship_applications → id, user_id, course_id, full_name, email, phone, reason, status, payment_token, token_expires_at, payment_completed
 lesson_progress         → id, user_id, lesson_id, completed, watch_position, last_watched_at
 certificates            → id, user_id, course_id, certificate_number, student_id, status, pdf_url, issued_at
@@ -196,8 +196,10 @@ Scholarship:
 NEXT_PUBLIC_SUPABASE_URL=https://bsykjkgmlghikcvcsxud.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=[anon key]
 SUPABASE_SERVICE_ROLE_KEY=[service role key]
-NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=[paystack public key]
-PAYSTACK_SECRET_KEY=[paystack secret key]
+ALATPAY_PUBLIC_KEY=[alatpay public key]
+ALATPAY_BUSINESS_ID=[alatpay business id]
+ALATPAY_SECRET_KEY=[alatpay secret key]
+ALATPAY_WEBHOOK_SECRET=[alatpay webhook secret]
 RESEND_API_KEY=[resend api key]
 RESEND_FROM_EMAIL=noreply@lagosdataschoolltd.com
 SUPPORT_EMAIL=support@lagosdataschoolltd.com
@@ -216,10 +218,11 @@ NEXT_PUBLIC_APP_URL=https://lagosdataschoolltd.com
 
 ---
 
-## Payment System (Paystack)
+## Payment System (ALATPay)
 - All payments in Nigerian Naira (NGN)
-- Amounts stored in kobo (multiply by 100 before sending to Paystack)
-- Webhook endpoint: /api/paystack/webhook
+- Amounts are passed to ALATPay in Naira (not kobo)
+- Routes: /api/alatpay/initialize, /api/alatpay/verify, /api/alatpay/webhook
+- Webhook URL: https://lagosdataschoolltd.com/api/alatpay/webhook
 - Verify payments server-side before creating enrollment
 - Prevent duplicate enrollments with unique constraint
 - Scholarship payments only via approved token link

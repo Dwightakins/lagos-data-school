@@ -2,48 +2,60 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assignStudentId } from "@/lib/student-id";
 import { sendOnboardingEmail } from "@/lib/emails/onboarding";
-import { verifyAlatpayTransaction } from "@/lib/payments/alatpay";
+import { isValidAlatpaySignature, verifyAlatpayTransaction } from "@/lib/payments/alatpay";
 import { getExpectedPaymentAmount } from "@/lib/payment-config";
+
+// ALATPay webhook payload (PascalCase), see docs "Setup Webhook URL".
+type AlatpayWebhookBody = {
+  Value?: {
+    Data?: { Id?: string; Status?: string };
+    Status?: boolean;
+  };
+};
 
 export async function POST(req: NextRequest) {
   try {
+    // Signature must be checked against the exact raw body.
     const body = await req.text();
-    const event = JSON.parse(body) as {
-      event?: string;
-      data?: {
-        reference?: string;
-        amount?: number;
-        metadata?: {
-          userId?: string;
-          fullName?: string;
-          courseIds?: string[];
-          courseId?: string;
-          courseNames?: string;
-          paymentType?: "full" | "scholarship";
-        };
-        customer?: { email?: string };
-      };
+    const signature = req.headers.get("x-signature");
+
+    if (!process.env.ALATPAY_WEBHOOK_SECRET) {
+      console.error("[alatpay/webhook] ALATPAY_WEBHOOK_SECRET is not set");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+    }
+    if (!isValidAlatpaySignature(body, signature)) {
+      console.error("[alatpay/webhook] Invalid signature");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    const event = JSON.parse(body) as AlatpayWebhookBody;
+    const transactionId = event.Value?.Data?.Id;
+    if (!transactionId) {
+      return NextResponse.json({ received: true });
+    }
+
+    // Defence in depth: never trust the payload alone, re-check with ALATPay.
+    const verified = await verifyAlatpayTransaction(transactionId);
+    if (!verified.ok || verified.status !== "success" || verified.currency !== "NGN") {
+      return NextResponse.json({ received: true });
+    }
+
+    const reference = verified.reference;
+    const metadata = verified.metadata as {
+      userId?: string;
+      fullName?: string;
+      courseIds?: string[];
+      courseId?: string;
+      courseNames?: string;
+      paymentType?: "full" | "scholarship";
     };
-
-    const reference = event.data?.reference;
-    if (!reference) {
-      return NextResponse.json({ received: true });
-    }
-
-    const verified = await verifyAlatpayTransaction(reference);
-    if (!verified.ok || verified.status !== "success") {
-      return NextResponse.json({ received: true });
-    }
-
-    const { data } = event;
-    const metadata = data?.metadata ?? {};
     const userId = metadata.userId;
     const fullName = metadata.fullName ?? "";
     const courseIds = metadata.courseIds ?? (metadata.courseId ? [metadata.courseId] : []);
     const paymentType = metadata.paymentType ?? "full";
 
     if (!userId || courseIds.length === 0) {
-      console.error("[webhook] Missing userId or courseIds in metadata", { reference });
+      console.error("[alatpay/webhook] Missing userId or courseIds in metadata", { reference });
       return NextResponse.json({ received: true });
     }
 
@@ -51,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     const { data: authData, error: authError } = await admin.auth.admin.getUserById(userId);
     if (authError || !authData.user) {
-      console.error("[webhook] User not found:", userId);
+      console.error("[alatpay/webhook] User not found:", userId);
       return NextResponse.json({ received: true });
     }
 
@@ -68,13 +80,13 @@ export async function POST(req: NextRequest) {
       );
 
       if (verified.amountNaira < expectedAmount) {
-        console.error(`[webhook] Amount mismatch: paid ₦${verified.amountNaira}, expected ₦${expectedAmount}`);
+        console.error(`[alatpay/webhook] Amount mismatch: paid ₦${verified.amountNaira}, expected ₦${expectedAmount}`);
         return NextResponse.json({ received: true });
       }
     }
 
     await admin.from("users").upsert(
-      { id: userId, email: data?.customer?.email ?? "", full_name: fullName, role: "student" },
+      { id: userId, email: verified.email || authData.user.email || "", full_name: fullName, role: "student" },
       { onConflict: "id" }
     );
 
@@ -145,6 +157,7 @@ export async function POST(req: NextRequest) {
           course_id: courseId,
           type: paymentType,
           status: "active",
+          payment_status: "paid",
         }))
       );
     }
@@ -187,7 +200,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("[alatpay/webhook] error:", error);
     return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
   }
 }
