@@ -12,7 +12,7 @@ export async function GET() {
       .from("courses")
       .select("id, title, slug, description, price, published, duration, thumbnail_url, cover_image_url, created_at")
       .order("created_at", { ascending: false }),
-    admin.from("enrollments").select("course_id").eq("status", "active"),
+    admin.from("enrollments").select("course_id").or("status.eq.active,status.is.null"),
   ]);
 
   const countByCourse: Record<string, number> = {};

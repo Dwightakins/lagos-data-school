@@ -123,7 +123,7 @@ export function CourseCard({
               href="/apply-scholarship"
               className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-green-600 transition-all hover:gap-1.5 dark:text-green-500"
             >
-              97% Scholarship <ArrowRight className="h-3.5 w-3.5" />
+              94% Scholarship <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         )}

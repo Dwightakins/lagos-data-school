@@ -5,7 +5,7 @@ function getNumberEnv(name: string, fallback: number): number {
 }
 
 export const PAYMENT_CONFIG = {
-  scholarshipFee: getNumberEnv("NEXT_PUBLIC_SCHOLARSHIP_FEE", getNumberEnv("SCHOLARSHIP_FEE", 8000)),
+  scholarshipFee: getNumberEnv("NEXT_PUBLIC_SCHOLARSHIP_FEE", getNumberEnv("SCHOLARSHIP_FEE", 15000)),
   bulkDiscountThreshold: getNumberEnv("NEXT_PUBLIC_BULK_DISCOUNT_THRESHOLD", getNumberEnv("BULK_DISCOUNT_THRESHOLD", 3)),
   bulkDiscountRate: getNumberEnv("NEXT_PUBLIC_BULK_DISCOUNT_RATE", getNumberEnv("BULK_DISCOUNT_RATE", 0.1)),
 };

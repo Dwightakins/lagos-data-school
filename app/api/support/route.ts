@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         .from("enrollments")
         .select("courses(title)")
         .eq("user_id", user.id)
-        .eq("status", "active")
+        .or("status.eq.active,status.is.null")
         .limit(5);
 
       const studentName = (profile as { full_name?: string } | null)?.full_name ?? "Unknown Student";

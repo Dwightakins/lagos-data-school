@@ -33,7 +33,7 @@ export default function Step4Verify({ email, payType, courseName, onDone }: Step
       <p className="text-[13.5px] text-foreground mb-1 leading-relaxed">
         {payType === "full"
           ? "Your payment has been received and verified."
-          : "Your ₦15,000 scholarship fee has been confirmed. You now have full access to your course."}
+          : "Your scholarship payment has been confirmed. You now have full access to your course."}
       </p>
 
       <p className="text-[13.5px] text-muted-foreground mb-6 leading-relaxed">

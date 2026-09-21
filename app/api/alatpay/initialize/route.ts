@@ -1,6 +1,8 @@
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolvePaymentType } from "@/lib/payments/pricing";
 import { getAlatpayConfig } from "@/lib/payments/alatpay";
 import { getExpectedPaymentAmount } from "@/lib/payment-config";
 
@@ -13,33 +15,33 @@ function makeReference() {
 }
 
 export async function POST(request: Request) {
-  let body: {
-    userId?: string;
-    fullName?: string;
-    email?: string;
-    courseIds?: string[];
-    courseId?: string;
-    paymentType?: "full" | "scholarship";
-  };
+  // Identity comes from the session, never from the request body.
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Please log in to continue." }, { status: 401 });
+  }
 
+  // Only the course is read from the browser. Any userId, email or paymentType it sends is ignored.
+  let body: { fullName?: string; courseIds?: string[]; courseId?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const userId = body.userId?.trim();
+  const userId = user.id;
+  const email = (user.email ?? "").toLowerCase();
   const fullName = body.fullName?.trim() ?? "";
-  const email = body.email?.trim().toLowerCase() ?? "";
   const courseIds = body.courseIds ?? (body.courseId ? [body.courseId] : []);
-  const paymentType = body.paymentType;
 
-  if (!userId || !email || courseIds.length === 0 || !paymentType) {
+  if (!email || courseIds.length === 0) {
     return NextResponse.json({ error: "Missing payment details." }, { status: 400 });
   }
 
-  if (paymentType !== "full" && paymentType !== "scholarship") {
-    return NextResponse.json({ error: "Invalid payment type." }, { status: 400 });
+  // One course per student.
+  if (courseIds.length !== 1) {
+    return NextResponse.json({ error: "You can only enroll in one course at a time." }, { status: 400 });
   }
 
   const { publicKey, businessId } = getAlatpayConfig();
@@ -50,15 +52,6 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
 
   try {
-    const { data: authUser, error: authError } = await admin.auth.admin.getUserById(userId);
-    if (authError || !authUser.user) {
-      return NextResponse.json({ error: "Account not found. Please restart registration." }, { status: 401 });
-    }
-
-    if (authUser.user.email?.toLowerCase() !== email) {
-      return NextResponse.json({ error: "Account email does not match payment email." }, { status: 400 });
-    }
-
     const { data: courses, error: coursesError } = await admin
       .from("courses")
       .select("id, title, price, published")
@@ -76,22 +69,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "One or more courses are not currently available." }, { status: 400 });
     }
 
-    const { data: existingEnrollments } = await admin
+    // Any active enrollment (including old rows with NULL status) blocks a new purchase.
+    const { data: activeEnrollments } = await admin
       .from("enrollments")
       .select("course_id")
       .eq("user_id", userId)
-      .in("course_id", courseIds)
       .or("status.eq.active,status.is.null");
 
-    if (existingEnrollments && existingEnrollments.length > 0) {
+    if (activeEnrollments && activeEnrollments.length > 0) {
+      const sameCourse = (activeEnrollments as Array<{ course_id: string }>)
+        .some((e) => courseIds.includes(e.course_id));
+      if (sameCourse) {
+        return NextResponse.json(
+          {
+            error: "You're already enrolled in this course. Head to your dashboard to continue learning.",
+            alreadyEnrolled: true,
+          },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
-        {
-          error: "You're already enrolled in this course. Head to your dashboard to continue learning.",
-          alreadyEnrolled: true,
-        },
-        { status: 409 }
+        { error: "You are already enrolled in a course. Complete your current course before enrolling in another." },
+        { status: 403 }
       );
     }
+
+    // The server decides the price: scholarship only with an approved, unpaid application.
+    const paymentType = await resolvePaymentType(admin, userId, courseIds[0]);
 
     const expectedAmount = getExpectedPaymentAmount(
       typedCourses.map((c) => c.price),

@@ -157,7 +157,7 @@ function ApplyScholarshipContent() {
               Scholarship Application
             </h1>
             <p className="text-[13.5px] text-muted-foreground text-center mb-2 leading-relaxed">
-              Apply for a <strong className="text-foreground">97% scholarship</strong> — pay only ₦8,000 instead of ₦250,000.
+              Apply for a <strong className="text-foreground">94% scholarship</strong> and get 94% off the full course fee.
             </p>
             <p className="text-[12px] text-muted-foreground text-center mb-8">
               Applications reviewed within 48 hours. No account required.
@@ -261,7 +261,7 @@ function ApplyScholarshipContent() {
               <div className="bg-muted border border-border rounded-xl px-4 py-3">
                 <p className="text-[12px] text-muted-foreground leading-relaxed">
                   By submitting, you agree that if approved, you will pay the{" "}
-                  <strong className="text-foreground">₦8,000 non-refundable scholarship fee</strong>{" "}
+                  <strong className="text-foreground">non-refundable scholarship fee</strong>{" "}
                   via the link sent to your email.
                 </p>
               </div>

@@ -167,7 +167,7 @@ export function CourseDetailModal({ courseId, open, onClose }: Props) {
                   <span className="text-[1.15rem] font-black text-brand">
                     {fmt(course.price)}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">or ₦8,000 scholarship fee</span>
+                  <span className="text-[11px] text-muted-foreground">or 94% off with a scholarship</span>
                 </div>
               </>
             )}

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       .select("id")
       .eq("user_id", userId)
       .eq("course_id", courseId)
-      .eq("status", "active")
+      .or("status.eq.active,status.is.null")
       .maybeSingle();
 
     if (!enrollment) {

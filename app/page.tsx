@@ -15,11 +15,11 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Lagos Data School — Learn Data Analysis, Data Science & Tech Skills in Nigeria",
   description:
-    "Join Nigeria's leading tech academy. Live instructor-led training in Data Analysis, Data Science, Cybersecurity and more. 97% scholarships available. Enroll today.",
+    "Join Nigeria's leading tech academy. Live instructor-led training in Data Analysis, Data Science, Cybersecurity and more. 94% scholarships available. Enroll today.",
   openGraph: {
     title: "Lagos Data School — Learn Data Analysis, Data Science & Tech Skills in Nigeria",
     description:
-      "Join Nigeria's leading tech academy. Live instructor-led training in Data Analysis, Data Science, Cybersecurity and more. 97% scholarships available. Enroll today.",
+      "Join Nigeria's leading tech academy. Live instructor-led training in Data Analysis, Data Science, Cybersecurity and more. 94% scholarships available. Enroll today.",
     url: "https://lagosdataschool.com",
   },
 };

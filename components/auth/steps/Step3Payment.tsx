@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import Link from "next/link";
 import type { CourseItem } from "@/components/auth/types";
+import { createClient } from "@/lib/supabase/client";
 
 function fmt(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -114,6 +115,15 @@ export default function Step3Payment({
     const userId = await ensureUserId();
     if (!userId) return;
 
+    // The payment API identifies the student from their session, so sign in first.
+    setLoadingStep("account");
+    const { error: signInError } = await createClient().auth.signInWithPassword({ email, password });
+    if (signInError) {
+      setError("We could not sign you in. If you already have an account, please log in first, then pay from the course page.");
+      setLoadingStep(null);
+      return;
+    }
+
     setLoadingStep("initializing");
     type InitOk = {
       reference: string;
@@ -133,11 +143,8 @@ export default function Step3Payment({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
           fullName,
-          email,
           courseIds: selectedCourses.map((c) => c.id),
-          paymentType: "full",
         }),
       });
       const raw = (await initRes.json()) as InitResult;
@@ -187,7 +194,6 @@ export default function Step3Payment({
                 reference: response.data?.transactionId ?? response.data?.id ?? initData.reference,
                 userId,
                 courseIds: selectedCourses.map((c) => c.id),
-                paymentType: "full",
               }),
             });
             const result = (await verifyRes.json()) as { success?: boolean; error?: string };
@@ -325,7 +331,7 @@ export default function Step3Payment({
         <p className="text-[12.5px] text-muted-foreground leading-relaxed">
           Can&apos;t afford full price?{" "}
           <Link href="/apply-scholarship" className="text-brand font-semibold hover:underline">
-            Apply for a 97% scholarship →
+            Apply for a 94% scholarship →
           </Link>
         </p>
       </div>

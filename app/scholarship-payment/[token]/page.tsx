@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AppLogo } from "@/components/layout/logo";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
-const SCHOLARSHIP_FEE = Number(process.env.NEXT_PUBLIC_SCHOLARSHIP_FEE ?? process.env.SCHOLARSHIP_FEE ?? 8000);
+const SCHOLARSHIP_FEE = Number(process.env.NEXT_PUBLIC_SCHOLARSHIP_FEE ?? process.env.SCHOLARSHIP_FEE ?? 15000);
 
 function fmt(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;

@@ -4,6 +4,7 @@ import { assignStudentId } from "@/lib/student-id";
 import { sendOnboardingEmail } from "@/lib/emails/onboarding";
 import { verifyAlatpayTransaction } from "@/lib/payments/alatpay";
 import { getExpectedPaymentAmount } from "@/lib/payment-config";
+import { resolvePaymentType, markScholarshipPaid } from "@/lib/payments/pricing";
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown error";
@@ -15,7 +16,6 @@ export async function POST(req: NextRequest) {
     userId?: string;
     courseIds?: string[];
     courseId?: string;
-    paymentType?: string;
   };
 
   try {
@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
 
   const { reference, userId } = body;
   const courseIds = body.courseIds ?? (body.courseId ? [body.courseId] : []);
-  const paymentType = (body.paymentType ?? "full") as string;
 
   if (!reference || !userId || courseIds.length === 0) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -54,6 +53,26 @@ export async function POST(req: NextRequest) {
       console.error("[alatpay/verify] Transaction does not belong to user", { reference, userId });
       return NextResponse.json({ error: "This payment does not belong to your account." }, { status: 403 });
     }
+
+    // Already processed (by the webhook or an earlier verify call)? Then just confirm success.
+    const { data: existingPayment } = await admin
+      .from("payments")
+      .select("id")
+      .eq("reference", reference)
+      .maybeSingle();
+
+    if (existingPayment) {
+      const { data: alreadyEnrolled } = await admin
+        .from("enrollments")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("course_id", courseIds[0])
+        .maybeSingle();
+      if (alreadyEnrolled) return NextResponse.json({ success: true });
+    }
+
+    // The server decides the price. paymentType from the browser is ignored.
+    const paymentType = await resolvePaymentType(admin, userId, courseIds[0]);
 
     const amountPaidNaira = verified.amountNaira;
 
@@ -108,11 +127,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { data: existingPayment } = await admin
-      .from("payments")
-      .select("id")
-      .eq("reference", reference)
-      .maybeSingle();
+    if (paymentType === "scholarship") {
+      await markScholarshipPaid(admin, userId, courseIds[0]);
+    }
 
     if (!existingPayment) {
       const { error: paymentError } = await admin.from("payments").insert({

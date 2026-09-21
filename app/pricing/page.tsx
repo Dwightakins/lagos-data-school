@@ -40,7 +40,7 @@ const FAQ = [
   },
   {
     q: "How does the scholarship work?",
-    a: "Pay a ₦15,000 non-refundable application fee. Your application is reviewed within 48 hours. If approved, you get full course access. The fee covers the review process and is not refunded regardless of outcome.",
+    a: "Pay a small non-refundable application fee (94% off the full course price). Your application is reviewed within 48 hours. If approved, you get full course access. The fee covers the review process and is not refunded regardless of outcome.",
   },
   {
     q: "Can I pay in installments?",
@@ -111,8 +111,8 @@ export default function PricingPage() {
           {/* Scholarship */}
           <div className="bg-card rounded-2xl border-2 border-border hover:border-brand/40 p-8 transition-colors shadow-sm">
             <div className="mb-6">
-              <div className="text-[3rem] font-black text-foreground leading-none">₦8,000</div>
-              <div className="text-muted-foreground text-[13px] font-medium mt-1">Application Fee Only</div>
+              <div className="text-[3rem] font-black text-foreground leading-none">94% OFF</div>
+              <div className="text-muted-foreground text-[13px] font-medium mt-1">Scholarship for qualifying students</div>
             </div>
             <ul className="space-y-3 mb-8">
               {SCHOLARSHIP_FEATURES.map((f) => (

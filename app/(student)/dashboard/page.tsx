@@ -77,7 +77,7 @@ export default function DashboardPage() {
           .from("enrollments")
           .select("id, status, type, enrolled_at, course:courses(id, title, description, price)")
           .eq("user_id", user.id)
-          .eq("status", "active")
+          .or("status.eq.active,status.is.null")
           .order("enrolled_at", { ascending: false }),
       ]);
 

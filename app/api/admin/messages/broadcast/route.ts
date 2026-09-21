@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       .from("enrollments")
       .select("user_id")
       .eq("course_id", body.courseId)
-      .eq("status", "active");
+      .or("status.eq.active,status.is.null");
     recipientIds = Array.from(new Set((enrollments ?? []).map((e: { user_id: string }) => e.user_id)));
   } else {
     const { data: students } = await admin

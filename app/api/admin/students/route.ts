@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     .from("enrollments")
     .select("id, user_id, course_id, status, type, enrolled_at, courses(title)")
     .in("user_id", userIds)
-    .eq("status", "active");
+    .or("status.eq.active,status.is.null");
 
   const enrollmentsByUser: Record<string, unknown[]> = {};
   for (const e of (enrollments ?? []) as Array<{ user_id: string }>) {

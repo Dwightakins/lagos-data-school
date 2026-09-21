@@ -154,7 +154,6 @@ function CheckoutContent() {
           fullName,
           email,
           courseIds: [course.id],
-          paymentType: "full",
         }),
       });
       const raw = (await initRes.json()) as InitResult;
@@ -213,7 +212,6 @@ function CheckoutContent() {
                 reference: response.data?.transactionId ?? response.data?.id ?? initData.reference,
                 userId,
                 courseIds: [course.id],
-                paymentType: "full",
               }),
             });
             const result = (await verifyRes.json()) as { success?: boolean; error?: string };
@@ -367,7 +365,7 @@ function CheckoutContent() {
               <p className="text-[12.5px] text-muted-foreground leading-relaxed">
                 Can&apos;t afford full price?{" "}
                 <Link href="/apply-scholarship" className="text-brand font-semibold hover:underline">
-                  Apply for a 97% scholarship →
+                  Apply for a 94% scholarship →
                 </Link>
               </p>
             </div>

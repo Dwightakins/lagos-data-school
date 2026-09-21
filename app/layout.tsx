@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s — Lagos Data School",
   },
   description:
-    "Join Nigeria's leading tech academy. Live instructor-led training in Data Analysis, Data Science, Cybersecurity and more. 97% scholarships available. Enroll today.",
+    "Join Nigeria's leading tech academy. Live instructor-led training in Data Analysis, Data Science, Cybersecurity and more. 94% scholarships available. Enroll today.",
   openGraph: {
     type: "website",
     locale: "en_NG",

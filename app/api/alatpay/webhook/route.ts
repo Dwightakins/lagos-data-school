@@ -4,6 +4,7 @@ import { assignStudentId } from "@/lib/student-id";
 import { sendOnboardingEmail } from "@/lib/emails/onboarding";
 import { isValidAlatpaySignature, verifyAlatpayTransaction } from "@/lib/payments/alatpay";
 import { getExpectedPaymentAmount } from "@/lib/payment-config";
+import { resolvePaymentType, markScholarshipPaid } from "@/lib/payments/pricing";
 
 // ALATPay webhook payload (PascalCase), see docs "Setup Webhook URL".
 type AlatpayWebhookBody = {
@@ -47,12 +48,10 @@ export async function POST(req: NextRequest) {
       courseIds?: string[];
       courseId?: string;
       courseNames?: string;
-      paymentType?: "full" | "scholarship";
     };
     const userId = metadata.userId;
     const fullName = metadata.fullName ?? "";
     const courseIds = metadata.courseIds ?? (metadata.courseId ? [metadata.courseId] : []);
-    const paymentType = metadata.paymentType ?? "full";
 
     if (!userId || courseIds.length === 0) {
       console.error("[alatpay/webhook] Missing userId or courseIds in metadata", { reference });
@@ -60,6 +59,9 @@ export async function POST(req: NextRequest) {
     }
 
     const admin = createAdminClient();
+
+    // The server decides the price. Popup metadata is browser-controlled and never trusted for this.
+    const paymentType = await resolvePaymentType(admin, userId, courseIds[0]);
 
     const { data: authData, error: authError } = await admin.auth.admin.getUserById(userId);
     if (authError || !authData.user) {
@@ -110,35 +112,6 @@ export async function POST(req: NextRequest) {
       { onConflict: "reference" }
     );
 
-    if (paymentType === "scholarship") {
-      const { data: existingApplication } = await admin
-        .from("scholarship_applications")
-        .select("id")
-        .eq("payment_reference", reference)
-        .maybeSingle();
-
-      if (existingApplication) {
-        await admin
-          .from("scholarship_applications")
-          .update({
-            user_id: userId,
-            course_id: courseIds[0],
-            status: "approved",
-            amount_paid: verified.amountNaira,
-          })
-          .eq("id", existingApplication.id);
-      } else {
-        await admin.from("scholarship_applications").insert({
-          user_id: userId,
-          course_id: courseIds[0],
-          course_name: metadata.courseNames ?? "",
-          status: "approved",
-          payment_reference: reference,
-          amount_paid: verified.amountNaira,
-        });
-      }
-    }
-
     const { data: existingEnrollments } = await admin
       .from("enrollments")
       .select("course_id")
@@ -160,6 +133,10 @@ export async function POST(req: NextRequest) {
           payment_status: "paid",
         }))
       );
+    }
+
+    if (paymentType === "scholarship") {
+      await markScholarshipPaid(admin, userId, courseIds[0]);
     }
 
     const { data: primaryCourse } = await admin

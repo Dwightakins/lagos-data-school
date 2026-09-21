@@ -26,8 +26,8 @@ const tiers = [
   {
     badge: { icon: GraduationCap, label: "Need‑based" },
     name: "Scholarship",
-    price: "₦8,000",
-    cadence: "non‑refundable application fee",
+    price: "94% off",
+    cadence: "for qualifying students",
     desc: "Partial or full sponsorship for serious students who qualify.",
     features: [
       "Up to 100% tuition covered",

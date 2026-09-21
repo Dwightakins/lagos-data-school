@@ -13,8 +13,8 @@ const FAQS = [
     a: "Classes hold on Zoom with live instructors. If you miss a class, recordings are available in your dashboard.",
   },
   {
-    q: "How does the 97% scholarship work?",
-    a: "Apply through our scholarship form. If approved, you pay only ₦8,000 instead of ₦250,000. You'll receive a unique payment link by email.",
+    q: "How does the 94% scholarship work?",
+    a: "Apply through our scholarship form. If approved, you get 94% off the full course fee. You'll receive a unique payment link by email.",
   },
   {
     q: "Will I get a certificate?",
