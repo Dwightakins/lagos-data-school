@@ -32,12 +32,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.thumbnail_url !== undefined) update.thumbnail_url = body.thumbnail_url;
   if (body.cover_image_url !== undefined) update.cover_image_url = body.cover_image_url;
   if (body.duration !== undefined) update.duration = body.duration;
-  update.updated_at = new Date().toISOString();
+
+  if (body.published !== undefined && typeof body.published !== "boolean") {
+    return NextResponse.json({ error: "published must be a boolean" }, { status: 400 });
+  }
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  }
 
   const admin = createAdminClient();
-  const { error } = await admin.from("courses").update(update).eq("id", id);
+  const { data, error } = await admin.from("courses").update(update).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, course: data });
 }
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
