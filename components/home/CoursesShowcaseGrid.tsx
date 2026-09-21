@@ -26,7 +26,7 @@ export function CoursesShowcaseGrid({ courses }: { courses: CourseCardData[] }) 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
         {enrollment === "enrolled" ? (
           <Link
-            href="/dashboard"
+            href="/login"
             className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-[14.5px] px-8 py-3.5 rounded-xl transition-colors shadow-sm"
           >
             <LayoutDashboard className="w-4 h-4" /> Go to Dashboard

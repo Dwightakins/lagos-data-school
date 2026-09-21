@@ -22,7 +22,7 @@ export function CtaBannerSection() {
             <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
               {enrollment === "enrolled" ? (
                 <a
-                  href="/dashboard"
+                  href="/login"
                   className="relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl gradient-brand px-7 py-3.5 text-sm font-semibold text-brand-foreground shadow-brand hover:opacity-95 transition"
                 >
                   <Noise className="opacity-40" />

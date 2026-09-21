@@ -134,7 +134,7 @@ export default function LDSCoursesClient({ courses }: { courses: Course[] }) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {enrollment === "enrolled" ? (
             <Link
-              href="/dashboard"
+              href="/login"
               className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-[15px] px-10 py-4 rounded-xl transition-colors shadow-lg"
             >
               <LayoutDashboard className="w-4 h-4" /> Go to Dashboard

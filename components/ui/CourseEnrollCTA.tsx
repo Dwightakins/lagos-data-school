@@ -65,7 +65,7 @@ export default function CourseEnrollCTA({ courseId, price }: Props) {
   if (state === "enrolledOther") {
     return (
       <Link
-        href="/dashboard"
+        href="/login"
         className="w-full flex items-center justify-center gap-2 gradient-brand text-brand-foreground font-bold text-[15px] py-3 rounded-xl transition-opacity hover:opacity-90 shadow-sm"
       >
         <LayoutDashboard className="w-4 h-4" />

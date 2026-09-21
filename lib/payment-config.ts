@@ -6,15 +6,11 @@ function getNumberEnv(name: string, fallback: number): number {
 
 export const PAYMENT_CONFIG = {
   scholarshipFee: getNumberEnv("NEXT_PUBLIC_SCHOLARSHIP_FEE", getNumberEnv("SCHOLARSHIP_FEE", 15000)),
-  bulkDiscountThreshold: getNumberEnv("NEXT_PUBLIC_BULK_DISCOUNT_THRESHOLD", getNumberEnv("BULK_DISCOUNT_THRESHOLD", 3)),
-  bulkDiscountRate: getNumberEnv("NEXT_PUBLIC_BULK_DISCOUNT_RATE", getNumberEnv("BULK_DISCOUNT_RATE", 0.1)),
 };
 
+// One course per student, so the full price is simply the sum of the (single) course price.
 export function computeExpectedCourseTotal(prices: number[]): number {
-  const total = prices.reduce((sum, price) => sum + price, 0);
-  return prices.length >= PAYMENT_CONFIG.bulkDiscountThreshold
-    ? Math.round(total * (1 - PAYMENT_CONFIG.bulkDiscountRate))
-    : total;
+  return prices.reduce((sum, price) => sum + price, 0);
 }
 
 export function getExpectedPaymentAmount(prices: number[], paymentType: "full" | "scholarship" | string): number {

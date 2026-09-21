@@ -103,7 +103,7 @@ export function CourseCard({
         {enrollment === "enrolled" ? (
           <div className="border-t border-green-600/15 pt-4">
             <Link
-              href="/dashboard"
+              href="/login"
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-green-700"
             >
               <LayoutDashboard className="h-4 w-4" />

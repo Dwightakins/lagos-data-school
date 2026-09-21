@@ -264,7 +264,7 @@ function CheckoutContent() {
               Head to your dashboard to continue learning.
             </p>
             <a
-              href="/dashboard"
+              href="/login"
               className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-brand hover:opacity-90 text-brand-foreground font-bold text-[15px] transition-opacity shadow-brand"
             >
               Go to My Courses →

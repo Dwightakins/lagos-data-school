@@ -213,7 +213,7 @@ export default function ScholarshipPaymentPage() {
               Head to your dashboard to start learning.
             </p>
             <Link
-              href="/dashboard"
+              href="/login"
               className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-brand hover:opacity-90 text-brand-foreground font-bold text-[15px] transition-opacity shadow-brand"
             >
               Go to Dashboard
@@ -255,7 +255,7 @@ export default function ScholarshipPaymentPage() {
             <p className="text-[14px] text-muted-foreground mb-8 leading-relaxed">{msg.body}</p>
             {pageState === "already_paid" ? (
               <Link
-                href="/dashboard"
+                href="/login"
                 className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-brand hover:opacity-90 text-brand-foreground font-bold text-[15px] transition-opacity"
               >
                 Go to Dashboard

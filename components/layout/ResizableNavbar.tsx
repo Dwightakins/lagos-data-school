@@ -190,7 +190,7 @@ export function ResizableNavbar() {
                   {mounted && user ? (
                     <>
                       <Link
-                        href="/dashboard"
+                        href="/login"
                         onClick={() => setMobileOpen(false)}
                         className="inline-flex min-h-12 items-center justify-center rounded-xl border border-border bg-card px-4 py-3 text-center text-[14px] font-semibold text-foreground transition-colors hover:bg-accent"
                       >
@@ -279,7 +279,7 @@ export function ResizableNavbar() {
             {mounted && user ? (
               <>
                 <a
-                  href="/dashboard"
+                  href="/login"
                   className="hidden lg:inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-foreground/80 hover:text-foreground transition"
                 >
                   <LayoutDashboard className="h-3.5 w-3.5" />
@@ -361,7 +361,7 @@ function ProfileDropdown({ user, onSignOut }: { user: NavUser; onSignOut: () => 
             </div>
 
             <a
-              href="/dashboard"
+              href="/login"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-foreground hover:bg-accent transition"
             >
@@ -369,7 +369,7 @@ function ProfileDropdown({ user, onSignOut }: { user: NavUser; onSignOut: () => 
               Dashboard
             </a>
             <a
-              href="/dashboard"
+              href="/login"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-foreground hover:bg-accent transition"
             >

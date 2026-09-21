@@ -59,7 +59,7 @@ export function HeroSection() {
             >
               {enrollment === "enrolled" ? (
                 <Link
-                  href="/dashboard"
+                  href="/login"
                   className="inline-flex items-center justify-center gap-2 rounded-[0.85rem] bg-brand px-7 py-3.5 text-sm font-semibold text-brand-foreground shadow-brand hover:opacity-90 transition"
                 >
                   <LayoutDashboard className="h-4 w-4" />
