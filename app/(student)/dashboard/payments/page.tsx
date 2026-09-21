@@ -10,9 +10,14 @@ interface PaymentRow {
   amount: number;
   reference: string;
   status: string;
-  created_at: string;
-  courses: { title: string } | null;
-  payment_intents: { payment_type: string } | null;
+  paid_at: string | null;
+  course_title: string | null;
+  payment_type: string | null;
+}
+
+function fmtDate(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -37,13 +42,15 @@ export default function PaymentsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      const { data } = await supabase
-        .from("payments")
-        .select("id, amount, reference, status, created_at, courses ( title ), payment_intents ( payment_type )")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      setPayments((data ?? []) as unknown as PaymentRow[]);
+      try {
+        const res = await fetch("/api/payments/history", { cache: "no-store" });
+        if (res.ok) {
+          const d = await res.json() as { payments: PaymentRow[] };
+          setPayments(d.payments);
+        }
+      } catch {
+        // leave list empty on network failure
+      }
       setLoading(false);
     };
     load();
@@ -91,18 +98,18 @@ export default function PaymentsPage() {
               {filtered.map((p) => (
                 <div key={p.id} className="bg-card border border-border rounded-2xl p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="text-[13px] font-semibold text-foreground leading-snug flex-1">{p.courses?.title ?? "—"}</p>
+                    <p className="text-[13px] font-semibold text-foreground leading-snug flex-1">{p.course_title ?? "—"}</p>
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${STATUS_COLORS[p.status] ?? "bg-gray-100 text-gray-600"}`}>{p.status}</span>
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <div>
                       <p className="text-[15px] font-black text-foreground">{formatNaira(p.amount)}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(p.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{fmtDate(p.paid_at)}</p>
                       {p.reference && <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate max-w-[160px]">{p.reference}</p>}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${(p.payment_intents?.payment_type === "scholarship") ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
-                        {p.payment_intents?.payment_type === "scholarship" ? "Scholarship" : "Full Pay"}
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${(p.payment_type === "scholarship") ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
+                        {p.payment_type === "scholarship" ? "Scholarship" : "Full Pay"}
                       </span>
                       <a href={`/api/invoice/${p.id}`} className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline">
                         <Download className="w-3 h-3" /> Receipt
@@ -128,17 +135,17 @@ export default function PaymentsPage() {
                     {filtered.map((p) => (
                       <tr key={p.id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-muted/40 transition-colors">
                         <td className="px-5 py-4 text-[13px] text-muted-foreground whitespace-nowrap">
-                          {new Date(p.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                          {fmtDate(p.paid_at)}
                         </td>
                         <td className="px-5 py-4 text-[13px] font-medium text-foreground max-w-[180px] truncate">
-                          {p.courses?.title ?? "—"}
+                          {p.course_title ?? "—"}
                         </td>
                         <td className="px-5 py-4 text-[13.5px] font-bold text-foreground whitespace-nowrap">
                           {formatNaira(p.amount)}
                         </td>
                         <td className="px-5 py-4">
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${(p.payment_intents?.payment_type === "scholarship") ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
-                            {p.payment_intents?.payment_type === "scholarship" ? "Scholarship" : "Full Pay"}
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${(p.payment_type === "scholarship") ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
+                            {p.payment_type === "scholarship" ? "Scholarship" : "Full Pay"}
                           </span>
                         </td>
                         <td className="px-5 py-4">
