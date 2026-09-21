@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Download, Receipt } from "lucide-react";
+import { downloadReceipt } from "@/lib/receipt";
 
 interface PaymentRow {
   id: string;
@@ -35,12 +36,38 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<{ full_name: string | null; student_id: string | null } | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
+
+  async function handleDownload(p: PaymentRow) {
+    setDownloading(p.id);
+    try {
+      await downloadReceipt({
+        reference: p.reference,
+        paidAt: p.paid_at,
+        studentName: profile?.full_name ?? "",
+        studentId: profile?.student_id ?? null,
+        courseName: p.course_title ?? "",
+        amount: p.amount,
+        status: p.status,
+      });
+    } finally {
+      setDownloading(null);
+    }
+  }
 
   useEffect(() => {
     const load = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
+
+      const { data: prof } = await supabase
+        .from("users")
+        .select("full_name, student_id")
+        .eq("id", user.id)
+        .single();
+      setProfile(prof as { full_name: string | null; student_id: string | null } | null);
 
       try {
         const res = await fetch("/api/payments/history", { cache: "no-store" });
@@ -111,9 +138,14 @@ export default function PaymentsPage() {
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${(p.payment_type === "scholarship") ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
                         {p.payment_type === "scholarship" ? "Scholarship" : "Full Pay"}
                       </span>
-                      <a href={`/api/invoice/${p.id}`} className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline">
-                        <Download className="w-3 h-3" /> Receipt
-                      </a>
+                      <button
+                        type="button"
+                        onClick={() => void handleDownload(p)}
+                        disabled={downloading === p.id}
+                        className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline disabled:opacity-50 min-h-[44px] px-1"
+                      >
+                        <Download className="w-3 h-3" /> {downloading === p.id ? "Preparing…" : "Download Receipt"}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -157,12 +189,14 @@ export default function PaymentsPage() {
                           {p.reference || "—"}
                         </td>
                         <td className="px-5 py-4">
-                          <a
-                            href={`/api/invoice/${p.id}`}
-                            className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline"
+                          <button
+                            type="button"
+                            onClick={() => void handleDownload(p)}
+                            disabled={downloading === p.id}
+                            className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline disabled:opacity-50 whitespace-nowrap"
                           >
-                            <Download className="w-3 h-3" /> Receipt
-                          </a>
+                            <Download className="w-3 h-3" /> {downloading === p.id ? "Preparing…" : "Download Receipt"}
+                          </button>
                         </td>
                       </tr>
                     ))}
