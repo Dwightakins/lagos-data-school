@@ -5,13 +5,14 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Plus, Trash2, ChevronDown, ChevronUp, GripVertical, Edit3,
-  Check, X, Save, Video, Clock, Eye,
+  Check, X, Save, Video, Clock, Eye, Radio,
 } from "lucide-react";
 
 interface Lesson {
   id: string; title: string; order_index: number;
   video_url: string | null; duration_minutes: number | null;
   is_preview: boolean; description?: string | null;
+  zoom_link?: string | null; zoom_schedule?: string | null; is_live?: boolean;
 }
 interface Module { id: string; title: string; order_index: number; lessons: Lesson[]; }
 
@@ -47,7 +48,10 @@ export default function CourseContentPage() {
   const [addingModule, setAddingModule] = useState(false);
   const [newModuleTitle, setNewModuleTitle] = useState("");
   const [addingLessonFor, setAddingLessonFor] = useState<string | null>(null);
-  const [newLesson, setNewLesson] = useState({ title: "", video_url: "", duration_minutes: "", description: "", is_preview: false });
+  const [newLesson, setNewLesson] = useState({
+    title: "", video_url: "", duration_minutes: "", description: "", is_preview: false,
+    zoom_link: "", zoom_schedule: "", is_live: false,
+  });
 
   // Drag — modules
   // State, not a ref: the dragged source id is read directly in JSX (to dim its card),
@@ -173,13 +177,16 @@ export default function CourseContentPage() {
         description: newLesson.description || null,
         is_preview: newLesson.is_preview,
         order_index: lessons.length,
+        zoom_link: newLesson.zoom_link || null,
+        zoom_schedule: newLesson.zoom_schedule || null,
+        is_live: newLesson.is_live,
       }),
     });
     const d = await res.json() as { lesson?: Lesson };
     setSaving(false);
     if (d.lesson) {
       setModules((prev) => prev.map((m) => m.id === moduleId ? { ...m, lessons: [...m.lessons, d.lesson!] } : m));
-      setNewLesson({ title: "", video_url: "", duration_minutes: "", description: "", is_preview: false });
+      setNewLesson({ title: "", video_url: "", duration_minutes: "", description: "", is_preview: false, zoom_link: "", zoom_schedule: "", is_live: false });
       setAddingLessonFor(null);
       showToast("Lesson added.");
     }
@@ -382,6 +389,25 @@ export default function CourseContentPage() {
                             Free preview
                           </label>
                         </div>
+                        <div className="pt-2 mt-1 border-t border-border space-y-2">
+                          <label className="flex items-center gap-2 text-[12px] font-semibold text-foreground cursor-pointer select-none">
+                            <input type="checkbox" checked={editLesson.is_live ?? lesson.is_live ?? false} onChange={(e) => setEditLesson((p) => ({ ...p, is_live: e.target.checked }))} className="accent-brand" />
+                            <Radio className="w-3 h-3 text-brand" />
+                            Live session (instead of a recorded lesson)
+                          </label>
+                          <input
+                            value={editLesson.zoom_link ?? lesson.zoom_link ?? ""}
+                            onChange={(e) => setEditLesson((p) => ({ ...p, zoom_link: e.target.value }))}
+                            placeholder="Zoom link (for live sessions)"
+                            className={INP}
+                          />
+                          <input
+                            value={editLesson.zoom_schedule ?? lesson.zoom_schedule ?? ""}
+                            onChange={(e) => setEditLesson((p) => ({ ...p, zoom_schedule: e.target.value }))}
+                            placeholder="Schedule (e.g. Every Monday 6pm WAT)"
+                            className={INP}
+                          />
+                        </div>
                         <div className="flex gap-2">
                           <button onClick={() => saveLesson(mod.id, lesson.id)} className="flex items-center gap-1.5 bg-brand text-brand-foreground text-[12px] px-3 py-1.5 rounded-lg font-semibold"><Save className="w-3.5 h-3.5" />Save</button>
                           <button onClick={() => setEditLessonId(null)} className="text-[12px] px-3 py-1.5 rounded-lg border border-border text-muted-foreground">Cancel</button>
@@ -409,6 +435,11 @@ export default function CourseContentPage() {
                                 <Eye className="w-2.5 h-2.5" />PREVIEW
                               </span>
                             )}
+                            {lesson.is_live && (
+                              <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                                <Radio className="w-2.5 h-2.5" />LIVE
+                              </span>
+                            )}
                           </div>
                         </div>
                         <button onClick={() => { setEditLessonId(lesson.id); setEditLesson({}); }} className="text-muted-foreground hover:text-foreground p-1"><Edit3 className="w-3.5 h-3.5" /></button>
@@ -431,6 +462,15 @@ export default function CourseContentPage() {
                         Free preview
                       </label>
                     </div>
+                    <div className="pt-2 mt-1 border-t border-border/60 space-y-2">
+                      <label className="flex items-center gap-2 text-[12px] font-semibold text-foreground cursor-pointer select-none">
+                        <input type="checkbox" checked={newLesson.is_live} onChange={(e) => setNewLesson((p) => ({ ...p, is_live: e.target.checked }))} className="accent-brand" />
+                        <Radio className="w-3 h-3 text-brand" />
+                        Live session (instead of a recorded lesson)
+                      </label>
+                      <input value={newLesson.zoom_link} onChange={(e) => setNewLesson((p) => ({ ...p, zoom_link: e.target.value }))} placeholder="Zoom link (for live sessions)" className={INP} />
+                      <input value={newLesson.zoom_schedule} onChange={(e) => setNewLesson((p) => ({ ...p, zoom_schedule: e.target.value }))} placeholder="Schedule (e.g. Every Monday 6pm WAT)" className={INP} />
+                    </div>
                     <div className="flex gap-2">
                       <button onClick={() => addLesson(mod.id)} disabled={saving || !newLesson.title.trim()} className="flex-1 bg-brand text-brand-foreground text-[12px] py-1.5 rounded-lg font-semibold disabled:opacity-50">
                         {saving ? "Adding…" : "Add Lesson"}
@@ -440,7 +480,7 @@ export default function CourseContentPage() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => { setAddingLessonFor(mod.id); setNewLesson({ title: "", video_url: "", duration_minutes: "", description: "", is_preview: false }); }}
+                    onClick={() => { setAddingLessonFor(mod.id); setNewLesson({ title: "", video_url: "", duration_minutes: "", description: "", is_preview: false, zoom_link: "", zoom_schedule: "", is_live: false }); }}
                     className="w-full flex items-center gap-2 text-[12px] text-brand hover:text-brand/80 px-3 py-2 rounded-xl border border-dashed border-brand/30 hover:border-brand/60 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add Lesson

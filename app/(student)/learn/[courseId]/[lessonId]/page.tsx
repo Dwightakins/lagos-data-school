@@ -11,13 +11,14 @@ import {
   FileText, Send, ThumbsUp, Trash2, Edit3, Check, Plus, File,
   FileText as FileTxt, Film, Archive, Image as Img,
   Bookmark, BookmarkCheck, ChevronDown, ChevronUp, AlertCircle,
-  Lock, ClipboardList, HelpCircle, Upload, Link2,
+  Lock, ClipboardList, HelpCircle, Upload, Link2, Radio, Calendar,
 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────── */
 interface LessonRow {
   id: string; title: string; content: string | null;
   video_url: string | null; duration_minutes: number | null;
+  zoom_link: string | null; zoom_schedule: string | null; is_live: boolean;
   order_index: number; module_id: string;
 }
 interface ModuleRow { id: string; title: string; order_index: number; lessons: LessonRow[]; }
@@ -128,6 +129,34 @@ function VideoEmbed({ url }: { url: string }) {
     </div>
   );
   return <video src={url} controls className="w-full rounded-xl bg-black" style={{ maxHeight: "480px" }} />;
+}
+
+/* ── Live session card ────────────────────────────────────── */
+function LiveSessionCard({ zoomLink, schedule }: { zoomLink: string; schedule: string | null }) {
+  return (
+    <div className="rounded-xl border border-amber-300/60 bg-amber-50 dark:bg-amber-900/15 dark:border-amber-700/40 p-5 sm:p-6">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full uppercase tracking-wide">
+          <Radio className="w-3 h-3 animate-pulse" />Live Session
+        </span>
+      </div>
+      {schedule && (
+        <div className="flex items-center gap-1.5 text-[13px] text-amber-800 dark:text-amber-300 mb-4">
+          <Calendar className="w-3.5 h-3.5" />
+          <span>{schedule}</span>
+        </div>
+      )}
+      <a
+        href={zoomLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[14px] px-6 py-3 rounded-xl transition-colors shadow-sm min-h-[44px]"
+      >
+        <Radio className="w-4 h-4" />
+        Join Live Class
+      </a>
+    </div>
+  );
 }
 
 /* ── Tab: Materials ─────────────────────────────────────── */
@@ -823,7 +852,7 @@ export default function LessonPlayerPage() {
     const moduleList = (modulesRes.data ?? []) as Omit<ModuleRow, "lessons">[];
     const moduleIds = moduleList.map(m => m.id);
     const { data: allLessonsRaw } = moduleIds.length
-      ? await supabase.from("lessons").select("id,title,content,video_url,duration_minutes,order_index,module_id").in("module_id", moduleIds).order("order_index")
+      ? await supabase.from("lessons").select("id,title,content,video_url,duration_minutes,zoom_link,zoom_schedule,is_live,order_index,module_id").in("module_id", moduleIds).order("order_index")
       : { data: [] };
 
     const lessonsByModule = (allLessonsRaw ?? []).reduce<Record<string, LessonRow[]>>((acc, l) => {
@@ -1176,10 +1205,20 @@ export default function LessonPlayerPage() {
                   )}
                 </div>
 
-                {/* Video */}
-                {currentLesson.video_url && (
-                  <div className="mb-6"><VideoEmbed url={currentLesson.video_url} /></div>
-                )}
+                {/* Live class, recorded video, or "coming soon" — in that priority order */}
+                <div className="mb-6">
+                  {currentLesson.is_live && currentLesson.zoom_link ? (
+                    <LiveSessionCard zoomLink={currentLesson.zoom_link} schedule={currentLesson.zoom_schedule} />
+                  ) : currentLesson.video_url ? (
+                    <VideoEmbed url={currentLesson.video_url} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-border bg-muted/30 py-12 px-6">
+                      <BookOpen className="w-8 h-8 text-muted-foreground mb-3" />
+                      <p className="text-[14px] font-semibold text-foreground">Content coming soon</p>
+                      <p className="text-[12.5px] text-muted-foreground mt-1">Check back later for this lesson&apos;s video.</p>
+                    </div>
+                  )}
+                </div>
 
                 {/* Navigation + Complete */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-8 pb-6 border-b border-border">

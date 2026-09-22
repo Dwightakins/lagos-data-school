@@ -13,6 +13,9 @@ export async function POST(request: Request) {
     durationMinutes?: number; duration_minutes?: number;
     orderIndex?: number; order_index?: number;
     content?: string;
+    zoom_link?: string | null;
+    zoom_schedule?: string | null;
+    is_live?: boolean;
   };
 
   const moduleId = body.moduleId ?? body.module_id;
@@ -25,7 +28,17 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("lessons")
-    .insert({ module_id: moduleId, title: body.title, video_url: videoUrl, duration_minutes: durationMinutes, order_index: orderIndex, content: body.content ?? null })
+    .insert({
+      module_id: moduleId,
+      title: body.title,
+      video_url: videoUrl,
+      duration_minutes: durationMinutes,
+      order_index: orderIndex,
+      content: body.content ?? null,
+      zoom_link: body.zoom_link ?? null,
+      zoom_schedule: body.zoom_schedule ?? null,
+      is_live: body.is_live ?? false,
+    })
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

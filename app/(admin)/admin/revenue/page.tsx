@@ -2,24 +2,34 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { DollarSign, TrendingUp, CreditCard, BarChart2 } from "lucide-react";
 import AdminRevenueCharts from "@/components/admin/AdminRevenueCharts";
 
+// "*" (not a named column list) on both queries below so this works whether the payments
+// date column is paid_at or created_at — naming a column that doesn't exist in .select()
+// or .order() fails the whole query, which is why this page used to show ₦0.
 async function getData() {
   const admin = createAdminClient();
   const [payments, byCourse] = await Promise.all([
-    admin.from("payments").select("amount, status, created_at, reference, users(full_name, email), courses(title)").order("created_at", { ascending: false }),
-    admin.from("payments").select("amount, courses(title)").eq("status", "paid"),
+    admin.from("payments").select("*, users(full_name, email), courses(title)"),
+    admin.from("payments").select("*, courses(title)").eq("status", "paid"),
   ]);
 
-  const txs = (payments.data ?? []) as unknown as Array<{
-    amount: number; status: string; created_at: string; reference: string;
+  type Row = {
+    amount: number; status: string; reference: string;
+    paid_at?: string | null; created_at?: string | null;
     users: { full_name: string; email: string } | null;
     courses: { title: string } | null;
-  }>;
+  };
 
-  const total = txs.filter((t) => t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
+  const txs = ((payments.data ?? []) as unknown as Row[])
+    .map((t) => ({ ...t, date: t.paid_at ?? t.created_at ?? null }))
+    .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+
+  const paidTxs = txs.filter((t) => t.status === "paid");
+  const total = paidTxs.reduce((s, t) => s + Number(t.amount), 0);
   const now = new Date();
-  const thisMonth = txs.filter((t) => {
-    const d = new Date(t.created_at);
-    return t.status === "paid" && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  const thisMonth = paidTxs.filter((t) => {
+    if (!t.date) return false;
+    const d = new Date(t.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).reduce((s, t) => s + Number(t.amount), 0);
 
   const courseRevMap: Record<string, number> = {};
@@ -29,11 +39,11 @@ async function getData() {
   }
   const byCourseArr = Object.entries(courseRevMap).map(([name, amount]) => ({ name, amount })).sort((a, b) => b.amount - a.amount);
 
-  return { total, thisMonth, transactions: txs, byCourse: byCourseArr };
+  return { total, thisMonth, paidCount: paidTxs.length, transactions: txs, byCourse: byCourseArr };
 }
 
 export default async function RevenuePage() {
-  const { total, thisMonth, transactions, byCourse } = await getData();
+  const { total, thisMonth, paidCount, transactions, byCourse } = await getData();
 
   const fmt = (n: number) => n >= 1_000_000 ? `₦${(n / 1_000_000).toFixed(2)}M` : `₦${n.toLocaleString("en-NG")}`;
 
@@ -56,8 +66,8 @@ export default async function RevenuePage() {
         {[
           { label: "Total Revenue", value: fmt(total), Icon: DollarSign },
           { label: "This Month", value: fmt(thisMonth), Icon: TrendingUp },
-          { label: "Transactions", value: String(transactions.length), Icon: CreditCard },
-          { label: "Paid Count", value: String(transactions.filter((t) => t.status === "paid").length), Icon: BarChart2 },
+          { label: "Transactions", value: String(paidCount), Icon: CreditCard },
+          { label: "Paid Count", value: String(paidCount), Icon: BarChart2 },
         ].map((s) => (
           <div key={s.label} className="bg-card border border-border rounded-2xl p-5 shadow-sm">
             <div className="w-9 h-9 rounded-xl bg-brand/8 flex items-center justify-center mb-3">
@@ -104,7 +114,7 @@ export default async function RevenuePage() {
                   <td className="px-5 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${STATUS_STYLE[t.status] ?? "text-muted-foreground bg-muted"}`}>{t.status}</span>
                   </td>
-                  <td className="px-5 py-3 text-muted-foreground">{new Date(t.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{t.date ? new Date(t.date).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) : "—"}</td>
                   <td className="px-5 py-3 text-muted-foreground font-mono text-[11px]">{t.reference}</td>
                 </tr>
               ))}

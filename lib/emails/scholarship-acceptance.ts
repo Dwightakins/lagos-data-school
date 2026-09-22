@@ -188,17 +188,20 @@ export async function sendScholarshipRejectionEmail(
       </tr>
       <tr>
         <td style="padding:36px 40px;">
-          <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">Hi <strong>${p.studentName}</strong>,</p>
+          <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">Dear <strong>${p.studentName}</strong>,</p>
           <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">
-            Thank you for applying for a scholarship for <strong>${p.courseName}</strong>.
-            After careful review, we are unable to offer you a scholarship at this time.
+            Thank you for applying for the Lagos Data School Limited scholarship programme${p.courseName ? ` for <strong>${p.courseName}</strong>` : ""}.
+          </p>
+          <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">
+            After careful review, we are unable to approve your scholarship application at this time.
           </p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:12px;margin-bottom:28px;">
             <tr>
               <td style="padding:18px 24px;">
-                <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#92400e;">You can still enrol at full price</p>
+                <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#92400e;">You're still welcome to enrol at full price</p>
                 <p style="margin:0;font-size:13.5px;color:#78350f;line-height:1.6;">
-                  Invest in your future today. Spots are limited — secure yours before they fill up.
+                  You are still welcome to enrol in any of our courses at the full price of <strong>₦250,000</strong>.
+                  Visit <a href="${appUrl}/courses" style="color:#92400e;text-decoration:underline;">lagosdataschoolltd.com/courses</a> to browse available courses.
                 </p>
               </td>
             </tr>
@@ -209,6 +212,11 @@ export async function sendScholarshipRejectionEmail(
               Browse Courses →
             </a>
           </div>
+          <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;text-align:center;">
+            We encourage you to apply again in the future.
+          </p>
+          <p style="margin:0 0 4px;color:#374151;font-size:14px;line-height:1.7;">Warm regards,</p>
+          <p style="margin:0 0 20px;color:#374151;font-size:14px;font-weight:700;line-height:1.7;">Lagos Data School Limited Team</p>
           <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.7;text-align:center;">
             Questions? Email us at
             <a href="mailto:${SUPPORT_EMAIL}" style="color:#0D9488;font-weight:600;text-decoration:none;">${SUPPORT_EMAIL}</a>
@@ -228,7 +236,7 @@ export async function sendScholarshipRejectionEmail(
 
   return sendEmail({
     to: p.to,
-    subject: "Scholarship Application Update — Lagos Data School",
+    subject: "Your Lagos Data School Scholarship Application Update",
     html,
   });
 }

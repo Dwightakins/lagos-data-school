@@ -15,7 +15,8 @@ async function getStats() {
     admin.from("scholarship_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
     admin.from("certificates").select("id", { count: "exact", head: true }),
     admin.from("courses").select("id", { count: "exact", head: true }).eq("published", true),
-    admin.from("payments").select("amount").eq("status", "paid"),
+    // "*" (not a named column list) so this works whether the date column is paid_at or created_at.
+    admin.from("payments").select("*").eq("status", "paid"),
   ]);
   const totalRevenue = ((payments.data ?? []) as unknown as Array<{ amount: number }>)
     .reduce((sum, p) => sum + Number(p.amount), 0);
@@ -44,10 +45,9 @@ async function getActivityFeed() {
       .limit(5),
     admin
       .from("payments")
-      .select("id, created_at, amount, users(full_name), courses(title)")
+      .select("*, users(full_name), courses(title)")
       .eq("status", "paid")
-      .order("created_at", { ascending: false })
-      .limit(5),
+      .limit(20),
   ]);
 
   type FeedItem = {
@@ -66,8 +66,8 @@ async function getActivityFeed() {
   for (const s of (scholarships.data ?? []) as unknown as Array<{ id: string; created_at: string; applicant_name: string | null; course_name: string; status: string }>) {
     items.push({ id: s.id, type: "scholarship", text: `${s.applicant_name ?? "Applicant"} applied for scholarship`, sub: s.course_name, ts: s.created_at });
   }
-  for (const p of (payments.data ?? []) as unknown as Array<{ id: string; created_at: string; amount: number; users: { full_name: string } | null; courses: { title: string } | null }>) {
-    items.push({ id: p.id, type: "payment", text: `₦${Number(p.amount).toLocaleString("en-NG")} payment received`, sub: `${p.users?.full_name ?? ""} · ${p.courses?.title ?? ""}`, ts: p.created_at });
+  for (const p of (payments.data ?? []) as unknown as Array<{ id: string; paid_at?: string | null; created_at?: string | null; amount: number; users: { full_name: string } | null; courses: { title: string } | null }>) {
+    items.push({ id: p.id, type: "payment", text: `₦${Number(p.amount).toLocaleString("en-NG")} payment received`, sub: `${p.users?.full_name ?? ""} · ${p.courses?.title ?? ""}`, ts: p.paid_at ?? p.created_at ?? new Date(0).toISOString() });
   }
 
   return items.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()).slice(0, 10);

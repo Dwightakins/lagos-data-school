@@ -29,20 +29,24 @@ export async function GET() {
       .from("enrollments")
       .select("enrolled_at, payment_status")
       .gte("enrolled_at", sixMonthsAgo.toISOString()),
+    // "*" (not a named column list) so this works whether the date column is paid_at or
+    // created_at — and the 6-month cutoff is applied in JS below for the same reason
+    // (a .gte() naming a column that doesn't exist would fail the whole query).
     admin
       .from("payments")
-      .select("amount, course_id, status, created_at")
-      .eq("status", "paid")
-      .gte("created_at", sixMonthsAgo.toISOString()),
+      .select("*")
+      .eq("status", "paid"),
     admin.from("courses").select("id, title"),
   ]);
 
   type EnrollRow = { enrolled_at: string; payment_status: string };
-  type PaymentRow = { amount: number; course_id: string; status: string; created_at: string };
+  type PaymentRow = { amount: number; course_id: string; status: string; paid_at?: string | null; created_at?: string | null };
   type CourseRow = { id: string; title: string };
 
   const enrollments = (enrollmentsRes.data ?? []) as EnrollRow[];
-  const payments = (paymentsRes.data ?? []) as PaymentRow[];
+  const payments = ((paymentsRes.data ?? []) as PaymentRow[])
+    .map((p) => ({ ...p, date: p.paid_at ?? p.created_at ?? null }))
+    .filter((p) => p.date && p.date >= sixMonthsAgo.toISOString());
   const courses = (coursesRes.data ?? []) as CourseRow[];
 
   // Monthly enrollment counts
@@ -57,7 +61,7 @@ export async function GET() {
   const revenueByMonth: Record<string, number> = {};
   months.forEach(({ key }) => { revenueByMonth[key] = 0; });
   payments.forEach((p) => {
-    const key = (p.created_at ?? "").slice(0, 7);
+    const key = (p.date ?? "").slice(0, 7);
     if (revenueByMonth[key] !== undefined) revenueByMonth[key] += Number(p.amount);
   });
 

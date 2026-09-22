@@ -4,18 +4,27 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 
 interface Props {
   byCourse: { name: string; amount: number }[];
-  transactions: { amount: number; status: string; created_at: string }[];
+  transactions: { amount: number; status: string; date: string | null }[];
 }
 
 function buildMonthly(txs: Props["transactions"]) {
+  // Bucket by a sortable "YYYY-MM" key first (transactions may arrive in any order),
+  // then sort chronologically before taking the most recent 6 — a plain insertion-order
+  // slice(-6) would grab whichever 6 months happened to be inserted last, not the newest.
   const map: Record<string, number> = {};
   for (const t of txs) {
-    if (t.status !== "paid") continue;
-    const d = new Date(t.created_at);
-    const key = d.toLocaleDateString("en-NG", { month: "short", year: "2-digit" });
+    if (t.status !== "paid" || !t.date) continue;
+    const key = t.date.slice(0, 7); // YYYY-MM
     map[key] = (map[key] ?? 0) + Number(t.amount);
   }
-  return Object.entries(map).slice(-6).map(([month, amount]) => ({ month, amount }));
+  return Object.entries(map)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-6)
+    .map(([key, amount]) => {
+      const [year, month] = key.split("-").map(Number);
+      const label = new Date(year, month - 1, 1).toLocaleDateString("en-NG", { month: "short", year: "2-digit" });
+      return { month: label, amount };
+    });
 }
 
 export default function AdminRevenueCharts({ byCourse, transactions }: Props) {

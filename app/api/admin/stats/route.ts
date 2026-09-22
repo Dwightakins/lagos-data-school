@@ -15,7 +15,8 @@ interface PaymentRaw {
   amount: number;
   reference: string;
   status: string;
-  created_at: string;
+  paid_at?: string | null;
+  created_at?: string | null;
   provider: string;
   user_id: string;
   course_id: string;
@@ -82,11 +83,11 @@ export async function GET() {
       .select("id, enrolled_at, payment_status, user_id, course_id")
       .order("enrolled_at", { ascending: false })
       .limit(10),
+    // "*" (not a named column list), sorted/limited in JS below — works whether the date
+    // column is paid_at or created_at.
     admin
       .from("payments")
-      .select("id, amount, reference, status, created_at, provider, user_id, course_id")
-      .order("created_at", { ascending: false })
-      .limit(10),
+      .select("*"),
   ]);
 
   const totalStudents = studentsResult.count ?? 0;
@@ -98,7 +99,9 @@ export async function GET() {
   const pendingScholarships = scholarshipsResult.count ?? 0;
 
   const enrollmentRows = (enrollmentsResult.data ?? []) as EnrollmentRaw[];
-  const paymentRows = (paymentsResult.data ?? []) as PaymentRaw[];
+  const paymentRows = ((paymentsResult.data ?? []) as PaymentRaw[])
+    .sort((a, b) => (b.paid_at ?? b.created_at ?? "").localeCompare(a.paid_at ?? a.created_at ?? ""))
+    .slice(0, 10);
 
   // Batch-fetch user and course details for the recent activity rows
   const allUserIds = [
@@ -149,7 +152,7 @@ export async function GET() {
     amount: p.amount,
     reference: p.reference,
     status: p.status,
-    created_at: p.created_at,
+    created_at: p.paid_at ?? p.created_at ?? null,
     provider: p.provider,
     user: usersMap.get(p.user_id) ?? null,
     course: coursesMap.get(p.course_id) ?? null,
