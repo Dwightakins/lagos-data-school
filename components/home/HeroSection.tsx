@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, LayoutDashboard, PlayCircle } from "lucide-react";
 import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
-import Image from "next/image";
 import { Spotlight } from "@/components/ui/spotlight";
 import { ContainerTextFlip } from "@/components/ui/container-text-flip";
 import { MovingBorderButton } from "@/components/ui/moving-border-button";
@@ -110,13 +109,14 @@ export function HeroSection() {
           >
             <div className="animate-float relative rounded-3xl border border-border/70 bg-card/70 backdrop-blur-xl p-2 shadow-elevated">
               <div className="absolute -top-3 left-6 right-6 h-3 rounded-t-xl bg-gradient-to-r from-brand via-brand-glow to-gold opacity-60 blur-md" />
-              <Image
-                src="/images/hero.jpg"
-                width={1280}
-                height={896}
-                alt="LDSL learning platform"
+              <video
+                src="/videos/promo.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
                 className="w-full rounded-2xl"
-                priority
+                aria-label="Lagos Data School promotional video"
               />
               <div className="absolute -bottom-5 -left-5 rounded-2xl border border-border/70 bg-background/90 backdrop-blur p-3 shadow-elevated hidden sm:block">
                 <div className="flex items-center gap-2.5">
