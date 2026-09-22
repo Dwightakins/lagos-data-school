@@ -43,9 +43,11 @@ async function getActivityFeed() {
       .select("id, created_at, applicant_name, course_name, status")
       .order("created_at", { ascending: false })
       .limit(5),
+    // No foreign key from payments to users (only to courses), so `users(...)` can't be
+    // embedded here — PostgREST rejects it (PGRST200). Names are fetched separately below.
     admin
       .from("payments")
-      .select("*, users(full_name), courses(title)")
+      .select("id, user_id, amount, paid_at, courses(title)")
       .eq("status", "paid")
       .limit(20),
   ]);
@@ -66,8 +68,17 @@ async function getActivityFeed() {
   for (const s of (scholarships.data ?? []) as unknown as Array<{ id: string; created_at: string; applicant_name: string | null; course_name: string; status: string }>) {
     items.push({ id: s.id, type: "scholarship", text: `${s.applicant_name ?? "Applicant"} applied for scholarship`, sub: s.course_name, ts: s.created_at });
   }
-  for (const p of (payments.data ?? []) as unknown as Array<{ id: string; paid_at?: string | null; created_at?: string | null; amount: number; users: { full_name: string } | null; courses: { title: string } | null }>) {
-    items.push({ id: p.id, type: "payment", text: `₦${Number(p.amount).toLocaleString("en-NG")} payment received`, sub: `${p.users?.full_name ?? ""} · ${p.courses?.title ?? ""}`, ts: p.paid_at ?? p.created_at ?? new Date(0).toISOString() });
+
+  const paymentRows = (payments.data ?? []) as unknown as Array<{ id: string; user_id: string; paid_at: string | null; amount: number; courses: { title: string } | null }>;
+  const payerIds = [...new Set(paymentRows.map((p) => p.user_id).filter(Boolean))];
+  const { data: payersData } = payerIds.length > 0
+    ? await admin.from("users").select("id, full_name").in("id", payerIds)
+    : { data: [] as Array<{ id: string; full_name: string | null }> };
+  const payerMap = new Map(((payersData ?? []) as Array<{ id: string; full_name: string | null }>).map((u) => [u.id, u]));
+
+  for (const p of paymentRows) {
+    const payer = payerMap.get(p.user_id);
+    items.push({ id: p.id, type: "payment", text: `₦${Number(p.amount).toLocaleString("en-NG")} payment received`, sub: `${payer?.full_name ?? ""} · ${p.courses?.title ?? ""}`, ts: p.paid_at ?? new Date(0).toISOString() });
   }
 
   return items.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()).slice(0, 10);

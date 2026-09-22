@@ -4,19 +4,22 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 interface PaymentRow {
   id: string;
+  user_id: string;
   amount: number;
   status: string;
   reference: string;
   course_id: string;
-  paid_at?: string | null;
-  created_at?: string | null;
-  users?: { full_name: string } | null;
+  paid_at: string | null;
   courses?: { title: string } | null;
 }
 
-// "*" (not a named column list) on every query below so this works whether the payments
-// date column is paid_at or created_at — naming a column that doesn't exist in .select(),
-// .gte() or .order() fails the whole query, which used to make this route return all zeros.
+interface UserRow {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
+// GET /api/admin/revenue
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,42 +33,54 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") ?? "overview";
 
   if (type === "overview") {
-    const [paidPay, transactions] = await Promise.all([
-      admin.from("payments").select("*").eq("status", "paid"),
-      admin.from("payments").select("*, users(full_name, email), courses(title)"),
-    ]);
+    // The payments table has no foreign key to users (only to courses), so `users(...)`
+    // can't be embedded here — PostgREST rejects it (PGRST200). Names are fetched
+    // separately below instead.
+    const { data: rows, error } = await admin
+      .from("payments")
+      .select("id, user_id, amount, status, reference, course_id, paid_at, courses(title)")
+      .order("paid_at", { ascending: false });
 
-    const paidRows = ((paidPay.data ?? []) as PaymentRow[])
-      .map((p) => ({ ...p, date: p.paid_at ?? p.created_at ?? null }));
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+    const paymentRows = (rows ?? []) as unknown as PaymentRow[];
+    const userIds = [...new Set(paymentRows.map((r) => r.user_id).filter(Boolean))];
+    const { data: usersData, error: usersError } = userIds.length > 0
+      ? await admin.from("users").select("id, full_name, email").in("id", userIds)
+      : { data: [] as UserRow[], error: null };
+
+    if (usersError) return NextResponse.json({ error: usersError.message }, { status: 500 });
+
+    const userMap = new Map(((usersData ?? []) as UserRow[]).map((u) => [u.id, u]));
+    const transactions = paymentRows.map((r) => ({ ...r, user: userMap.get(r.user_id) ?? null }));
+
+    const paidRows = transactions.filter((r) => r.status === "paid");
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const sum = (rows: typeof paidRows) => rows.reduce((a, r) => a + Number(r.amount), 0);
+    const sum = (rs: typeof paidRows) => rs.reduce((a, r) => a + Number(r.amount), 0);
 
     const allRevenue = sum(paidRows);
-    const monthRevenue = sum(paidRows.filter((r) => r.date && new Date(r.date) >= firstOfMonth));
+    const monthRevenue = sum(paidRows.filter((r) => r.paid_at && new Date(r.paid_at) >= firstOfMonth));
     const paidCount = paidRows.length;
     const avgOrderValue = paidCount > 0 ? Math.round(allRevenue / paidCount) : 0;
-
-    const allTxRows = ((transactions.data ?? []) as PaymentRow[])
-      .map((t) => ({ ...t, date: t.paid_at ?? t.created_at ?? null }))
-      .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 
     return NextResponse.json({
       allRevenue,
       monthRevenue,
-      transactionsCount: allTxRows.length,
+      transactionsCount: transactions.length,
       paidCount,
       avgOrderValue,
-      transactions: allTxRows,
+      transactions,
     });
   }
 
   if (type === "by-course") {
-    const { data } = await admin
+    const { data, error } = await admin
       .from("payments")
       .select("amount, course_id, courses ( title )")
       .eq("status", "paid");
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const courseMap: Record<string, { title: string; count: number; revenue: number }> = {};
     ((data ?? []) as Array<{ amount: number; course_id: string; courses: { title: string } | null }>).forEach((p) => {
@@ -80,13 +95,14 @@ export async function GET(request: Request) {
   }
 
   if (type === "monthly") {
-    const { data } = await admin.from("payments").select("*").eq("status", "paid");
+    const { data, error } = await admin.from("payments").select("amount, paid_at").eq("status", "paid");
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const monthly: Record<string, number> = {};
-    ((data ?? []) as PaymentRow[]).forEach((p) => {
-      const date = p.paid_at ?? p.created_at ?? null;
-      if (!date) return;
-      const key = date.slice(0, 7); // YYYY-MM
+    ((data ?? []) as Array<{ amount: number; paid_at: string | null }>).forEach((p) => {
+      if (!p.paid_at) return;
+      const key = p.paid_at.slice(0, 7); // YYYY-MM
       monthly[key] = (monthly[key] ?? 0) + Number(p.amount);
     });
 

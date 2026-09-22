@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 
 interface Props {
   byCourse: { name: string; amount: number }[];
-  transactions: { amount: number; status: string; date: string | null }[];
+  transactions: { amount: number; status: string; paid_at: string | null }[];
 }
 
 function buildMonthly(txs: Props["transactions"]) {
@@ -13,8 +13,8 @@ function buildMonthly(txs: Props["transactions"]) {
   // slice(-6) would grab whichever 6 months happened to be inserted last, not the newest.
   const map: Record<string, number> = {};
   for (const t of txs) {
-    if (t.status !== "paid" || !t.date) continue;
-    const key = t.date.slice(0, 7); // YYYY-MM
+    if (t.status !== "paid" || !t.paid_at) continue;
+    const key = t.paid_at.slice(0, 7); // YYYY-MM
     map[key] = (map[key] ?? 0) + Number(t.amount);
   }
   return Object.entries(map)
