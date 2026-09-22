@@ -2,6 +2,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { DollarSign, TrendingUp, CreditCard, BarChart2 } from "lucide-react";
 import AdminRevenueCharts from "@/components/admin/AdminRevenueCharts";
 
+// This page has no dynamic APIs (no cookies()/headers()), so Next.js was statically
+// prerendering it once at build time and serving that frozen snapshot forever — new
+// payments never showed up no matter what the query below returned. Force it dynamic.
+export const dynamic = "force-dynamic";
+
 // "*" (not a named column list) on both queries below so this works whether the payments
 // date column is paid_at or created_at — naming a column that doesn't exist in .select()
 // or .order() fails the whole query, which is why this page used to show ₦0.
