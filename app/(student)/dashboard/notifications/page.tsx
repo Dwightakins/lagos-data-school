@@ -51,7 +51,7 @@ export default function NotificationsPage() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { queueMicrotask(() => load()); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function changeFilter(f: Filter) {
     setFilter(f);

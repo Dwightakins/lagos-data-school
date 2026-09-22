@@ -80,7 +80,7 @@ export async function POST(request: Request) {
             <div style="background:#f8fafc;border-radius:8px;padding:16px;font-size:14px;line-height:1.7;white-space:pre-wrap">${body.message.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
             <p style="margin-top:20px;font-size:13px;color:#64748B">
               Reply directly to <a href="mailto:${studentEmail}" style="color:#0D9488">${studentEmail}</a> or manage this ticket in the
-              <a href="https://lagosdataschool.com/admin/support" style="color:#0D9488">admin panel</a>.
+              <a href="https://lagosdataschoolltd.com/admin/support" style="color:#0D9488">admin panel</a>.
             </p>
           </div>
         `,

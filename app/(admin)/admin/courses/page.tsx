@@ -105,7 +105,7 @@ export default function AdminCoursesPage() {
     }
   }
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { queueMicrotask(() => void load()); }, []);
 
   function openCreate() {
     setForm(EMPTY_FORM);
@@ -555,7 +555,7 @@ export default function AdminCoursesPage() {
             <h2 className="text-[16px] font-bold text-foreground mb-2">Delete Course</h2>
             <p className="text-[13.5px] text-muted-foreground mb-1">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">"{confirmDelete.title}"</span>?
+              <span className="font-semibold text-foreground">&quot;{confirmDelete.title}&quot;</span>?
             </p>
             <p className="text-[12.5px] text-red-500 font-medium mb-5">This cannot be undone.</p>
             <div className="flex gap-3">

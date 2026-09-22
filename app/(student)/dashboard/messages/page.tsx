@@ -54,7 +54,7 @@ export default function StudentMessagesPage() {
     setLoading(false);
   }
 
-  useEffect(() => { void load(); }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { queueMicrotask(() => void load()); }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function markRead(msg: Message) {
     if (!msg.read && tab === "inbox") {

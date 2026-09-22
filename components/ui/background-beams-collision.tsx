@@ -3,7 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 
-const beams = [
+interface BeamOptions {
+  initialX?: number;
+  translateX?: number;
+  initialY?: number;
+  translateY?: number;
+  duration?: number;
+  repeatDelay?: number;
+  delay?: number;
+  className?: string;
+}
+
+const beams: BeamOptions[] = [
   { initialX: 10, translateX: 10, duration: 7, repeatDelay: 3, delay: 2 },
   { initialX: 600, translateX: 600, duration: 3, repeatDelay: 3, delay: 4 },
   { initialX: 100, translateX: 100, duration: 7, repeatDelay: 7, className: "h-6" },
@@ -53,7 +64,7 @@ function CollisionMechanism({
 }: {
   containerRef: React.RefObject<HTMLDivElement | null>;
   parentRef: React.RefObject<HTMLDivElement | null>;
-  beamOptions: any;
+  beamOptions: BeamOptions;
 }) {
   const beamRef = useRef<HTMLDivElement>(null);
   const [collision, setCollision] = useState<{ detected: boolean; coordinates: { x: number; y: number } | null }>({
@@ -130,13 +141,17 @@ function CollisionMechanism({
 }
 
 function Explosion({ style }: { style?: React.CSSProperties }) {
-  const spans = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    initialX: 0,
-    initialY: 0,
-    directionX: Math.floor(Math.random() * 80 - 40),
-    directionY: Math.floor(Math.random() * -50 - 10),
-  }));
+  // Lazy initializer: computed once on mount, not recomputed (impurely) on every render.
+  const [spans] = useState(() =>
+    Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      initialX: 0,
+      initialY: 0,
+      directionX: Math.floor(Math.random() * 80 - 40),
+      directionY: Math.floor(Math.random() * -50 - 10),
+      duration: Math.random() * 1.5 + 0.5,
+    }))
+  );
   return (
     <div style={style} className="absolute z-50 h-2 w-2">
       <motion.div
@@ -150,7 +165,7 @@ function Explosion({ style }: { style?: React.CSSProperties }) {
           key={s.id}
           initial={{ x: s.initialX, y: s.initialY, opacity: 1 }}
           animate={{ x: s.directionX, y: s.directionY, opacity: 0 }}
-          transition={{ duration: Math.random() * 1.5 + 0.5, ease: "easeOut" }}
+          transition={{ duration: s.duration, ease: "easeOut" }}
           className="absolute h-1 w-1 rounded-full bg-gradient-to-b from-brand to-brand-glow"
         />
       ))}

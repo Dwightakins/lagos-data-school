@@ -626,7 +626,7 @@ function QuizSection({ quiz, onResult }: { quiz: Quiz; onResult: (quizId: string
                             }`}>
                               <input type="radio" name={q.id} checked={answers[q.id] === opt}
                                 onChange={() => setAnswers(p => ({ ...p, [q.id]: opt }))}
-                                className="accent-[var(--brand,#722F37)]" />
+                                className="accent-brand" />
                               {opt}
                             </label>
                           ))}
@@ -660,7 +660,7 @@ function AssignmentSection({ lessonId }: { lessonId: string }) {
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     fetch(`/api/assignments?lessonId=${lessonId}`)
       .then(r => r.json())
       .then((d: { assignments?: Assignment[] }) => { setAssignments(d.assignments ?? []); setLoading(false); })
@@ -869,8 +869,8 @@ export default function LessonPlayerPage() {
     setLoading(false);
   }, [courseId, lessonId, router]);
 
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setSidebarOpen(false); }, [lessonId]);
+  useEffect(() => { queueMicrotask(() => void load()); }, [load]);
+  useEffect(() => { queueMicrotask(() => setSidebarOpen(false)); }, [lessonId]);
 
   async function markComplete() {
     if (!currentLesson) return;

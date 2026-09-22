@@ -26,7 +26,7 @@ interface ApplicationInfo {
   courseName: string;
   studentName: string;
   email: string;
-  userId: string;
+  userId: string | null;
   courseId: string;
 }
 
@@ -120,12 +120,21 @@ export default function ScholarshipPaymentPage() {
         businessId: raw.businessId,
         reference: raw.reference,
         amount: raw.amount ?? SCHOLARSHIP_FEE,
-        email: raw.email ?? appInfo.email,
+        email: raw.email || appInfo.email || "",
         firstName: (appInfo.studentName || "Student").split(" ")[0] || "Student",
         lastName: (appInfo.studentName || "Student").split(" ").slice(1).join(" ") || "User",
       };
     } catch {
       setError("Network error. Please try again.");
+      setPaying(false);
+      return;
+    }
+
+    // ALATPay rejects the transaction outright without a customer email
+    // ("Unable to perform transaction. Please add the customer email.") — catch it
+    // here with a clear message instead of letting the popup fail silently.
+    if (!initData.email) {
+      setError("We don't have an email on file for this application. Please contact support.");
       setPaying(false);
       return;
     }

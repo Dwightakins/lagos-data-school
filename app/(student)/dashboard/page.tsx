@@ -71,53 +71,41 @@ export default function DashboardPage() {
 
       if (!user) { router.push("/login"); return; }
 
-      const [profileResult, enrollResult] = await Promise.all([
-        supabase.from("users").select("full_name, role, student_id").eq("id", user.id).single(),
-        supabase
-          .from("enrollments")
-          .select("id, status, type, enrolled_at, course:courses(id, title, description, price)")
-          .eq("user_id", user.id)
-          .or("status.eq.active,status.is.null")
-          .order("enrolled_at", { ascending: false }),
-      ]);
+      const res = await fetch("/api/student/overview", { cache: "no-store" });
+      if (res.status === 401) { router.push("/login"); return; }
+      const overview = await res.json() as {
+        profile: Profile | null;
+        enrollments: Enrollment[];
+        certsCount: number;
+        completedLessonsTotal: number;
+      };
 
-      const enrolledList = (enrollResult.data ?? []) as unknown as Enrollment[];
+      const enrolledList = overview.enrollments ?? [];
       setUser(user);
-      setProfile(profileResult.data);
+      setProfile(overview.profile);
       setEnrollments(enrolledList);
+      setCertsCount(overview.certsCount ?? 0);
+      setCompletedLessonsTotal(overview.completedLessonsTotal ?? 0);
       setLoading(false);
 
       const courseIds = enrolledList.map((e) => e.course?.id).filter(Boolean) as string[];
 
-      const [progressEntries, certsResult, completedResult] = await Promise.all([
-        Promise.all(
-          courseIds.map(async (courseId) => {
-            try {
-              const res = await fetch(`/api/progress?courseId=${courseId}`);
-              if (!res.ok) return null;
-              const data = await res.json() as CourseProgress;
-              return [courseId, data] as [string, CourseProgress];
-            } catch {
-              return null;
-            }
-          })
-        ),
-        supabase
-          .from("certificates")
-          .select("id", { count: "exact", head: true })
-          .eq("student_id", user.id),
-        supabase
-          .from("lesson_progress")
-          .select("id", { count: "exact", head: true })
-          .eq("student_id", user.id)
-          .eq("completed", true),
-      ]);
+      const progressEntries = await Promise.all(
+        courseIds.map(async (courseId) => {
+          try {
+            const pRes = await fetch(`/api/progress?courseId=${courseId}`);
+            if (!pRes.ok) return null;
+            const data = await pRes.json() as CourseProgress;
+            return [courseId, data] as [string, CourseProgress];
+          } catch {
+            return null;
+          }
+        })
+      );
 
       const map: Record<string, CourseProgress> = {};
       progressEntries.forEach((entry) => { if (entry) map[entry[0]] = entry[1]; });
       setProgressMap(map);
-      setCertsCount(certsResult.count ?? 0);
-      setCompletedLessonsTotal(completedResult.count ?? 0);
     };
 
     load();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { CheckCircle } from "lucide-react";
 
@@ -10,9 +10,13 @@ export function ContactForm() {
   const [phone, setPhone] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot — left empty by real visitors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // Set in an effect, not read directly during render — Date.now() is impure.
+  const loadedAt = useRef<number | null>(null);
+  useEffect(() => { loadedAt.current = Date.now(); }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +27,7 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, subject, message }),
+        body: JSON.stringify({ name, email, phone, subject, message, website, loadedAt: loadedAt.current }),
       });
       const data = await res.json() as { error?: string; success?: boolean };
       if (!res.ok) {
@@ -56,6 +60,17 @@ export function ContactForm() {
         <>
           <h2 className="text-[1.1rem] font-bold text-foreground mb-6">Send us a message</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Honeypot — hidden from real visitors, some bots fill every field */}
+            <input
+              type="text"
+              name="website"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="absolute -left-[9999px] w-px h-px opacity-0"
+            />
             <div>
               <label className="block text-[12.5px] font-semibold text-foreground mb-1.5">Full Name</label>
               <input

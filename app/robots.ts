@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dashboard", "/admin", "/api", "/checkout", "/learn"],
       },
     ],
-    sitemap: "https://lagosdataschool.com/sitemap.xml",
+    sitemap: "https://lagosdataschoolltd.com/sitemap.xml",
   };
 }

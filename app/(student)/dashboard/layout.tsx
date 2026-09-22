@@ -32,6 +32,88 @@ const NAV: NavItem[] = [
 // 4 items pinned in bottom tab bar; remaining items accessible via "More" drawer
 const PINNED = [NAV[0], NAV[1], NAV[2], NAV[3]];
 
+function isActive(pathname: string, href: string, exact?: boolean) {
+  return exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+}
+
+// Shared nav link list — used in both desktop sidebar and mobile drawer.
+// Defined outside the layout component so it isn't recreated (and doesn't lose state)
+// on every render.
+function NavLinks({ pathname, unreadMessages, onClick }: { pathname: string; unreadMessages: number; onClick?: () => void }) {
+  return (
+    <>
+      {NAV.map(({ href, label, Icon, exact }) => {
+        const active = isActive(pathname, href, exact);
+        const badge = href === "/dashboard/messages" && unreadMessages > 0 ? unreadMessages : 0;
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={onClick}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+              active
+                ? "bg-background/15 text-background"
+                : "text-background/55 hover:text-background hover:bg-background/10"
+            }`}
+          >
+            <Icon className="w-4 h-4 shrink-0" />
+            {label}
+            {badge > 0 && (
+              <span className="ml-auto bg-brand text-brand-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                {badge > 99 ? "99+" : badge}
+              </span>
+            )}
+            {active && badge === 0 && (
+              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-background/60 shrink-0" />
+            )}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
+// User profile strip — used in both sidebars
+function ProfileStrip({ firstName, studentId }: { firstName: string; studentId: string | null }) {
+  return (
+    <div className="px-4 py-4 border-b border-background/8 flex items-center gap-3">
+      <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center shrink-0">
+        <User className="w-3.5 h-3.5 text-brand" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[13px] font-semibold truncate">{firstName || "Student"}</p>
+        {studentId && (
+          <p className="text-[10px] text-brand font-mono font-bold tracking-wide">{studentId}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Theme + Logout actions — used in both sidebars
+function SidebarActions({ theme, onToggleTheme, onLogout }: { theme: string; onToggleTheme: () => void; onLogout: () => void }) {
+  return (
+    <div className="px-3 pb-5 pt-3 space-y-0.5 border-t border-background/10">
+      <button
+        type="button"
+        onClick={onToggleTheme}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-background/45 hover:text-background hover:bg-background/8 transition-colors"
+      >
+        {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        {theme === "dark" ? "Light Mode" : "Dark Mode"}
+      </button>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-background/45 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+      >
+        <LogOut className="w-4 h-4" />
+        Log out
+      </button>
+    </div>
+  );
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -63,92 +145,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     void load();
   }, []);
 
-  // Close drawer on navigation
-  useEffect(() => { setDrawerOpen(false); }, [pathname]);
+  // Close drawer on navigation. Deferred so the setState doesn't run synchronously
+  // within the effect body.
+  useEffect(() => { queueMicrotask(() => setDrawerOpen(false)); }, [pathname]);
 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
-  }
-
-  const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
-
-  // Shared nav link list — used in both desktop sidebar and mobile drawer
-  function NavLinks({ onClick }: { onClick?: () => void }) {
-    return (
-      <>
-        {NAV.map(({ href, label, Icon, exact }) => {
-          const active = isActive(href, exact);
-          const badge = href === "/dashboard/messages" && unreadMessages > 0 ? unreadMessages : 0;
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClick}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                active
-                  ? "bg-background/15 text-background"
-                  : "text-background/55 hover:text-background hover:bg-background/10"
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              {label}
-              {badge > 0 && (
-                <span className="ml-auto bg-brand text-brand-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
-                  {badge > 99 ? "99+" : badge}
-                </span>
-              )}
-              {active && badge === 0 && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-background/60 shrink-0" />
-              )}
-            </Link>
-          );
-        })}
-      </>
-    );
-  }
-
-  // User profile strip — used in both sidebars
-  function ProfileStrip() {
-    return (
-      <div className="px-4 py-4 border-b border-background/8 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center shrink-0">
-          <User className="w-3.5 h-3.5 text-brand" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[13px] font-semibold truncate">{firstName || "Student"}</p>
-          {studentId && (
-            <p className="text-[10px] text-brand font-mono font-bold tracking-wide">{studentId}</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Theme + Logout actions — used in both sidebars
-  function SidebarActions() {
-    return (
-      <div className="px-3 pb-5 pt-3 space-y-0.5 border-t border-background/10">
-        <button
-          type="button"
-          onClick={toggle}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-background/45 hover:text-background hover:bg-background/8 transition-colors"
-        >
-          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {theme === "dark" ? "Light Mode" : "Dark Mode"}
-        </button>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-background/45 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          Log out
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -172,11 +176,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-5 py-5 border-b border-background/10">
           <AppLogo size="md" onDark />
         </div>
-        <ProfileStrip />
+        <ProfileStrip firstName={firstName} studentId={studentId} />
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <NavLinks />
+          <NavLinks pathname={pathname} unreadMessages={unreadMessages} />
         </nav>
-        <SidebarActions />
+        <SidebarActions theme={theme} onToggleTheme={toggle} onLogout={handleLogout} />
       </aside>
 
       {/* ── Main content area ──────────────────────────────────── */}
@@ -215,13 +219,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        <ProfileStrip />
+        <ProfileStrip firstName={firstName} studentId={studentId} />
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <NavLinks onClick={() => setDrawerOpen(false)} />
+          <NavLinks pathname={pathname} unreadMessages={unreadMessages} onClick={() => setDrawerOpen(false)} />
         </nav>
 
-        <SidebarActions />
+        <SidebarActions theme={theme} onToggleTheme={toggle} onLogout={handleLogout} />
       </aside>
 
       {/* ── Mobile: bottom tab bar ─────────────────────────────── */}
@@ -234,7 +238,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             key={href}
             href={href}
             className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 transition-colors ${
-              isActive(href, exact) ? "text-brand" : "text-muted-foreground"
+              isActive(pathname, href, exact) ? "text-brand" : "text-muted-foreground"
             }`}
           >
             <Icon className="w-5 h-5" />

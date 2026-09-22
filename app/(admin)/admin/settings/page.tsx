@@ -27,7 +27,7 @@ const SECTIONS: Section[] = [
     description: "Core information about your school.",
     fields: [
       { key: "school_name", label: "School Name", type: "text", placeholder: "Lagos Data School" },
-      { key: "school_url", label: "Website URL", type: "url", placeholder: "https://lagosdataschool.com" },
+      { key: "school_url", label: "Website URL", type: "url", placeholder: "https://lagosdataschoolltd.com" },
       { key: "support_email", label: "Support Email", type: "email", placeholder: "support@lagosdataschoolltd.com" },
     ],
   },
@@ -64,7 +64,7 @@ const SECTIONS: Section[] = [
     description: "Sender details for all outgoing emails.",
     fields: [
       { key: "email_from_name", label: "From Name", type: "text", placeholder: "Lagos Data School" },
-      { key: "email_from_address", label: "From Address", type: "email", placeholder: "noreply@lagosdataschool.com" },
+      { key: "email_from_address", label: "From Address", type: "email", placeholder: "noreply@lagosdataschoolltd.com" },
       { key: "email_reply_to", label: "Reply-To Address", type: "email", placeholder: "support@lagosdataschoolltd.com" },
     ],
   },

@@ -141,28 +141,18 @@ export default function CertificatesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      const [certsResult, enrollResult] = await Promise.all([
-        supabase
-          .from("certificates")
-          .select("id, course_id, issued_at, pdf_url, certificate_number, courses(title, slug)")
-          .eq("student_id", user.id)
-          .order("issued_at", { ascending: false }),
-        supabase
-          .from("enrollments")
-          .select("course_id, courses(title)")
-          .eq("user_id", user.id)
-          .or("payment_status.eq.paid,payment_status.is.null")
-          .or("status.eq.active,status.is.null"),
-      ]);
+      const res = await fetch("/api/student/certificates", { cache: "no-store" });
+      if (res.status === 401) { router.push("/login"); return; }
+      const data = await res.json() as {
+        certificates: CertRow[];
+        enrollments: Array<{ course_id: string; courses: { title: string } | null }>;
+      };
 
-      const certList = (certsResult.data ?? []) as unknown as CertRow[];
+      const certList = data.certificates ?? [];
       setCerts(certList);
 
       const certCourseIds = new Set(certList.map((c) => c.course_id));
-      const enrolledCourses = (enrollResult.data ?? []) as unknown as Array<{
-        course_id: string;
-        courses: { title: string } | null;
-      }>;
+      const enrolledCourses = data.enrollments ?? [];
 
       const claimableList: ClaimableCourse[] = [];
       await Promise.all(

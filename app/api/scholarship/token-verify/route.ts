@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
 
   const { data: app, error } = await admin
     .from("scholarship_applications")
-    .select("id, course_id, course_name, user_id, status, payment_completed, token_expires_at, users(full_name, email)")
+    .select(
+      "id, course_id, course_name, user_id, status, payment_completed, token_expires_at, applicant_name, applicant_email, users(full_name, email)"
+    )
     .eq("payment_token", token)
     .maybeSingle();
 
@@ -24,10 +26,12 @@ export async function GET(req: NextRequest) {
     id: string;
     course_id: string;
     course_name: string;
-    user_id: string;
+    user_id: string | null;
     status: string;
     payment_completed: boolean;
     token_expires_at: string | null;
+    applicant_name: string | null;
+    applicant_email: string | null;
     users: { full_name: string; email: string } | null;
   };
 
@@ -45,13 +49,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ valid: false, reason: "expired" });
   }
 
+  // Most scholarship applicants apply publicly, before they have an account, so their
+  // contact details live on the application row (applicant_name/applicant_email), not
+  // in `users`. Prefer a linked account's details when one exists, but always fall back.
+  const studentName = row.users?.full_name || row.applicant_name || "Student";
+  const email = row.users?.email || row.applicant_email || "";
+
   return NextResponse.json({
     valid: true,
     application: {
       id: row.id,
       courseName: row.course_name,
-      studentName: row.users?.full_name ?? "Student",
-      email: row.users?.email ?? "",
+      studentName,
+      email,
       userId: row.user_id,
       courseId: row.course_id,
     },

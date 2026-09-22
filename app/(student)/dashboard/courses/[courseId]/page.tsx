@@ -57,58 +57,30 @@ export default function CourseDetailPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    const { data: enrollment } = await supabase
-      .from("enrollments")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("course_id", courseId)
-      .eq("payment_status", "paid")
-      .maybeSingle();
+    const courseRes = await fetch(`/api/student/course/${courseId}`, { cache: "no-store" });
+    if (courseRes.status === 401 || courseRes.status === 403 || courseRes.status === 404) {
+      router.push("/dashboard/courses");
+      return;
+    }
+    if (!courseRes.ok) { router.push("/dashboard/courses"); return; }
 
-    if (!enrollment) { router.push("/dashboard/courses"); return; }
+    const data = await courseRes.json() as {
+      firstName: string;
+      course: CourseDetails;
+      modules: ModuleRow[];
+    };
 
-    const [profileRes, courseRes] = await Promise.all([
-      supabase.from("users").select("full_name").eq("id", user.id).single(),
-      supabase.from("courses").select("id, title, description, cover_image_url").eq("id", courseId).single(),
-    ]);
+    setFirstName(data.firstName || user.email || "Student");
+    setCourse(data.course);
+    setModules(data.modules);
+    setExpandedModules(new Set(data.modules.map((m) => m.id)));
 
-    setFirstName(profileRes.data?.full_name?.split(" ")[0] || user.email || "Student");
-    if (!courseRes.data) { router.push("/dashboard/courses"); return; }
-    setCourse(courseRes.data as CourseDetails);
-
-    const { data: modulesData } = await supabase
-      .from("modules")
-      .select("id, title, order_index")
-      .eq("course_id", courseId)
-      .order("order_index");
-
-    const moduleList = (modulesData ?? []) as Omit<ModuleRow, "lessons">[];
-    const moduleIds = moduleList.map((m) => m.id);
-    const { data: allLessonsRaw } = moduleIds.length
-      ? await supabase
-          .from("lessons")
-          .select("id, title, duration_minutes, order_index, module_id")
-          .in("module_id", moduleIds)
-          .order("order_index")
-      : { data: [] };
-    const lessonsByModule = (allLessonsRaw ?? []).reduce<Record<string, LessonRow[]>>((acc, l) => {
-      const lesson = l as LessonRow;
-      (acc[lesson.module_id] ??= []).push(lesson);
-      return acc;
-    }, {});
-    const withLessons: ModuleRow[] = moduleList.map((m) => ({
-      ...m,
-      lessons: lessonsByModule[m.id] ?? [],
-    }));
-    setModules(withLessons);
-    setExpandedModules(new Set(withLessons.map((m) => m.id)));
-
-    const res = await fetch(`/api/progress?courseId=${courseId}`);
-    if (res.ok) {
-      const data = await res.json() as ProgressData;
-      setProgressData(data);
-      const allLessons = withLessons.flatMap((m) => m.lessons);
-      setAllComplete(allLessons.length > 0 && data.completedLessons >= allLessons.length);
+    const progRes = await fetch(`/api/progress?courseId=${courseId}`);
+    if (progRes.ok) {
+      const progress = await progRes.json() as ProgressData;
+      setProgressData(progress);
+      const allLessons = data.modules.flatMap((m) => m.lessons);
+      setAllComplete(allLessons.length > 0 && progress.completedLessons >= allLessons.length);
     }
 
     setLoading(false);

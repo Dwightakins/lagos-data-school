@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: "Our Courses — Lagos Data School",
     description:
       "Browse 20+ professional tech courses. Live classes, hands-on projects, verified certificates.",
-    url: "https://lagosdataschool.com/courses",
+    url: "https://lagosdataschoolltd.com/courses",
   },
 };
 

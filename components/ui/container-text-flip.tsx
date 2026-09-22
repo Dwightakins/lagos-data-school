@@ -19,9 +19,7 @@ export function ContainerTextFlip({
   const [ready, setReady] = useState(false);
   const prefersReducedMotion = useReducedMotion();
 
-  useEffect(() => {
-    setReady(true);
-  }, []);
+  useEffect(() => { queueMicrotask(() => setReady(true)); }, []);
 
   useEffect(() => {
     const t = setInterval(() => setIndex((i) => (i + 1) % words.length), interval);

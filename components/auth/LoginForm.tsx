@@ -59,7 +59,9 @@ export default function LoginForm() {
     return () => clearInterval(id);
   }, [lockoutUntil]);
 
-  const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil;
+  // Derived from remainingSeconds (kept live by the countdown effect above), not from a
+  // fresh Date.now() read during render.
+  const isLockedOut = lockoutUntil !== null && remainingSeconds > 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

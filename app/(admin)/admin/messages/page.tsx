@@ -70,17 +70,19 @@ export default function AdminMessagesPage() {
     setLoading(false);
   }
 
-  useEffect(() => { void load(); }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { queueMicrotask(() => void load()); }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetch("/api/admin/students").then(r => r.json()).then((d: { students?: Student[] }) => setStudents(d.students ?? []));
+    fetch("/api/admin/students").then(r => r.json()).then((d: { students?: Student[] }) => queueMicrotask(() => setStudents(d.students ?? [])));
     fetch("/api/admin/courses").then(r => r.json()).then((d: { courses?: Course[] }) => setCourses(d.courses ?? []));
   }, []);
 
   useEffect(() => {
-    if (!studentSearch.trim()) { setStudentSuggestions([]); return; }
-    const q = studentSearch.toLowerCase();
-    setStudentSuggestions(students.filter(s => (s.full_name ?? "").toLowerCase().includes(q) || (s.email ?? "").toLowerCase().includes(q)).slice(0, 6));
+    queueMicrotask(() => {
+      if (!studentSearch.trim()) { setStudentSuggestions([]); return; }
+      const q = studentSearch.toLowerCase();
+      setStudentSuggestions(students.filter(s => (s.full_name ?? "").toLowerCase().includes(q) || (s.email ?? "").toLowerCase().includes(q)).slice(0, 6));
+    });
   }, [studentSearch, students]);
 
   async function markRead(msg: Message) {

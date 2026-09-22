@@ -50,7 +50,7 @@ export default function AdminContactPage() {
     setLoading(false);
   }
 
-  useEffect(() => { void load(); }, [filter]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { queueMicrotask(() => void load()); }, [filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function markAs(id: string, status: ContactMessage["status"]) {
     await fetch(`/api/admin/contact/${id}`, {

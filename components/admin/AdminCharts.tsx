@@ -7,10 +7,12 @@ import {
 } from "recharts";
 import { RefreshCw } from "lucide-react";
 
-const BRAND = "#722F37";
-const BRAND_LIGHT = "#a3505a";
-const BRAND_DIM = "#c47a84";
-const COLORS = [BRAND, BRAND_LIGHT, BRAND_DIM, "#e2b3b8", "#9b4a53"];
+// Recharts needs literal color values (SVG fill/stroke props), so these mirror the
+// --brand green token rather than referencing it — keep in sync with app/globals.css.
+const BRAND = "#16a34a";
+const BRAND_LIGHT = "#4ade80";
+const BRAND_DIM = "#86efac";
+const COLORS = [BRAND, BRAND_LIGHT, BRAND_DIM, "#bbf7d0", "#166534"];
 const REFRESH_INTERVAL_MS = 60_000;
 
 interface MonthlyPoint {
@@ -82,7 +84,7 @@ export default function AdminCharts() {
 
   // Initial load + 60s auto-refresh
   useEffect(() => {
-    void fetchData();
+    queueMicrotask(() => void fetchData());
     intervalRef.current = setInterval(() => { void fetchData(); }, REFRESH_INTERVAL_MS);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);

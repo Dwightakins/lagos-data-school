@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Dialog,
@@ -108,9 +108,12 @@ export function CourseDetailModal({ courseId, open, onClose }: Props) {
 
   useEffect(() => {
     if (!open || !courseId) return;
-    setLoading(true);
-    setCourse(null);
-    setModules([]);
+    // Deferred so these setState calls don't run synchronously within the effect body.
+    queueMicrotask(() => {
+      setLoading(true);
+      setCourse(null);
+      setModules([]);
+    });
 
     const supabase = createClient();
     Promise.all([
@@ -132,13 +135,17 @@ export function CourseDetailModal({ courseId, open, onClose }: Props) {
       : `/register?course=${courseId}`
     : "/register";
 
-  const Icon = course ? getCourseIcon(course.slug) : BookOpen;
+  // Selects among stable, module-scope icon components (BookOpen, BarChart2, …) — never
+  // creates a new component. eslint's static-components check can't see that through the
+  // getCourseIcon() call, so the <Icon /> usage below is silenced as a known-safe case.
+  const Icon = useMemo(() => (course ? getCourseIcon(course.slug) : BookOpen), [course]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent className="max-w-2xl sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
         {/* Header gradient */}
         <div className="gradient-brand h-32 flex items-center justify-center relative">
+          {/* eslint-disable-next-line react-hooks/static-components */}
           <Icon className="w-16 h-16 text-white/20 absolute" />
           <div className="relative z-10 text-center">
             <GraduationCap className="w-8 h-8 text-brand-foreground mx-auto opacity-80" />

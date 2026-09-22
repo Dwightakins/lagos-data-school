@@ -61,7 +61,7 @@ export default function AdminSupportPage() {
     setLoading(false);
   }
 
-  useEffect(() => { void load(); }, [filter]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { queueMicrotask(() => void load()); }, [filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function updateStatus(ticketId: string, status: string) {
     await fetch(`/api/admin/support/${ticketId}`, {

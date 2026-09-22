@@ -125,10 +125,12 @@ function RegisterWizardContent() {
       if (saved) {
         const parsed = JSON.parse(saved) as RegSession;
         if (parsed.step === 4) {
-          setEmail(parsed.email);
-          setPaymentType(parsed.payType);
-          setCourseName(parsed.courseName);
-          setStep(4);
+          queueMicrotask(() => {
+            setEmail(parsed.email);
+            setPaymentType(parsed.payType);
+            setCourseName(parsed.courseName);
+            setStep(4);
+          });
           return;
         }
       }

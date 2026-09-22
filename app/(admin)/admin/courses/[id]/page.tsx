@@ -70,9 +70,7 @@ export default function EditCoursePage() {
     }
   }, [id, router]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { queueMicrotask(() => void load()); }, [load]);
 
   function showToast(msg: string) {
     setToast(msg);

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const { data: app, error } = await admin
     .from("scholarship_applications")
-    .select("id, user_id, course_id, status, payment_completed, token_expires_at, users(email)")
+    .select("id, user_id, course_id, status, payment_completed, token_expires_at, applicant_email, users(email)")
     .eq("payment_token", token)
     .maybeSingle();
 
@@ -36,11 +36,12 @@ export async function POST(req: NextRequest) {
 
   type AppRow = {
     id: string;
-    user_id: string;
+    user_id: string | null;
     course_id: string;
     status: string;
     payment_completed: boolean;
     token_expires_at: string | null;
+    applicant_email: string | null;
     users: { email: string } | null;
   };
 
@@ -56,8 +57,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This payment link has expired." }, { status: 410 });
   }
 
-  const email = row.users?.email ?? "";
+  // Most scholarship applicants apply publicly, before they have an account, so their
+  // email lives on the application row (applicant_email), not in `users`. Prefer a
+  // linked account's email when one exists, but always fall back — ALATPay rejects the
+  // transaction outright if email is missing ("Please add the customer email").
+  const email = row.users?.email || row.applicant_email || "";
+  if (!email) {
+    console.error("[scholarship/token-initialize] no email on file for application:", row.id);
+    return NextResponse.json(
+      { error: "No email on file for this application. Please contact support." },
+      { status: 400 }
+    );
+  }
+
   const reference = `LDS-SCH-${Date.now()}-${randomBytes(6).toString("hex")}`;
+
+  // Bind this reference to this application. complete-payment will only accept a
+  // reference that was actually issued for this token, so a valid ALATPay reference
+  // from an unrelated payment can't be replayed here to mark the fee as paid.
+  const { error: bindError } = await admin
+    .from("scholarship_applications")
+    .update({ payment_reference: reference })
+    .eq("id", row.id);
+
+  if (bindError) {
+    console.error("[scholarship/token-initialize] failed to bind reference:", bindError);
+    return NextResponse.json({ error: "Could not set up payment. Please try again." }, { status: 500 });
+  }
 
   return NextResponse.json({
     apiKey: publicKey,

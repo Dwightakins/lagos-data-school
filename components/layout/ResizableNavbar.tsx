@@ -40,7 +40,7 @@ export function ResizableNavbar() {
   const { isDark, toggle } = useTheme();
 
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
 
     const supabase = createClient();
 
@@ -481,7 +481,7 @@ function DropdownGrid({ items }: { items: { title: string; desc: string }[] }) {
   return (
     <div className="grid w-[min(560px,calc(100vw-3rem))] grid-cols-2 gap-1">
       {items.map((it) => (
-        <a
+        <Link
           key={it.title}
           href="/courses"
           className="group rounded-xl p-3 hover:bg-accent transition"
@@ -495,7 +495,7 @@ function DropdownGrid({ items }: { items: { title: string; desc: string }[] }) {
               <div className="text-xs text-muted-foreground leading-snug">{it.desc}</div>
             </div>
           </div>
-        </a>
+        </Link>
       ))}
     </div>
   );

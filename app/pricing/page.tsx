@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pricing — Lagos Data School",
     description: "Simple, transparent pricing. Full pay for immediate access, or apply for a scholarship. No hidden fees.",
-    url: "https://lagosdataschool.com/pricing",
+    url: "https://lagosdataschoolltd.com/pricing",
   },
 };
 

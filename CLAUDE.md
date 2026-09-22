@@ -88,7 +88,12 @@ modules                 → id, course_id, title, description, order_index
 lessons                 → id, module_id, title, description, video_url, duration, is_preview, order_index
 enrollments             → id, user_id, course_id, payment_status, status, type, enrolled_at
 payments                → id, user_id, course_id, amount, status, reference, provider, created_at
-scholarship_applications → id, user_id, course_id, full_name, email, phone, reason, status, payment_token, token_expires_at, payment_completed
+scholarship_applications → id, user_id (nullable — public applicants have no account yet), course_id, course_name,
+                           applicant_name, applicant_email, applicant_phone, essay, status, payment_token,
+                           payment_reference, amount_paid, token_expires_at, payment_completed
+                           NOTE: contact fields are applicant_name/applicant_email/applicant_phone, NOT full_name/email/phone.
+                           A linked users(full_name, email) row exists only if user_id is set — always fall back to the
+                           applicant_* columns (see lib/payments/pricing.ts and app/api/scholarship/token-*).
 lesson_progress         → id, user_id, lesson_id, completed, watch_position, last_watched_at
 certificates            → id, user_id, course_id, certificate_number, student_id, status, pdf_url, issued_at
 notifications           → id, user_id, type, title, message, read, created_at
@@ -112,6 +117,10 @@ support_tickets         → id, user_id, course_id, subject, message, status, cr
 - Students can only enroll in ONE course at a time
 - Student ID format: LDSL/DA/001 (LDSL/[COURSE_CODE]/[SEQUENTIAL_NUMBER])
 - Course codes: DA=Data Analysis, DS=Data Science, CY=Cybersecurity, ML=Machine Learning, etc.
+- Pricing and the one-course rule are decided/enforced server-side in `POST /api/alatpay/initialize`
+  (`lib/payments/pricing.ts` resolves scholarship vs. full price from an approved, unpaid
+  `scholarship_applications` row — never from a `paymentType` sent by the browser). Do not
+  reintroduce a client-supplied `paymentType`/price into that route or `/api/alatpay/verify`.
 
 ---
 
@@ -200,6 +209,8 @@ ALATPAY_PUBLIC_KEY=[alatpay public key]
 ALATPAY_BUSINESS_ID=[alatpay business id]
 ALATPAY_SECRET_KEY=[alatpay secret key]
 ALATPAY_WEBHOOK_SECRET=[alatpay webhook secret]
+ALATPAY_API_URL=[alatpay api base url, e.g. https://apibox.alatpay.ng]
+NEXT_PUBLIC_SCHOLARSHIP_FEE=15000
 RESEND_API_KEY=[resend api key]
 RESEND_FROM_EMAIL=noreply@lagosdataschoolltd.com
 SUPPORT_EMAIL=support@lagosdataschoolltd.com

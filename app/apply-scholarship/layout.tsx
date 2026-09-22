@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: "Apply for 94% Scholarship — Lagos Data School",
     description:
       "Get 94% off your course fee. Apply for our scholarship programme and start your tech career today.",
-    url: "https://lagosdataschool.com/apply-scholarship",
+    url: "https://lagosdataschoolltd.com/apply-scholarship",
   },
 };
 

@@ -1,4 +1,4 @@
-export const revalidate = 3600;
+export const revalidate = 60;
 export const dynamicParams = true;
 
 import Link from "next/link";
@@ -69,7 +69,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: `https://lagosdataschool.com/courses/${id}`,
+      url: `https://lagosdataschoolltd.com/courses/${id}`,
     },
   };
 }

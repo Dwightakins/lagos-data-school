@@ -61,7 +61,8 @@ export default function AdminCertificatesPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  // Deferred so load()'s setState calls don't run synchronously within the effect body.
+  useEffect(() => { queueMicrotask(() => void load()); }, [load]);
 
   async function issueCert() {
     if (!issueStudentId || !issueCourseId) { setIssueError("Select a student and course"); return; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppLogo } from "@/components/layout/logo";
@@ -27,10 +27,14 @@ function ApplyScholarshipContent() {
   const [phone, setPhone]                       = useState("");
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [essay, setEssay]                       = useState("");
+  const [website, setWebsite]                   = useState(""); // honeypot — left empty by real visitors
 
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone]             = useState(false);
   const [error, setError]           = useState<string | null>(null);
+  // Set in an effect, not read directly during render — Date.now() is impure.
+  const loadedAt = useRef<number | null>(null);
+  useEffect(() => { loadedAt.current = Date.now(); }, []);
 
   useEffect(() => {
     fetch("/api/courses")
@@ -65,7 +69,7 @@ function ApplyScholarshipContent() {
       const res = await fetch("/api/scholarship/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, courseId: selectedCourseId, essay }),
+        body: JSON.stringify({ name, email, phone, courseId: selectedCourseId, essay, website, loadedAt: loadedAt.current }),
       });
       const data = (await res.json()) as { success?: boolean; error?: string };
 
@@ -170,6 +174,17 @@ function ApplyScholarshipContent() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Honeypot — hidden from real visitors, some bots fill every field */}
+              <input
+                type="text"
+                name="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute -left-[9999px] w-px h-px opacity-0"
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[12.5px] font-semibold text-foreground mb-1.5">

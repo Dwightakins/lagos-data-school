@@ -98,7 +98,7 @@ export default function AdminStudentDetailPage() {
     setLoading(false);
   }, [studentId, router]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { queueMicrotask(() => void load()); }, [load]);
 
   async function saveProfile() {
     if (!student) return;

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const BASE = "https://lagosdataschool.com";
+const BASE = "https://lagosdataschoolltd.com";
 
 export const revalidate = 3600;
 

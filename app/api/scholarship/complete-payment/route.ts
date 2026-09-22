@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   const { data: app, error } = await admin
     .from("scholarship_applications")
-    .select("id, user_id, course_id, status, payment_completed, token_expires_at")
+    .select("id, user_id, course_id, status, payment_completed, token_expires_at, payment_reference")
     .eq("payment_token", token)
     .maybeSingle();
 
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     status: string;
     payment_completed: boolean;
     token_expires_at: string | null;
+    payment_reference: string | null;
   };
 
   const row = app as unknown as AppRow;
@@ -49,6 +50,12 @@ export async function POST(req: NextRequest) {
   }
   if (row.token_expires_at && new Date(row.token_expires_at) < new Date()) {
     return NextResponse.json({ error: "Payment link has expired." }, { status: 410 });
+  }
+  // The reference must be the one this application's own payment session issued
+  // (set by token-initialize) — never trust that any successful ALATPay reference
+  // proves *this* application was paid for.
+  if (!row.payment_reference || reference !== row.payment_reference) {
+    return NextResponse.json({ error: "This payment session is invalid. Please restart payment." }, { status: 400 });
   }
 
   try {
@@ -70,9 +77,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create enrollment. Contact support." }, { status: 500 });
     }
 
+    // Record the payment so it shows up in the student's payment history and admin revenue,
+    // same as a full-price purchase. onConflict makes this safe if the general ALATPay
+    // webhook already recorded the same reference.
+    await admin.from("payments").upsert(
+      {
+        user_id: row.user_id,
+        course_id: row.course_id,
+        amount: verified.amountNaira,
+        reference,
+        status: "paid",
+        provider: "alatpay",
+      },
+      { onConflict: "reference" }
+    );
+
     await admin
       .from("scholarship_applications")
-      .update({ payment_completed: true })
+      .update({ payment_completed: true, amount_paid: verified.amountNaira })
       .eq("id", row.id);
 
     return NextResponse.json({ success: true });

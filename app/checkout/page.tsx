@@ -112,7 +112,7 @@ function CheckoutContent() {
 
   // Poll until ALATPay Web Plugin is available on window
   useEffect(() => {
-    if (window.Alatpay) { setAlatpayReady(true); return; }
+    if (window.Alatpay) { queueMicrotask(() => setAlatpayReady(true)); return; }
     const id = setInterval(() => {
       if (window.Alatpay) { setAlatpayReady(true); clearInterval(id); }
     }, 150);

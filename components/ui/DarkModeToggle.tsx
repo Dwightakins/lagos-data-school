@@ -8,7 +8,8 @@ export default function DarkModeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  // Deferred so the setState doesn't run synchronously within the effect body.
+  useEffect(() => { queueMicrotask(() => setMounted(true)); }, []);
 
   if (!mounted) return <div className="w-9 h-9" />;
 
@@ -19,7 +20,7 @@ export default function DarkModeToggle({ className }: { className?: string }) {
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={
         className ??
-        "p-2 rounded-lg text-[#0A0A0A]/60 dark:text-white/75 hover:bg-[#722F37]/10 dark:hover:bg-white/8 transition-colors"
+        "p-2 rounded-lg text-[#0A0A0A]/60 dark:text-white/75 hover:bg-brand/10 dark:hover:bg-white/8 transition-colors"
       }
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >

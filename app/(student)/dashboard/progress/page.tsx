@@ -32,16 +32,24 @@ export default function ProgressPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      const [enrollRes, certsRes, completedRes] = await Promise.all([
-        supabase.from("enrollments").select("id, enrolled_at, courses ( id, title )").eq("user_id", user.id).eq("payment_status", "paid"),
-        supabase.from("certificates").select("id", { count: "exact", head: true }).eq("student_id", user.id),
-        supabase.from("lesson_progress").select("id", { count: "exact", head: true }).eq("student_id", user.id).eq("completed", true),
-      ]);
+      const res = await fetch("/api/student/overview", { cache: "no-store" });
+      if (res.status === 401) { router.push("/login"); return; }
+      const overview = await res.json() as {
+        enrollments: Array<{ id: string; enrolled_at: string; course: { id: string; title: string } | null }>;
+        certsCount: number;
+        completedLessonsTotal: number;
+      };
 
-      const enrs = (enrollRes.data ?? []) as unknown as Enrollment[];
+      // /api/student/overview names the joined course "course" (singular); this page's
+      // own shape uses "courses" (plural) — map between them.
+      const enrs: Enrollment[] = (overview.enrollments ?? []).map((e) => ({
+        id: e.id,
+        enrolled_at: e.enrolled_at,
+        courses: e.course,
+      }));
       setEnrollments(enrs);
-      setCertsCount(certsRes.count ?? 0);
-      setTotalCompleted(completedRes.count ?? 0);
+      setCertsCount(overview.certsCount ?? 0);
+      setTotalCompleted(overview.completedLessonsTotal ?? 0);
 
       const map: Record<string, Progress> = {};
       await Promise.all(enrs.map(async (e) => {

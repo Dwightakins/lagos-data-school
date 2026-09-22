@@ -50,7 +50,9 @@ export default function CourseContentPage() {
   const [newLesson, setNewLesson] = useState({ title: "", video_url: "", duration_minutes: "", description: "", is_preview: false });
 
   // Drag — modules
-  const dragModuleId = useRef<string | null>(null);
+  // State, not a ref: the dragged source id is read directly in JSX (to dim its card),
+  // and refs must not be read during render.
+  const [dragModuleId, setDragModuleId] = useState<string | null>(null);
   const [dragOverModuleId, setDragOverModuleId] = useState<string | null>(null);
 
   // Drag — lessons
@@ -118,24 +120,24 @@ export default function CourseContentPage() {
   // ── Module drag-and-drop ─────────────────────────────────────────────────────
 
   function onModuleDragStart(e: React.DragEvent, moduleId: string) {
-    dragModuleId.current = moduleId;
+    setDragModuleId(moduleId);
     e.dataTransfer.effectAllowed = "move";
   }
 
   function onModuleDragOver(e: React.DragEvent, moduleId: string) {
     e.preventDefault();
-    if (moduleId !== dragModuleId.current) setDragOverModuleId(moduleId);
+    if (moduleId !== dragModuleId) setDragOverModuleId(moduleId);
   }
 
   function onModuleDragEnd() {
-    dragModuleId.current = null;
+    setDragModuleId(null);
     setDragOverModuleId(null);
   }
 
   function onModuleDrop(e: React.DragEvent, targetId: string) {
     e.preventDefault();
-    const sourceId = dragModuleId.current;
-    dragModuleId.current = null;
+    const sourceId = dragModuleId;
+    setDragModuleId(null);
     setDragOverModuleId(null);
     if (!sourceId || sourceId === targetId) return;
 
@@ -304,7 +306,7 @@ export default function CourseContentPage() {
             className={`bg-card border rounded-2xl overflow-hidden shadow-sm transition-all ${
               dragOverModuleId === mod.id
                 ? "border-brand ring-2 ring-brand/30 scale-[1.01]"
-                : dragModuleId.current === mod.id
+                : dragModuleId === mod.id
                 ? "border-border opacity-50"
                 : "border-border"
             }`}

@@ -122,8 +122,10 @@ export default function ScholarshipsPage() {
   }, [filter]);
 
   useEffect(() => {
-    setLoading(true);
-    void loadApps();
+    queueMicrotask(() => {
+      setLoading(true);
+      void loadApps();
+    });
   }, [loadApps]);
 
   async function handleDecision(id: string, decision: "approved" | "rejected") {

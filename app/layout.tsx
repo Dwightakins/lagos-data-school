@@ -10,7 +10,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lagosdataschool.com"),
+  metadataBase: new URL("https://lagosdataschoolltd.com"),
   title: {
     default: "Lagos Data School — Learn Data Analysis, Data Science & Tech Skills in Nigeria",
     template: "%s — Lagos Data School",

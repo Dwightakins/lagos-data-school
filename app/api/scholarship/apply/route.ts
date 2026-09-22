@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/emails";
+import { getClientIp, honeypotTripped, submittedTooFast, tooManyByEmail, tooManyRequests } from "@/lib/spam-guard";
 
 export async function POST(req: NextRequest) {
-  let body: { courseId?: string; name?: string; email?: string; phone?: string; essay?: string };
+  let body: {
+    courseId?: string; name?: string; email?: string; phone?: string; essay?: string;
+    website?: string; // honeypot — real visitors never fill this
+    loadedAt?: number;
+  };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  // Bot signals — accept quietly without saving or emailing, so bots don't learn to adapt.
+  if (honeypotTripped(body.website) || submittedTooFast(body.loadedAt)) {
+    return NextResponse.json({ success: true });
   }
 
   const courseId = body.courseId?.trim();
@@ -23,7 +33,16 @@ export async function POST(req: NextRequest) {
   if (!email)             return NextResponse.json({ error: "Email is required." }, { status: 400 });
   if (essay.length < 100) return NextResponse.json({ error: "Essay must be at least 100 characters." }, { status: 400 });
 
+  const ip = getClientIp(req);
+  if (tooManyRequests(`scholarship-apply:${ip}`, 3, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many applications submitted. Please try again in a few minutes." }, { status: 429 });
+  }
+
   const admin = createAdminClient();
+
+  if (await tooManyByEmail(admin, "scholarship_applications", "applicant_email", email, 3, 24 * 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "You've submitted several applications recently. Please wait before applying again." }, { status: 429 });
+  }
 
   // Try to look up the course title — query by id only (no published filter to avoid column name mismatch)
   const { data: courseRow } = await admin

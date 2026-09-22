@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendEmail, SUPPORT_EMAIL } from "@/lib/emails";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getClientIp, honeypotTripped, submittedTooFast, tooManyByEmail, tooManyRequests } from "@/lib/spam-guard";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,7 +13,14 @@ export async function POST(request: Request) {
       phone?: string;
       subject?: string;
       message?: string;
+      website?: string; // honeypot — real visitors never fill this
+      loadedAt?: number;
     };
+
+    // Bot signals — accept quietly without saving or emailing, so bots don't learn to adapt.
+    if (honeypotTripped(body.website) || submittedTooFast(body.loadedAt)) {
+      return NextResponse.json({ success: true });
+    }
 
     const name = body.name?.trim() ?? "";
     const email = body.email?.trim() ?? "";
@@ -27,7 +35,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
     }
 
+    const ip = getClientIp(request);
+    if (tooManyRequests(`contact:${ip}`, 5, 10 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many messages sent. Please try again in a few minutes." }, { status: 429 });
+    }
+
     const admin = createAdminClient();
+
+    if (await tooManyByEmail(admin, "contact_messages", "email", email, 3, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "You've sent several messages recently. Please wait before sending another." }, { status: 429 });
+    }
     const { error: dbError } = await admin.from("contact_messages").insert({
       name,
       email,
