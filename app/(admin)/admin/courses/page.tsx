@@ -80,6 +80,7 @@ export default function AdminCoursesPage() {
   // Delete confirm
   const [confirmDelete, setConfirmDelete] = useState<Course | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [dependents, setDependents] = useState<{ payments: number; enrollments: number } | null>(null);
 
   // Per-course toggling
   const [toggling, setToggling] = useState<string | null>(null);
@@ -197,23 +198,39 @@ export default function AdminCoursesPage() {
     }
   }
 
+  function openDelete(course: Course) {
+    setDependents(null);
+    setConfirmDelete(course);
+  }
+
+  function closeDelete() {
+    setConfirmDelete(null);
+    setDependents(null);
+  }
+
   async function handleDelete() {
     if (!confirmDelete) return;
     setDeleting(true);
+    // Second click (after the warning) forces removal of payments + enrollments
+    const url = `/api/admin/courses/${confirmDelete.id}${dependents ? "?force=true" : ""}`;
     try {
-      const res = await fetchWithTimeout(`/api/admin/courses/${confirmDelete.id}`, { method: "DELETE" });
+      const res = await fetchWithTimeout(url, { method: "DELETE" }, 30000);
       if (res.ok) {
         setCourses((prev) => prev.filter((c) => c.id !== confirmDelete.id));
-        setConfirmDelete(null);
+        closeDelete();
         showToast(`"${confirmDelete.title}" deleted.`);
       } else {
-        const d = await res.json() as { error?: string };
-        setError(d.error ?? "Failed to delete course.");
-        setConfirmDelete(null);
+        const d = await res.json() as { error?: string; requiresConfirmation?: boolean; payments?: number; enrollments?: number };
+        if (res.status === 409 && d.requiresConfirmation) {
+          setDependents({ payments: d.payments ?? 0, enrollments: d.enrollments ?? 0 });
+        } else {
+          setError(d.error ?? "Failed to delete course.");
+          closeDelete();
+        }
       }
     } catch (err) {
       setError(netError(err));
-      setConfirmDelete(null);
+      closeDelete();
     } finally {
       setDeleting(false);
     }
@@ -355,7 +372,7 @@ export default function AdminCoursesPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setConfirmDelete(course)}
+                    onClick={() => openDelete(course)}
                     className="p-2 rounded-lg border border-border text-muted-foreground hover:text-red-500 hover:border-red-200 transition-colors"
                     title="Delete course"
                   >
@@ -557,21 +574,28 @@ export default function AdminCoursesPage() {
               Are you sure you want to delete{" "}
               <span className="font-semibold text-foreground">&quot;{confirmDelete.title}&quot;</span>?
             </p>
+            {dependents && (
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-[13px] rounded-lg px-3.5 py-2.5 my-3">
+                This course has {dependents.payments} payment{dependents.payments !== 1 ? "s" : ""} and{" "}
+                {dependents.enrollments} enrollment{dependents.enrollments !== 1 ? "s" : ""}. Deleting it will also
+                remove all associated data. Are you sure?
+              </div>
+            )}
             <p className="text-[12.5px] text-red-500 font-medium mb-5">This cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-bold text-[14px] py-2.5 rounded-xl transition-colors"
+                className="flex-1 min-h-[44px] bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white font-bold text-[14px] py-2.5 rounded-xl transition-colors"
               >
-                {deleting ? "Deleting…" : "Yes, Delete"}
+                {deleting ? "Deleting…" : dependents ? "Delete Everything" : "Yes, Delete"}
               </button>
               <button
                 type="button"
-                onClick={() => setConfirmDelete(null)}
+                onClick={closeDelete}
                 disabled={deleting}
-                className="flex-1 border border-border text-[14px] font-semibold text-muted-foreground hover:bg-muted/40 py-2.5 rounded-xl transition-colors"
+                className="flex-1 min-h-[44px] border border-border text-[14px] font-semibold text-muted-foreground hover:bg-muted/40 py-2.5 rounded-xl transition-colors"
               >
                 Cancel
               </button>

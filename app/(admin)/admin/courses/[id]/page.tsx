@@ -106,7 +106,20 @@ export default function EditCoursePage() {
     setDeleting(true);
     setError("");
     try {
-      const res = await fetchWithTimeout(`/api/admin/courses/${id}`, { method: "DELETE" });
+      let res = await fetchWithTimeout(`/api/admin/courses/${id}`, { method: "DELETE" }, 30000);
+      if (res.status === 409) {
+        const j = await res.json() as { requiresConfirmation?: boolean; payments?: number; enrollments?: number };
+        if (j.requiresConfirmation) {
+          const p = j.payments ?? 0;
+          const e = j.enrollments ?? 0;
+          const ok = confirm(
+            `This course has ${p} payment${p !== 1 ? "s" : ""} and ${e} enrollment${e !== 1 ? "s" : ""}. ` +
+            "Deleting it will also remove all associated data. Are you sure?"
+          );
+          if (!ok) { setDeleting(false); return; }
+          res = await fetchWithTimeout(`/api/admin/courses/${id}?force=true`, { method: "DELETE" }, 30000);
+        }
+      }
       if (res.ok) {
         router.push("/admin/courses");
       } else {
