@@ -32,7 +32,7 @@ export async function sendScholarshipAcceptanceEmail(
 
       <!-- Header -->
       <tr>
-        <td style="background:linear-gradient(135deg,#0a5c4a 0%,#0D9488 100%);padding:40px 40px 36px;text-align:center;">
+        <td style="background-color:#0D9488;background-image:linear-gradient(135deg,#0a5c4a 0%,#0D9488 100%);padding:40px 40px 36px;text-align:center;">
           <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="120" style="display:inline-block;width:120px;max-width:50%;height:auto;background:#ffffff;padding:8px 14px;border-radius:12px;margin-bottom:14px;" />
           <h1 style="margin:18px 0 8px;color:#ffffff;font-size:28px;font-weight:800;line-height:1.2;">
             Your Scholarship Has Been Accepted!
@@ -133,10 +133,14 @@ export async function sendScholarshipAcceptanceEmail(
           <!-- CTA -->
           <div style="text-align:center;margin:32px 0;">
             <a href="${paymentUrl}"
-              style="display:inline-block;background:linear-gradient(135deg,#0D9488,#0a5c4a);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;">
+              style="display:inline-block;background-color:#0D9488;background-image:linear-gradient(135deg,#0D9488,#0a5c4a);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;">
               Complete Scholarship Payment →
             </a>
           </div>
+          <p style="margin:0 0 24px;color:#6b7280;font-size:12.5px;line-height:1.6;text-align:center;word-break:break-all;">
+            Button not showing? Copy this link into your browser:<br />
+            <a href="${paymentUrl}" style="color:#0D9488;text-decoration:underline;">${paymentUrl}</a>
+          </p>
 
           <!-- Support -->
           <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.7;text-align:center;">
