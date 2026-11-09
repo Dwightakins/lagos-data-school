@@ -75,19 +75,22 @@ export async function POST(req: NextRequest) {
         .eq("id", applicationId);
     }
 
-    // Send decision email (non-fatal)
+    // Send decision email. Must be awaited: on Vercel the function can be frozen as soon
+    // as the response is returned, which silently drops an email that is still sending.
+    // A failed email does not fail the decision (it is already saved above).
+    let emailSent = false;
     if (studentEmail) {
       if (decision === "approved" && paymentToken) {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+        const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
         const paymentUrl = `${appUrl}/scholarship-payment/${paymentToken}`;
-        void sendScholarshipAcceptanceEmail({
+        emailSent = await sendScholarshipAcceptanceEmail({
           to: studentEmail,
           studentName,
           courseName: app.course_name as string,
           paymentUrl,
         });
       } else if (decision === "rejected") {
-        void sendScholarshipRejectionEmail({
+        emailSent = await sendScholarshipRejectionEmail({
           to: studentEmail,
           studentName,
           courseName: app.course_name as string,
@@ -95,7 +98,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, emailSent });
   } catch (error) {
     console.error("[scholarship/decision]", error);
     return NextResponse.json({ error: "Failed to process decision." }, { status: 500 });

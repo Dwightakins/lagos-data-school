@@ -93,7 +93,8 @@ export async function POST(req: NextRequest) {
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
-  void sendEmail({
+  // Awaited on purpose: on Vercel a floating promise can be killed once the response is sent.
+  await sendEmail({
     to: email,
     subject: "LDSL Scholarship Application Received",
     html: `
@@ -165,7 +166,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Notify the admin team — non-blocking
-  void sendEmail({
+  await sendEmail({
     to: "support@lagosdataschoolltd.com",
     subject: `New Scholarship Application — ${name} (${courseTitle})`,
     html: `
