@@ -199,19 +199,36 @@ export async function completeScholarshipPayment(
       .is("user_id", null);
   }
 
-  // 6. Enrollment (unique on user_id + course_id, so a repeat is harmless).
-  const { error: enrollError } = await admin.from("enrollments").insert({
-    user_id: userId,
-    course_id: row.course_id,
-    type: "scholarship",
-    status: "active",
-    payment_status: "paid",
-  });
-  const enrollCode = (enrollError as { code?: string } | null)?.code;
-  const enrollMessage = (enrollError as { message?: string } | null)?.message ?? "";
-  if (enrollError && enrollCode !== "23505" && !enrollMessage.includes("duplicate")) {
-    console.error("[scholarship/complete] enroll error:", enrollError);
-    return fail(500, "Failed to create enrollment. Please contact support.", true);
+  // 6. Enrollment. Look first so a repeat never creates a second row, even if the database
+  //    has no unique (user_id, course_id) constraint. If the row exists, make sure it is
+  //    active and paid. A unique-violation on insert (a concurrent call) is also harmless.
+  const { data: existingEnrollment } = await admin
+    .from("enrollments")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("course_id", row.course_id)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingEnrollment) {
+    await admin
+      .from("enrollments")
+      .update({ status: "active", payment_status: "paid" })
+      .eq("id", (existingEnrollment as { id: string }).id);
+  } else {
+    const { error: enrollError } = await admin.from("enrollments").insert({
+      user_id: userId,
+      course_id: row.course_id,
+      type: "scholarship",
+      status: "active",
+      payment_status: "paid",
+    });
+    const enrollCode = (enrollError as { code?: string } | null)?.code;
+    const enrollMessage = (enrollError as { message?: string } | null)?.message ?? "";
+    if (enrollError && enrollCode !== "23505" && !enrollMessage.includes("duplicate")) {
+      console.error("[scholarship/complete] enroll error:", enrollError);
+      return fail(500, "Failed to create enrollment. Please contact support.", true);
+    }
   }
 
   // 7. Payment record (shows in payment history and admin revenue).
