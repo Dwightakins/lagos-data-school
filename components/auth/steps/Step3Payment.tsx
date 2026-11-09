@@ -26,7 +26,6 @@ const FULL_BENEFITS = [
   "Verified certificate on completion",
 ];
 
-const UID_CACHE_KEY = "lds_pending_uid";
 // Read by middleware.ts: if the page is refreshed after the account is created (and the
 // student is therefore logged in), /register sends them straight back to checkout for this course.
 const PENDING_COURSE_COOKIE = "ldsl_pending_course";
@@ -73,43 +72,53 @@ export default function Step3Payment({
 
   const loading = loadingStep !== null;
 
-  /** Returns cached or newly created userId, or null on failure (error already set). */
-  const ensureUserId = async (): Promise<string | null> => {
-    try {
-      const cached = sessionStorage.getItem(UID_CACHE_KEY);
-      if (cached) return cached;
-    } catch { /* storage may be blocked */ }
+  /**
+   * Signs the student in and returns their userId, creating the account first if this email
+   * has none yet. Never trusts a cached "account already created" flag: the email or password
+   * may have changed since (student went back to step 1), and the real answer is whether
+   * sign-in works right now.
+   */
+  const signInOrCreate = async (): Promise<string | null> => {
+    const supabase = createClient();
+    const normalizedEmail = email.trim().toLowerCase();
 
     setLoadingStep("account");
+    const first = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (!first.error && first.data.user) return first.data.user.id;
+
+    // No account for this email yet (or a different password): try to create it.
     let res: Response;
     try {
       res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, phone, password }),
+        body: JSON.stringify({ fullName, email: normalizedEmail, phone, password }),
       });
     } catch {
       setError("Network error. Please check your connection and try again.");
       return null;
     }
-
     const data = (await res.json()) as { userId?: string; error?: string };
-
-    if (data.userId) {
-      try { sessionStorage.setItem(UID_CACHE_KEY, data.userId); } catch { /* ignore */ }
-      return data.userId;
-    }
 
     if (res.status === 409) {
       setError(
-        data.error ??
-          "An account with this email already exists. Please log in instead."
+        "This email already has an account, and the password you entered does not match it. " +
+          "Go back and use your original password, or reset it with Forgot password on the login page."
       );
       return null;
     }
+    if (!data.userId) {
+      setError(data.error ?? "Could not create your account. Please try again.");
+      return null;
+    }
 
-    setError(data.error ?? "Could not create your account. Please try again.");
-    return null;
+    // The payment API identifies the student from their session, so sign in now.
+    const second = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (second.error || !second.data.user) {
+      setError(`We created your account but could not sign you in (${second.error?.message ?? "unknown error"}). Please log in from the login page, then pay from the course page.`);
+      return null;
+    }
+    return second.data.user.id;
   };
 
   const handlePayment = async () => {
@@ -121,14 +130,8 @@ export default function Step3Payment({
       return;
     }
 
-    const userId = await ensureUserId();
-    if (!userId) return;
-
-    // The payment API identifies the student from their session, so sign in first.
-    setLoadingStep("account");
-    const { error: signInError } = await createClient().auth.signInWithPassword({ email, password });
-    if (signInError) {
-      setError("We could not sign you in. If you already have an account, please log in first, then pay from the course page.");
+    const userId = await signInOrCreate();
+    if (!userId) {
       setLoadingStep(null);
       return;
     }
@@ -209,7 +212,6 @@ export default function Step3Payment({
             });
             const result = (await verifyRes.json()) as { success?: boolean; error?: string };
             if (verifyRes.ok && result.success) {
-              try { sessionStorage.removeItem(UID_CACHE_KEY); } catch { /* ignore */ }
               clearPendingCourse();
               onPaymentSuccess("full");
               return;
