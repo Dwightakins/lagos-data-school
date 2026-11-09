@@ -89,6 +89,27 @@ export async function middleware(request: NextRequest) {
       if (!user.email_confirmed_at) {
         return NextResponse.redirect(new URL("/verify-email", request.url));
       }
+
+      // The register wizard creates the account and signs the student in BEFORE they pay.
+      // If the page is refreshed mid-registration, the wizard state is gone but the session
+      // is not, so send an unpaid student back to checkout instead of an empty dashboard.
+      if (pathname === "/register") {
+        const pending =
+          request.cookies.get("ldsl_pending_course")?.value ??
+          request.nextUrl.searchParams.get("course");
+        if (pending && /^[0-9a-fA-F-]{36}$/.test(pending)) {
+          const { data: enrolled } = await supabase
+            .from("enrollments")
+            .select("id")
+            .eq("user_id", user.id)
+            .or("status.eq.active,status.is.null")
+            .limit(1);
+          if (!enrolled || enrolled.length === 0) {
+            return NextResponse.redirect(new URL(`/checkout?courseId=${pending}`, request.url));
+          }
+        }
+      }
+
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

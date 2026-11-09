@@ -27,6 +27,15 @@ const FULL_BENEFITS = [
 ];
 
 const UID_CACHE_KEY = "lds_pending_uid";
+// Read by middleware.ts: if the page is refreshed after the account is created (and the
+// student is therefore logged in), /register sends them straight back to checkout for this course.
+const PENDING_COURSE_COOKIE = "ldsl_pending_course";
+const setPendingCourse = (id: string) => {
+  document.cookie = `${PENDING_COURSE_COOKIE}=${encodeURIComponent(id)}; path=/; max-age=86400; SameSite=Lax`;
+};
+const clearPendingCourse = () => {
+  document.cookie = `${PENDING_COURSE_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+};
 
 type LoadingStep = "account" | "initializing" | "verifying" | null;
 
@@ -124,6 +133,8 @@ export default function Step3Payment({
       return;
     }
 
+    if (selectedCourses[0]) setPendingCourse(selectedCourses[0].id);
+
     setLoadingStep("initializing");
     type InitOk = {
       reference: string;
@@ -199,6 +210,7 @@ export default function Step3Payment({
             const result = (await verifyRes.json()) as { success?: boolean; error?: string };
             if (verifyRes.ok && result.success) {
               try { sessionStorage.removeItem(UID_CACHE_KEY); } catch { /* ignore */ }
+              clearPendingCourse();
               onPaymentSuccess("full");
               return;
             }

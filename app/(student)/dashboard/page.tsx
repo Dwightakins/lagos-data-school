@@ -199,7 +199,7 @@ export default function DashboardPage() {
             {enrollments.length === 0 ? (
               <div className="text-center py-12">
                 <BookOpen className="w-10 h-10 text-brand mx-auto mb-4" />
-                <p className="text-[14px] text-muted-foreground mb-5">You have no active courses yet.</p>
+                <p className="text-[14px] text-muted-foreground mb-5">You have no active courses yet. If you stopped before paying, choose your course to finish enrolling.</p>
                 <Link
                   href="/courses"
                   className="inline-flex items-center gap-2 bg-brand text-brand-foreground font-bold text-[13px] px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
