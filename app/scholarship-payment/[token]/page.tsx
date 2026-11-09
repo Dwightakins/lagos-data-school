@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppLogo } from "@/components/layout/logo";
 import { CheckCircle2, AlertCircle } from "lucide-react";
@@ -34,12 +34,13 @@ type PageState = "loading" | "valid" | "invalid" | "expired" | "already_paid" | 
 
 export default function ScholarshipPaymentPage() {
   const { token } = useParams<{ token: string }>();
-  const router = useRouter();
 
   const [pageState, setPageState] = useState<PageState>("loading");
   const [appInfo, setAppInfo] = useState<ApplicationInfo | null>(null);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [studentId, setStudentId] = useState<string | null>(null);
+  const [newAccount, setNewAccount] = useState(false);
 
   // Verify token on load
   useEffect(() => {
@@ -150,8 +151,11 @@ export default function ScholarshipPaymentPage() {
       lastName: initData.lastName,
       amount: initData.amount,
       currency: "NGN",
+      // `reference` is the session reference issued by token-initialize. The server checks it
+      // against the transaction ALATPay reports, so an unrelated payment cannot be replayed.
       metadata: JSON.stringify({
         token,
+        reference: initData.reference,
         applicationId: appInfo.id,
         courseId: appInfo.courseId,
         userId: appInfo.userId,
@@ -163,28 +167,45 @@ export default function ScholarshipPaymentPage() {
           return;
         }
 
+        const transactionId = response.data?.transactionId ?? response.data?.id;
+        if (!transactionId) {
+          setError(
+            "We could not read your payment confirmation. Please do not pay again. If you were charged, we confirm it automatically and email you. If you hear nothing in 30 minutes, contact support."
+          );
+          setPaying(false);
+          return;
+        }
+
         setPaying(true);
         try {
           const res = await fetch("/api/scholarship/complete-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              token,
-              reference: response.data?.transactionId ?? response.data?.id ?? initData.reference,
-            }),
+            body: JSON.stringify({ token, transactionId }),
           });
-          const data = (await res.json()) as { success?: boolean; error?: string };
+          const data = (await res.json()) as {
+            success?: boolean;
+            error?: string;
+            studentId?: string | null;
+            newAccount?: boolean;
+          };
 
           if (!res.ok || !data.success) {
-            setError(data.error ?? "Payment verification failed. If money was debited, please contact support.");
+            setError(
+              data.error
+                ? `${data.error} If money was debited, do not pay again. Contact support.`
+                : "Payment verification failed. If money was debited, do not pay again. Contact support."
+            );
             setPaying(false);
             return;
           }
 
+          setStudentId(data.studentId ?? null);
+          setNewAccount(Boolean(data.newAccount));
           setPageState("success");
           setPaying(false);
         } catch {
-          setError("Verification failed. If money was debited, please contact support.");
+          setError("Verification failed. If money was debited, do not pay again. Contact support.");
           setPaying(false);
         }
       },
@@ -214,19 +235,45 @@ export default function ScholarshipPaymentPage() {
               <CheckCircle2 className="w-8 h-8 text-brand" />
             </div>
             <h1 className="text-[1.5rem] font-bold text-foreground mb-3">Payment Successful!</h1>
-            <p className="text-[14px] text-muted-foreground mb-2 leading-relaxed">
-              Your scholarship payment is confirmed. You now have full access to{" "}
+            <p className="text-[14px] text-muted-foreground mb-4 leading-relaxed">
+              Your scholarship payment is confirmed. You are now enrolled in{" "}
               <strong className="text-foreground">{appInfo?.courseName}</strong>.
             </p>
-            <p className="text-[13.5px] text-muted-foreground mb-8">
-              Head to your dashboard to start learning.
+            {studentId && (
+              <div className="bg-muted border border-border rounded-xl px-4 py-3 mb-4">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-0.5">Your Student ID</p>
+                <p className="text-[1.1rem] font-bold text-foreground font-mono">{studentId}</p>
+              </div>
+            )}
+            <p className="text-[13.5px] text-muted-foreground mb-8 leading-relaxed">
+              {newAccount ? (
+                <>
+                  We created your student account and sent a welcome email to{" "}
+                  <strong className="text-foreground">{appInfo?.email}</strong>. Open it and use the
+                  button to set your password. Check your spam folder if you do not see it.
+                </>
+              ) : (
+                <>
+                  We sent a welcome email to{" "}
+                  <strong className="text-foreground">{appInfo?.email}</strong>. Log in with your
+                  existing password to start learning.
+                </>
+              )}
             </p>
             <Link
               href="/login"
               className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-brand hover:opacity-90 text-brand-foreground font-bold text-[15px] transition-opacity shadow-brand"
             >
-              Go to Dashboard
+              Go to Login
             </Link>
+            {newAccount && (
+              <p className="text-[12px] text-muted-foreground mt-4">
+                Link expired?{" "}
+                <Link href="/forgot-password" className="text-brand hover:underline font-medium">
+                  Get a new password link
+                </Link>
+              </p>
+            )}
           </div>
         </main>
       </div>

@@ -10,6 +10,8 @@ export interface OnboardingEmailParams {
   studentId: string | null;   // e.g. LDSL/DA/001
   enrolledAt: string;         // ISO date string
   dashboardUrl: string;
+  /** Set for brand new accounts (no password yet): the button then says "Set Your Password". */
+  setPasswordUrl?: string | null;
 }
 
 export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boolean> {
@@ -18,6 +20,11 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
   const paymentLabel = p.paymentType === "scholarship" ? "Scholarship" : "Full Pay";
+  const ctaUrl = p.setPasswordUrl || p.dashboardUrl;
+  const ctaLabel = p.setPasswordUrl ? "Set Your Password →" : "Log in to Your Dashboard →";
+  const stepOne = p.setPasswordUrl
+    ? "Set your password with the button above, then log in"
+    : "Log in to your student dashboard";
 
   const subject = `Welcome to ${p.courseName} — Your Access is Ready`;
 
@@ -32,7 +39,7 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
 
       <!-- Header -->
       <tr>
-        <td style="background:linear-gradient(135deg,#0a5c4a 0%,#0D9488 100%);padding:40px 40px 36px;text-align:center;">
+        <td style="background-color:#0D9488;background-image:linear-gradient(135deg,#0a5c4a 0%,#0D9488 100%);padding:40px 40px 36px;text-align:center;">
           <img src="${appUrl}/images/logo.png" alt="Lagos Data School" width="120" style="display:inline-block;width:120px;max-width:50%;height:auto;background:#ffffff;padding:8px 14px;border-radius:12px;margin-bottom:14px;" />
           <h1 style="margin:18px 0 8px;color:#ffffff;font-size:28px;font-weight:800;line-height:1.2;">
             Welcome, ${p.studentName}!
@@ -115,11 +122,19 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
 
           <!-- CTA -->
           <div style="text-align:center;margin:32px 0;">
-            <a href="${p.dashboardUrl}"
-              style="display:inline-block;background:linear-gradient(135deg,#0D9488,#0a5c4a);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;letter-spacing:0.2px;">
-              Log in to Your Dashboard →
+            <a href="${ctaUrl}"
+              style="display:inline-block;background-color:#0D9488;background-image:linear-gradient(135deg,#0D9488,#0a5c4a);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;letter-spacing:0.2px;">
+              ${ctaLabel}
             </a>
           </div>
+          ${p.setPasswordUrl ? `
+          <p style="margin:-12px 0 28px;color:#6b7280;font-size:12.5px;line-height:1.6;text-align:center;word-break:break-all;">
+            Button not showing? Copy this link into your browser:<br />
+            <a href="${p.setPasswordUrl}" style="color:#0D9488;text-decoration:underline;">${p.setPasswordUrl}</a><br /><br />
+            This link only works for a short time. If it has expired, go to
+            <a href="${appUrl}/forgot-password" style="color:#0D9488;text-decoration:underline;">${appUrl}/forgot-password</a>
+            and enter ${p.to} to get a new one.
+          </p>` : ""}
 
           <!-- What's Next -->
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:28px;">
@@ -130,7 +145,7 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
                   <td style="padding:6px 12px 6px 0;vertical-align:top;">
                     <span style="display:inline-flex;align-items:center;justify-content:center;background:#0D9488;color:#fff;border-radius:50%;width:22px;height:22px;font-size:11px;font-weight:800;">1</span>
                   </td>
-                  <td style="padding:6px 0;color:#374151;font-size:14px;line-height:1.5;">Log in to your student dashboard</td>
+                  <td style="padding:6px 0;color:#374151;font-size:14px;line-height:1.5;">${stepOne}</td>
                 </tr>
                 <tr>
                   <td style="padding:6px 12px 6px 0;vertical-align:top;">

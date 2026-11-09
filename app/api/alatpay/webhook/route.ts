@@ -5,6 +5,7 @@ import { sendOnboardingEmail } from "@/lib/emails/onboarding";
 import { isValidAlatpaySignature, verifyAlatpayTransaction } from "@/lib/payments/alatpay";
 import { getExpectedPaymentAmount } from "@/lib/payment-config";
 import { resolvePaymentType, markScholarshipPaid } from "@/lib/payments/pricing";
+import { completeScholarshipPayment } from "@/lib/scholarship/complete-payment";
 
 // ALATPay webhook payload (PascalCase), see docs "Setup Webhook URL".
 type AlatpayWebhookBody = {
@@ -43,13 +44,28 @@ export async function POST(req: NextRequest) {
 
     const reference = verified.reference;
     const metadata = verified.metadata as {
-      userId?: string;
+      token?: string;
+      userId?: string | null;
       fullName?: string;
       courseIds?: string[];
       courseId?: string;
       courseNames?: string;
     };
-    const userId = metadata.userId;
+    const userId = metadata.userId ?? undefined;
+
+    // Scholarship payments made from the emailed link carry the application token and have
+    // no userId yet (the student may not have an account). Finish them here so a student who
+    // pays and closes the page, or pays by bank transfer, still gets enrolled.
+    if (!userId && typeof metadata.token === "string" && metadata.token) {
+      const result = await completeScholarshipPayment(metadata.token, transactionId);
+      if (!result.ok) {
+        console.error("[alatpay/webhook] scholarship completion failed:", result.error, { transactionId });
+        // 5xx makes ALATPay retry later for transient failures.
+        if (result.retryable) return NextResponse.json({ error: "Retry" }, { status: 500 });
+      }
+      return NextResponse.json({ received: true });
+    }
+
     const fullName = metadata.fullName ?? "";
     const courseIds = metadata.courseIds ?? (metadata.courseId ? [metadata.courseId] : []);
 

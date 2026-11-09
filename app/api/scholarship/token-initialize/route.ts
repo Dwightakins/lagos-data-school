@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAlatpayConfig } from "@/lib/payments/alatpay";
 import { PAYMENT_CONFIG } from "@/lib/payment-config";
+import { findUserIdByEmail, hasOtherActiveEnrollment } from "@/lib/scholarship/complete-payment";
 
 export async function POST(req: NextRequest) {
   let body: { token?: string };
@@ -67,6 +68,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "No email on file for this application. Please contact support." },
       { status: 400 }
+    );
+  }
+
+  // One course per student: refuse before taking money if this email already has an
+  // active enrollment in a different course.
+  const accountId = row.user_id ?? (await findUserIdByEmail(admin, email.trim().toLowerCase()));
+  if (accountId && (await hasOtherActiveEnrollment(admin, accountId, row.course_id))) {
+    return NextResponse.json(
+      { error: "This email is already enrolled in another course. Please contact support." },
+      { status: 409 }
     );
   }
 
