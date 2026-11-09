@@ -7,10 +7,16 @@ interface PaymentRecord {
   amount: number;
   reference: string;
   status: string;
-  created_at: string;
+  paid_at?: string | null;
+  created_at?: string | null;
   provider: string | null;
   courses: { title: string } | null;
-  payment_intents: { payment_type: string } | null;
+  /** "scholarship" or "full", looked up from the student's enrollment. */
+  payment_type?: string | null;
+}
+
+function paymentDate(p: { paid_at?: string | null; created_at?: string | null }): Date {
+  return new Date(p.paid_at ?? p.created_at ?? Date.now());
 }
 
 interface StudentRecord {
@@ -64,7 +70,7 @@ async function buildReceiptPdf(
   doc.setFontSize(8.5);
   doc.setTextColor(220, 255, 250);
   const receiptNo = `LDSL-${payment.id.slice(0, 8).toUpperCase()}`;
-  const payDate = new Date(payment.created_at).toLocaleDateString("en-NG", {
+  const payDate = paymentDate(payment).toLocaleDateString("en-NG", {
     day: "numeric", month: "long", year: "numeric",
   });
   doc.text(`Receipt No: ${receiptNo}`, 20, 37);
@@ -120,7 +126,7 @@ async function buildReceiptPdf(
 
   row("Course", payment.courses?.title ?? "—");
   row("Amount Paid", `₦${Number(payment.amount).toLocaleString("en-NG")}`);
-  row("Payment Type", payment.payment_intents?.payment_type === "scholarship" ? "Scholarship" : "Full Pay");
+  row("Payment Type", payment.payment_type === "scholarship" ? "Scholarship" : "Full Pay");
   row("Payment Method", "ALATPay");
   row("Transaction Reference", payment.reference || "—");
 
@@ -171,14 +177,25 @@ export async function GET(
   const { id } = await params;
   const admin = createAdminClient();
 
-  const { data: payment } = await admin
+  // "*" so this works whether the date column is paid_at or created_at.
+  const { data: paymentRow } = await admin
     .from("payments")
-    .select("id, amount, reference, status, created_at, provider, user_id, courses(title), payment_intents(payment_type)")
+    .select("*, courses(title)")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
 
-  if (!payment) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
+  if (!paymentRow) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
+
+  // Scholarship or full price: recorded on the enrollment made by this payment.
+  const { data: enrollment } = await admin
+    .from("enrollments")
+    .select("type")
+    .eq("user_id", user.id)
+    .eq("course_id", (paymentRow as { course_id: string }).course_id)
+    .limit(1)
+    .maybeSingle();
+  const payment = { ...paymentRow, payment_type: (enrollment as { type?: string } | null)?.type ?? null };
 
   const { data: student } = await admin
     .from("users")
@@ -191,7 +208,7 @@ export async function GET(
     student as unknown as StudentRecord | null
   );
 
-  const dateStr = new Date((payment as { created_at: string }).created_at).toISOString().slice(0, 10);
+  const dateStr = paymentDate(payment).toISOString().slice(0, 10);
 
   return new NextResponse(pdfBuffer.buffer as ArrayBuffer, {
     headers: {

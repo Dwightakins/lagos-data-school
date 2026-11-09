@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const [userRes, enrollRes, paymentsRes, certsRes, notesRes] = await Promise.all([
     admin.from("users").select("id, full_name, email, phone, student_id, avatar_url, created_at, suspended, role").eq("id", id).single(),
     admin.from("enrollments").select("id, course_id, type, payment_status, enrolled_at, courses(title)").eq("user_id", id).order("enrolled_at", { ascending: false }),
-    admin.from("payments").select("id, amount, status, created_at, courses(title)").eq("user_id", id).order("created_at", { ascending: false }).limit(10),
+    admin.from("payments").select("*, courses(title)").eq("user_id", id),
     admin.from("certificates").select("id, issued_at, courses(title)").eq("student_id", id).order("issued_at", { ascending: false }),
     admin.from("student_notes").select("id, note, created_at, users!admin_id(full_name)").eq("student_id", id).order("created_at", { ascending: false }),
   ]);
@@ -31,7 +31,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return NextResponse.json({
     student: userRes.data,
     enrollments: enrollRes.data ?? [],
-    payments: paymentsRes.data ?? [],
+    // The payments table's date column is paid_at (older schemas used created_at). The page
+    // reads created_at, so expose the date under that name and show the newest 10.
+    payments: ((paymentsRes.data ?? []) as Array<{ paid_at?: string | null; created_at?: string | null }>)
+      .map((p) => ({ ...p, created_at: p.created_at ?? p.paid_at ?? null }))
+      .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+      .slice(0, 10),
     certificates: certsRes.data ?? [],
     adminNotes: notesRes.data ?? [],
   });
