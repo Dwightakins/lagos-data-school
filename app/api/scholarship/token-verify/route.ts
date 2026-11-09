@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getScholarshipFee } from "@/lib/scholarship/fee";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
@@ -64,6 +65,7 @@ export async function GET(req: NextRequest) {
       email,
       userId: row.user_id,
       courseId: row.course_id,
+      fee: getScholarshipFee(row.applicant_email),
     },
   });
 }

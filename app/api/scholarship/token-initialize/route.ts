@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAlatpayConfig } from "@/lib/payments/alatpay";
-import { PAYMENT_CONFIG } from "@/lib/payment-config";
+import { getScholarshipFee } from "@/lib/scholarship/fee";
 import { findUserIdByEmail, hasOtherActiveEnrollment } from "@/lib/scholarship/complete-payment";
 
 export async function POST(req: NextRequest) {
@@ -101,6 +101,6 @@ export async function POST(req: NextRequest) {
     businessId,
     reference,
     email,
-    amount: PAYMENT_CONFIG.scholarshipFee,
+    amount: getScholarshipFee(row.applicant_email),
   });
 }

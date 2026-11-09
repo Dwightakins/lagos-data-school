@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyAlatpayTransaction } from "@/lib/payments/alatpay";
-import { PAYMENT_CONFIG } from "@/lib/payment-config";
+import { getScholarshipFee } from "@/lib/scholarship/fee";
 import { assignStudentId } from "@/lib/student-id";
 import { sendOnboardingEmail } from "@/lib/emails/onboarding";
 
@@ -151,7 +151,7 @@ export async function completeScholarshipPayment(
     !verified.ok ||
     verified.status !== "success" ||
     verified.currency !== "NGN" ||
-    verified.amountNaira < PAYMENT_CONFIG.scholarshipFee
+    verified.amountNaira < getScholarshipFee(row.applicant_email)
   ) {
     return fail(400, "Payment not confirmed. Please contact support.");
   }

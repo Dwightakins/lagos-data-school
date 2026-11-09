@@ -28,6 +28,7 @@ interface ApplicationInfo {
   email: string;
   userId: string | null;
   courseId: string;
+  fee?: number;
 }
 
 type PageState = "loading" | "valid" | "invalid" | "expired" | "already_paid" | "success";
@@ -120,7 +121,7 @@ export default function ScholarshipPaymentPage() {
         apiKey: raw.apiKey,
         businessId: raw.businessId,
         reference: raw.reference,
-        amount: raw.amount ?? SCHOLARSHIP_FEE,
+        amount: raw.amount ?? appInfo.fee ?? SCHOLARSHIP_FEE,
         email: raw.email || appInfo.email || "",
         firstName: (appInfo.studentName || "Student").split(" ")[0] || "Student",
         lastName: (appInfo.studentName || "Student").split(" ").slice(1).join(" ") || "User",
@@ -367,7 +368,7 @@ export default function ScholarshipPaymentPage() {
             <div className="bg-muted border border-border rounded-xl p-5 mb-6">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[13px] text-muted-foreground">Scholarship Fee</span>
-                <span className="text-[1.25rem] font-black text-foreground">{fmt(SCHOLARSHIP_FEE)}</span>
+                <span className="text-[1.25rem] font-black text-foreground">{fmt(appInfo?.fee ?? SCHOLARSHIP_FEE)}</span>
               </div>
               <p className="text-[11.5px] text-muted-foreground">
                 Non-refundable · One-time payment · Full course access granted immediately
@@ -384,7 +385,7 @@ export default function ScholarshipPaymentPage() {
                   <Spinner /> Please wait…
                 </>
               ) : (
-                `Pay ${fmt(SCHOLARSHIP_FEE)} Now`
+                `Pay ${fmt(appInfo?.fee ?? SCHOLARSHIP_FEE)} Now`
               )}
             </button>
 
