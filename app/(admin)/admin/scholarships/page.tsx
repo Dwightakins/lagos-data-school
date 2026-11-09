@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   ChevronDown,
   ChevronUp,
+  Mail,
 } from "lucide-react";
 
 type Status = "pending" | "approved" | "rejected" | "revoked";
@@ -104,10 +105,13 @@ export default function ScholarshipsPage() {
   const displayStatus = (a: Application): DisplayStatus =>
     a.status === "approved" && a.payment_completed ? "paid" : a.status;
 
-  const showNotification = (type: Notification["type"], message: string) => {
+  const showNotification = (type: Notification["type"], message: string, ms = 3000) => {
     setNotification({ type, message });
-    setTimeout(() => setNotification(null), 3000);
+    setTimeout(() => setNotification(null), ms);
   };
+
+  const isUnpaidApproved = (a: Application) =>
+    a.status === "approved" && !a.payment_completed;
 
   const loadApps = useCallback(async () => {
     try {
@@ -150,6 +154,46 @@ export default function ScholarshipsPage() {
         );
       } else {
         showNotification("error", `Failed to ${decision} application.`);
+      }
+    } catch {
+      showNotification("error", "Network error. Please try again.");
+    } finally {
+      setActioning(null);
+    }
+  }
+
+  // Re-send the approval email with the payment link. One id, or every approved unpaid applicant.
+  async function handleResend(id?: string) {
+    const count = apps.filter(isUnpaidApproved).length;
+    if (!id && !window.confirm(
+      `Resend the approval email to all approved applicants who have not paid yet (${count} on this list)? Their payment links will be valid for 7 more days.`
+    )) {
+      return;
+    }
+    setActioning(id ?? "__all__");
+    try {
+      const res = await fetch("/api/scholarship/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(id ? { applicationId: id } : { all: true }),
+      });
+      const json = (await res.json()) as {
+        error?: string; total?: number; sent?: number; failed?: string[]; skipped?: string[];
+      };
+      if (!res.ok) {
+        showNotification("error", json.error ?? "Failed to resend email.", 6000);
+      } else {
+        const failed = json.failed ?? [];
+        const skipped = json.skipped ?? [];
+        const problems = failed.length + skipped.length;
+        const detail = problems
+          ? ` Not sent: ${[...failed, ...skipped].join(", ")}. Use the Resend button on those rows.`
+          : "";
+        showNotification(
+          problems ? "error" : "success",
+          `Sent ${json.sent ?? 0} of ${json.total ?? 0}.${detail}`,
+          problems ? 15000 : 6000,
+        );
       }
     } catch {
       showNotification("error", "Network error. Please try again.");
@@ -249,6 +293,18 @@ export default function ScholarshipsPage() {
             </button>
           ))}
         </div>
+
+        {apps.some(isUnpaidApproved) && (
+          <button
+            type="button"
+            onClick={() => handleResend()}
+            disabled={actioning !== null}
+            className="inline-flex items-center justify-center gap-1.5 bg-card hover:bg-muted disabled:opacity-50 text-foreground font-semibold text-[12.5px] px-3.5 py-2 rounded-lg border border-border transition-colors"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            {actioning === "__all__" ? "Sending…" : "Resend to all approved (unpaid)"}
+          </button>
+        )}
 
         {/* Search */}
         <div className="relative sm:ml-auto">
@@ -375,6 +431,17 @@ export default function ScholarshipsPage() {
                               {actioning === app.id ? "…" : "Reject"}
                             </button>
                           </>
+                        )}
+                        {isUnpaidApproved(app) && (
+                          <button
+                            type="button"
+                            onClick={() => handleResend(app.id)}
+                            disabled={actioning !== null}
+                            className="inline-flex items-center gap-1.5 bg-card hover:bg-muted disabled:opacity-50 text-foreground font-semibold text-[12px] px-3 py-1.5 rounded-lg border border-border transition-colors"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            {actioning === app.id ? "…" : "Resend"}
+                          </button>
                         )}
                         {app.status === "approved" && (
                           <button
@@ -508,6 +575,18 @@ export default function ScholarshipsPage() {
                       {actioning === app.id ? "Working…" : "Reject"}
                     </button>
                   </div>
+                )}
+
+                {isUnpaidApproved(app) && (
+                  <button
+                    type="button"
+                    onClick={() => handleResend(app.id)}
+                    disabled={actioning !== null}
+                    className="w-full flex items-center justify-center gap-1.5 bg-card hover:bg-muted disabled:opacity-50 text-foreground font-semibold text-[12.5px] px-3 py-2 rounded-lg border border-border transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    {actioning === app.id ? "Sending…" : "Resend approval email"}
+                  </button>
                 )}
 
                 {app.status === "approved" && (
