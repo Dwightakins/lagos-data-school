@@ -10,8 +10,8 @@ export interface OnboardingEmailParams {
   studentId: string | null;   // e.g. LDSL/DA/001
   enrolledAt: string;         // ISO date string
   dashboardUrl: string;
-  /** Set for brand new accounts (no password yet): the button then says "Set Your Password". */
-  setPasswordUrl?: string | null;
+  /** Set only for brand new accounts the system just created: shown in a "login details" box. */
+  temporaryPassword?: string | null;
 }
 
 export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boolean> {
@@ -20,10 +20,9 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
   const paymentLabel = p.paymentType === "scholarship" ? "Scholarship" : "Full Pay";
-  const ctaUrl = p.setPasswordUrl || p.dashboardUrl;
-  const ctaLabel = p.setPasswordUrl ? "Set Your Password →" : "Log in to Your Dashboard →";
-  const stepOne = p.setPasswordUrl
-    ? "Set your password with the button above, then log in"
+  const forgotUrl = `${appUrl}/forgot-password`;
+  const stepOne = p.temporaryPassword
+    ? "Log in with the details above, then change your password in Settings"
     : "Log in to your student dashboard";
 
   const subject = `Welcome to ${p.courseName} — Your Access is Ready`;
@@ -120,21 +119,32 @@ export async function sendOnboardingEmail(p: OnboardingEmailParams): Promise<boo
             </tr>
           </table>
 
+          ${p.temporaryPassword ? `
+          <!-- Login details (new account) -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;margin-bottom:8px;">
+            <tr><td style="padding:18px 24px;">
+              <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:#92400e;letter-spacing:2px;text-transform:uppercase;">Your Login Details</p>
+              <p style="margin:0 0 2px;color:#6b7280;font-size:12px;font-weight:600;">Email</p>
+              <p style="margin:0 0 14px;color:#111827;font-size:14px;font-weight:700;word-break:break-all;">${p.to}</p>
+              <p style="margin:0 0 2px;color:#6b7280;font-size:12px;font-weight:600;">Temporary password</p>
+              <p style="margin:0;color:#111827;font-size:18px;font-weight:800;font-family:monospace,monospace;letter-spacing:1px;">${p.temporaryPassword}</p>
+            </td></tr>
+          </table>` : ""}
+
           <!-- CTA -->
           <div style="text-align:center;margin:32px 0;">
-            <a href="${ctaUrl}"
+            <a href="${p.dashboardUrl}"
               style="display:inline-block;background-color:#0D9488;background-image:linear-gradient(135deg,#0D9488,#0a5c4a);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;letter-spacing:0.2px;">
-              ${ctaLabel}
+              Log in to Your Dashboard →
             </a>
           </div>
-          ${p.setPasswordUrl ? `
-          <p style="margin:-12px 0 28px;color:#6b7280;font-size:12.5px;line-height:1.6;text-align:center;word-break:break-all;">
+          <p style="margin:-12px 0 28px;color:#6b7280;font-size:12.5px;line-height:1.6;text-align:center;">
             Button not showing? Copy this link into your browser:<br />
-            <a href="${p.setPasswordUrl}" style="color:#0D9488;text-decoration:underline;">${p.setPasswordUrl}</a><br /><br />
-            This link only works for a short time. If it has expired, go to
-            <a href="${appUrl}/forgot-password" style="color:#0D9488;text-decoration:underline;">${appUrl}/forgot-password</a>
-            and enter ${p.to} to get a new one.
-          </p>` : ""}
+            <a href="${p.dashboardUrl}" style="color:#0D9488;text-decoration:underline;word-break:break-all;">${p.dashboardUrl}</a><br /><br />
+            ${p.temporaryPassword
+              ? `Please change this password after you log in (Dashboard, then Settings). Forgot it? <a href="${forgotUrl}" style="color:#0D9488;text-decoration:underline;">Reset it here</a>.`
+              : `Forgot your password? <a href="${forgotUrl}" style="color:#0D9488;text-decoration:underline;">Reset it here</a>.`}
+          </p>
 
           <!-- What's Next -->
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:28px;">

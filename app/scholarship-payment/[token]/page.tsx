@@ -249,9 +249,9 @@ export default function ScholarshipPaymentPage() {
             <p className="text-[13.5px] text-muted-foreground mb-8 leading-relaxed">
               {newAccount ? (
                 <>
-                  We created your student account and sent a welcome email to{" "}
-                  <strong className="text-foreground">{appInfo?.email}</strong>. Open it and use the
-                  button to set your password. Check your spam folder if you do not see it.
+                  We created your student account and sent your login details and temporary password to{" "}
+                  <strong className="text-foreground">{appInfo?.email}</strong>. Check your spam folder if
+                  you do not see the email, then log in and change your password in Settings.
                 </>
               ) : (
                 <>
@@ -269,9 +269,9 @@ export default function ScholarshipPaymentPage() {
             </Link>
             {newAccount && (
               <p className="text-[12px] text-muted-foreground mt-4">
-                Link expired?{" "}
+                Lost the email?{" "}
                 <Link href="/forgot-password" className="text-brand hover:underline font-medium">
-                  Get a new password link
+                  Reset your password
                 </Link>
               </p>
             )}

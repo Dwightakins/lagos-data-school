@@ -1,3 +1,4 @@
+import { randomInt } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyAlatpayTransaction } from "@/lib/payments/alatpay";
 import { getScholarshipFee } from "@/lib/scholarship/fee";
@@ -63,25 +64,45 @@ export async function hasOtherActiveEnrollment(
   return Array.isArray(data) && data.length > 0;
 }
 
+/** Readable temporary password: no look-alike characters (0/O, 1/l/I), always upper + lower + digit. */
+function generateTemporaryPassword(): string {
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lower = "abcdefghijkmnopqrstuvwxyz";
+  const digits = "23456789";
+  const all = upper + lower + digits;
+  const pick = (set: string) => set[randomInt(set.length)];
+  const chars = [pick(upper), pick(lower), pick(digits)];
+  while (chars.length < 10) chars.push(pick(all));
+  // Fisher-Yates shuffle so the guaranteed characters are not always first.
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
+}
+
 async function resolveAccount(
   admin: AdminClient,
   row: ApplicationRow,
-): Promise<{ userId: string; created: boolean } | null> {
-  if (row.user_id) return { userId: row.user_id, created: false };
+): Promise<{ userId: string; created: boolean; temporaryPassword: string | null } | null> {
+  if (row.user_id) return { userId: row.user_id, created: false, temporaryPassword: null };
 
   const email = (row.applicant_email ?? "").trim().toLowerCase();
   if (!email) return null;
 
   const existing = await findUserIdByEmail(admin, email);
-  if (existing) return { userId: existing, created: false };
+  if (existing) return { userId: existing, created: false, temporaryPassword: null };
 
   const name = (row.applicant_name ?? "").trim() || "Student";
   const phone = (row.applicant_phone ?? "").trim();
 
   // email_confirm: true because the student proved they own this mailbox by using the
-  // payment link that was emailed to it. No password is set; they set one from the email.
+  // payment link that was emailed to it. They get a temporary password in the welcome email
+  // and can change it from Settings or with "Forgot password".
+  const temporaryPassword = generateTemporaryPassword();
   const { data, error } = await admin.auth.admin.createUser({
     email,
+    password: temporaryPassword,
     email_confirm: true,
     user_metadata: { full_name: name, phone },
   });
@@ -89,7 +110,7 @@ async function resolveAccount(
   if (error || !data?.user) {
     // Another request (e.g. the webhook) may have just created the same account.
     const raced = await findUserIdByEmail(admin, email);
-    if (raced) return { userId: raced, created: false };
+    if (raced) return { userId: raced, created: false, temporaryPassword: null };
     console.error("[scholarship/complete] createUser failed:", error?.message);
     return null;
   }
@@ -104,7 +125,7 @@ async function resolveAccount(
     console.error("[scholarship/complete] profile upsert failed:", profileError.message);
   }
 
-  return { userId, created: true };
+  return { userId, created: true, temporaryPassword };
 }
 
 /**
@@ -177,7 +198,7 @@ export async function completeScholarshipPayment(
   if (!account) {
     return fail(500, "Could not set up your student account. Please contact support.", true);
   }
-  const { userId, created } = account;
+  const { userId, created, temporaryPassword } = account;
 
   // 4. One payment can only ever be used for one student.
   const paymentRef = verified.reference;
@@ -275,21 +296,6 @@ export async function completeScholarshipPayment(
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
     const email = (row.applicant_email ?? "").trim().toLowerCase();
 
-    let setPasswordUrl: string | null = null;
-    if (created && email) {
-      const { data: link, error: linkError } = await admin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-      });
-      const hashed = (link as { properties?: { hashed_token?: string } } | null)?.properties
-        ?.hashed_token;
-      if (linkError || !hashed) {
-        console.error("[scholarship/complete] generateLink failed:", linkError?.message);
-      } else {
-        setPasswordUrl = `${appUrl}/auth/callback?token_hash=${encodeURIComponent(hashed)}&type=recovery&next=/reset-password`;
-      }
-    }
-
     const { data: profile } = await admin
       .from("users")
       .select("full_name, email")
@@ -309,7 +315,7 @@ export async function completeScholarshipPayment(
         studentId,
         enrolledAt: new Date().toISOString(),
         dashboardUrl: `${appUrl}/login`,
-        setPasswordUrl,
+        temporaryPassword,
       });
       if (!sent) console.error("[scholarship/complete] welcome email failed for", to);
     }

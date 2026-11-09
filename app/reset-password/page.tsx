@@ -34,6 +34,19 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
     const supabase = createClient();
+
+    // Link from our reset email: /reset-password?token_hash=... The token is only used here,
+    // when the student submits, so email scanners that open the link cannot use it up.
+    const tokenHash = new URLSearchParams(window.location.search).get("token_hash");
+    if (tokenHash) {
+      const { error: verifyError } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+      if (verifyError) {
+        setLoading(false);
+        setError("Your reset link has expired or was already used. Please request a new one.");
+        return;
+      }
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setLoading(false);
 
