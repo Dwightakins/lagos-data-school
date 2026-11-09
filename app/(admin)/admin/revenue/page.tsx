@@ -16,6 +16,7 @@ interface PaymentRow {
   status: string;
   provider: string;
   paid_at: string | null;
+  created_at?: string | null;
   courses: { title: string } | null;
 }
 
@@ -33,14 +34,17 @@ async function getData() {
   // is what was 500ing this page. Student names are fetched separately below instead.
   const { data: paymentsData, error } = await admin
     .from("payments")
-    .select("id, user_id, course_id, amount, reference, status, provider, paid_at, courses(title)")
-    .order("paid_at", { ascending: false });
+    // "*" (not a named column list) so this works whether the date column is paid_at or created_at.
+    .select("*, courses(title)");
 
   if (error) {
     return { error: error.message, total: 0, thisMonth: 0, paidCount: 0, transactions: [], byCourse: [] };
   }
 
-  const rows = (paymentsData ?? []) as unknown as PaymentRow[];
+  // Newest first, using paid_at when present and created_at otherwise.
+  const rows = ((paymentsData ?? []) as unknown as PaymentRow[])
+    .map((r) => ({ ...r, paid_at: r.paid_at ?? r.created_at ?? null }))
+    .sort((a, b) => (b.paid_at ?? "").localeCompare(a.paid_at ?? ""));
 
   const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
   const { data: usersData, error: usersError } = userIds.length > 0

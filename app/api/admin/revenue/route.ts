@@ -10,6 +10,7 @@ interface PaymentRow {
   reference: string;
   course_id: string;
   paid_at: string | null;
+  created_at?: string | null;
   courses?: { title: string } | null;
 }
 
@@ -38,12 +39,14 @@ export async function GET(request: Request) {
     // separately below instead.
     const { data: rows, error } = await admin
       .from("payments")
-      .select("id, user_id, amount, status, reference, course_id, paid_at, courses(title)")
-      .order("paid_at", { ascending: false });
+      .select("*, courses(title)");
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const paymentRows = (rows ?? []) as unknown as PaymentRow[];
+    // Use paid_at when present, created_at otherwise; newest first.
+    const paymentRows = ((rows ?? []) as unknown as PaymentRow[])
+      .map((r) => ({ ...r, paid_at: r.paid_at ?? r.created_at ?? null }))
+      .sort((a, b) => (b.paid_at ?? "").localeCompare(a.paid_at ?? ""));
     const userIds = [...new Set(paymentRows.map((r) => r.user_id).filter(Boolean))];
     const { data: usersData, error: usersError } = userIds.length > 0
       ? await admin.from("users").select("id, full_name, email").in("id", userIds)
@@ -95,14 +98,15 @@ export async function GET(request: Request) {
   }
 
   if (type === "monthly") {
-    const { data, error } = await admin.from("payments").select("amount, paid_at").eq("status", "paid");
+    const { data, error } = await admin.from("payments").select("*").eq("status", "paid");
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const monthly: Record<string, number> = {};
-    ((data ?? []) as Array<{ amount: number; paid_at: string | null }>).forEach((p) => {
-      if (!p.paid_at) return;
-      const key = p.paid_at.slice(0, 7); // YYYY-MM
+    ((data ?? []) as Array<{ amount: number; paid_at?: string | null; created_at?: string | null }>).forEach((p) => {
+      const when = p.paid_at ?? p.created_at;
+      if (!when) return;
+      const key = when.slice(0, 7); // YYYY-MM
       monthly[key] = (monthly[key] ?? 0) + Number(p.amount);
     });
 
